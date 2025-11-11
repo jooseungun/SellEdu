@@ -192,6 +192,29 @@ SellEdu/
 - [ ] 구독제
 - [ ] 통계 대시보드
 
+## 빠른 배포 (Vercel)
+
+### 1. Vercel 계정 생성
+- https://vercel.com 접속
+- GitHub 계정으로 로그인
+
+### 2. 프로젝트 배포
+1. Vercel 대시보드에서 "Add New..." → "Project" 클릭
+2. GitHub 저장소 목록에서 `SellEdu` 선택
+3. "Import" 클릭
+4. Build Settings:
+   - Framework Preset: **Other**
+   - Build Command: `cd client && npm install && npm run build`
+   - Output Directory: `client/build`
+5. Environment Variables 추가 (데이터베이스 정보)
+6. "Deploy" 클릭
+
+### 3. 배포 완료
+- 약 2-3분 후 배포 완료
+- 자동 생성된 URL로 접속 가능 (예: `https://selledu.vercel.app`)
+
+자세한 배포 가이드는 [QUICK_DEPLOY.md](./QUICK_DEPLOY.md)를 참고하세요.
+
 ## 라이선스
 
 MIT
