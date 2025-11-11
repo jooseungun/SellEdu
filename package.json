@@ -1,0 +1,39 @@
+{
+  "name": "selledu",
+  "version": "1.0.0",
+  "description": "콘텐츠 마켓 플랫폼 - SellEdu",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "nodemon server/index.js",
+    "server:start": "node server/index.js",
+    "client:dev": "cd client && npm start",
+    "client:build": "cd client && npm run build",
+    "db:migrate": "node server/database/migrate.js",
+    "db:seed": "node server/database/seed.js"
+  },
+  "keywords": [
+    "content",
+    "marketplace",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.6.5",
+    "express-validator": "^7.0.1",
+    "multer": "^1.4.5-lts.1",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "concurrently": "^8.2.2"
+  }
+}
+
