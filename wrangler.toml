@@ -1,4 +1,4 @@
-name = "selledu-api"
+name = "joosu-selledu"
 main = "server/index.js"
 compatibility_date = "2024-01-01"
 
