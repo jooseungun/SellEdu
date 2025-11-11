@@ -192,26 +192,31 @@ SellEdu/
 - [ ] 구독제
 - [ ] 통계 대시보드
 
-## 빠른 배포 (Vercel)
+## 빠른 배포
 
-### 1. Vercel 계정 생성
-- https://vercel.com 접속
-- GitHub 계정으로 로그인
+### Cloudflare Pages (권장)
 
-### 2. 프로젝트 배포
-1. Vercel 대시보드에서 "Add New..." → "Project" 클릭
-2. GitHub 저장소 목록에서 `SellEdu` 선택
-3. "Import" 클릭
-4. Build Settings:
-   - Framework Preset: **Other**
-   - Build Command: `cd client && npm install && npm run build`
-   - Output Directory: `client/build`
-5. Environment Variables 추가 (데이터베이스 정보)
-6. "Deploy" 클릭
+1. **Cloudflare 계정 생성**
+   - https://dash.cloudflare.com 접속
+   - 계정 생성 또는 로그인
 
-### 3. 배포 완료
-- 약 2-3분 후 배포 완료
-- 자동 생성된 URL로 접속 가능 (예: `https://selledu.vercel.app`)
+2. **프로젝트 배포**
+   - Cloudflare 대시보드 → **Pages** 메뉴 클릭
+   - "Create a project" → "Connect to Git" 선택
+   - GitHub 저장소 `SellEdu` 선택
+   - 빌드 설정:
+     - Framework preset: `Create React App`
+     - Build command: `cd client && npm install && npm run build`
+     - Build output directory: `client/build`
+   - "Save and Deploy" 클릭
+
+3. **배포 완료**
+   - 약 2-3분 후 배포 완료
+   - 자동 생성된 URL로 접속 가능 (예: `https://selledu.pages.dev`)
+
+**자세한 가이드**: [CLOUDFLARE_DEPLOY.md](./CLOUDFLARE_DEPLOY.md)
+
+### Vercel 배포
 
 자세한 배포 가이드는 [QUICK_DEPLOY.md](./QUICK_DEPLOY.md)를 참고하세요.
 

@@ -1,0 +1,13 @@
+{
+  "build": {
+    "command": "cd client && npm install && npm run build",
+    "cwd": ".",
+    "output": "client/build"
+  },
+  "deploy": {
+    "env": {
+      "NODE_VERSION": "18"
+    }
+  }
+}
+
