@@ -60,12 +60,24 @@ const SellerDashboard = () => {
         api.get('/contents/seller/list'),
         api.get('/seller/settlement')
       ]);
-      setContents(contentsRes.data || []);
-      setSettlements(settlementsRes.data?.histories || []);
+      
+      // 배열인지 확인하고 안전하게 설정
+      const contentsData = contentsRes.data;
+      const contentsArray = Array.isArray(contentsData) ? contentsData : [];
+      setContents(contentsArray);
+      
+      // 정산 내역도 안전하게 처리
+      const settlementsData = settlementsRes.data?.histories || settlementsRes.data || [];
+      const settlementsArray = Array.isArray(settlementsData) ? settlementsData : [];
+      setSettlements(settlementsArray);
     } catch (error) {
       console.error('데이터 조회 실패:', error);
       const errorMessage = error.response?.data?.error || '데이터를 불러오는데 실패했습니다.';
       setError(errorMessage);
+      
+      // 에러 발생 시 빈 배열로 설정
+      setContents([]);
+      setSettlements([]);
       
       // 401 에러인 경우 로그인 페이지로 리다이렉트
       if (error.response?.status === 401) {
