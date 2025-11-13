@@ -27,7 +27,6 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import api from '../utils/api';
 import { getToken } from '../utils/auth';
 
