@@ -47,13 +47,23 @@ const BuyerHome = () => {
     <>
       <AppBar position="static" sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
         <Toolbar>
-          <Button
-            startIcon={<ArrowBackIcon />}
+          <Typography
+            variant="h6"
+            component="div"
             onClick={() => navigate('/')}
-            sx={{ color: 'white', mr: 2 }}
+            sx={{
+              flexGrow: 0,
+              mr: 3,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              userSelect: 'none',
+              '&:hover': {
+                opacity: 0.8
+              }
+            }}
           >
-            홈으로
-          </Button>
+            SellEdu
+          </Typography>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             구매자 페이지
           </Typography>

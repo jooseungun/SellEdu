@@ -138,13 +138,23 @@ const SellerDashboard = () => {
     <>
       <AppBar position="static" sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
         <Toolbar>
-          <Button
-            startIcon={<ArrowBackIcon />}
+          <Typography
+            variant="h6"
+            component="div"
             onClick={() => navigate('/')}
-            sx={{ color: 'white', mr: 2 }}
+            sx={{
+              flexGrow: 0,
+              mr: 3,
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              userSelect: 'none',
+              '&:hover': {
+                opacity: 0.8
+              }
+            }}
           >
-            홈으로
-          </Button>
+            SellEdu
+          </Typography>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             판매자 대시보드
           </Typography>

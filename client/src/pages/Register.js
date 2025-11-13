@@ -67,7 +67,36 @@ const Register = () => {
 
   return (
     <Container maxWidth="sm">
-      <Paper sx={{ p: 4, mt: 4 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          mt: 4,
+          mb: 2
+        }}
+      >
+        <Typography
+          variant="h4"
+          component="div"
+          onClick={() => navigate('/')}
+          sx={{
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            userSelect: 'none',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        >
+          SellEdu
+        </Typography>
+      </Box>
+      <Paper sx={{ p: 4, mt: 2 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           회원가입
         </Typography>
