@@ -41,6 +41,9 @@ coverage/
 # Documentation files (not needed in production)
 *.md
 !README.md
+!SEED_CONTENTS_GUIDE.md
+!QUICK_FIX_DATABASE.md
+!LOGIN_TROUBLESHOOTING.md
 
 # Video files
 *.mp4
