@@ -30,11 +30,6 @@ router.use(`/api/${API_VERSION}/seller`, sellerRoutes);
 router.use(`/api/${API_VERSION}/admin`, adminRoutes);
 router.use(`/api/${API_VERSION}/reviews`, reviewRoutes);
 
-// Health check
-router.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 module.exports = router;
 
 
