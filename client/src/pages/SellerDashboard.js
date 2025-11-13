@@ -45,8 +45,7 @@ const SellerDashboard = () => {
   useEffect(() => {
     // 로그인 체크
     if (!getToken()) {
-      alert('로그인이 필요합니다.');
-      navigate('/login');
+      navigate('/login?from=/seller');
       return;
     }
     fetchData();

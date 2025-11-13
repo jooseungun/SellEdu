@@ -22,9 +22,10 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // users 테이블 생성
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS users (
+    // 각 SQL 문을 개별적으로 실행
+    const statements = [
+      // users 테이블 생성
+      `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
@@ -36,15 +37,12 @@ export async function onRequestPost({ request, env }: {
         role TEXT DEFAULT 'buyer' CHECK(role IN ('buyer', 'seller', 'admin')),
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_username ON users(username);
-      CREATE INDEX IF NOT EXISTS idx_email ON users(email);
-    `);
-
-    // buyers 테이블 생성
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS buyers (
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_username ON users(username)`,
+      `CREATE INDEX IF NOT EXISTS idx_email ON users(email)`,
+      
+      // buyers 테이블 생성
+      `CREATE TABLE IF NOT EXISTS buyers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         grade TEXT DEFAULT 'BRONZE',
@@ -54,15 +52,12 @@ export async function onRequestPost({ request, env }: {
         recent_months INTEGER DEFAULT 3,
         last_grade_update TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_buyer_user_id ON buyers(user_id);
-      CREATE INDEX IF NOT EXISTS idx_buyer_grade ON buyers(grade);
-    `);
-
-    // sellers 테이블 생성
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS sellers (
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_buyer_user_id ON buyers(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_buyer_grade ON buyers(grade)`,
+      
+      // sellers 테이블 생성
+      `CREATE TABLE IF NOT EXISTS sellers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         grade TEXT DEFAULT 'BRONZE',
@@ -75,44 +70,63 @@ export async function onRequestPost({ request, env }: {
         account_number TEXT,
         account_holder TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-      );
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_seller_user_id ON sellers(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_seller_grade ON sellers(grade)`,
+      
+      // 관리자 계정 생성 (비밀번호: admin, SHA-256 해시)
+      `INSERT OR IGNORE INTO users (username, email, password_hash, name, role, created_at, updated_at)
+       VALUES (
+         'admin',
+         'admin@selledu.com',
+         '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
+         '관리자',
+         'admin',
+         datetime('now'),
+         datetime('now')
+       )`
+    ];
 
-      CREATE INDEX IF NOT EXISTS idx_seller_user_id ON sellers(user_id);
-      CREATE INDEX IF NOT EXISTS idx_seller_grade ON sellers(grade);
-    `);
-
-    // 관리자 계정 생성 (비밀번호: admin, SHA-256 해시)
-    await env.DB.exec(`
-      INSERT OR IGNORE INTO users (username, email, password_hash, name, role, created_at, updated_at)
-      VALUES (
-        'admin',
-        'admin@selledu.com',
-        '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918',
-        '관리자',
-        'admin',
-        datetime('now'),
-        datetime('now')
-      );
-    `);
+    // 각 SQL 문을 순차적으로 실행
+    for (const sql of statements) {
+      try {
+        await env.DB.prepare(sql).run();
+      } catch (stmtError: any) {
+        // 테이블이 이미 존재하는 경우 무시
+        if (!stmtError.message?.includes('already exists') && 
+            !stmtError.message?.includes('duplicate')) {
+          console.error('SQL execution error:', sql, stmtError);
+          throw stmtError;
+        }
+      }
+    }
 
     // 테이블 생성 확인
-    const tables = await env.DB.prepare(
+    const tablesResult = await env.DB.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
     ).all();
+
+    const tables = tablesResult.results?.map((t: any) => t.name) || [];
 
     return new Response(
       JSON.stringify({
         message: '데이터베이스 초기화가 완료되었습니다.',
-        tables: tables.results?.map((t: any) => t.name) || []
+        tables: tables
       }),
       { status: 200, headers: corsHeaders }
     );
   } catch (error: any) {
     console.error('Database initialization error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return new Response(
       JSON.stringify({
         error: '데이터베이스 초기화 중 오류가 발생했습니다.',
-        details: error.message || 'Unknown error'
+        details: error.message || 'Unknown error',
+        type: error.name || 'Error'
       }),
       { status: 500, headers: corsHeaders }
     );
@@ -130,4 +144,3 @@ export async function onRequestOptions(): Promise<Response> {
     }
   });
 }
-
