@@ -48,11 +48,17 @@ const authorize = (...roles) => {
 };
 
 // API 호출 로그 기록
-const logApiCall = async (req, res, next) => {
+const logApiCall = (req, res, next) => {
+  // OPTIONS 요청은 로그 기록하지 않음
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  
   const startTime = Date.now();
   
   res.on('finish', async () => {
     try {
+      // api_logs 테이블이 없을 수 있으므로 에러 무시
       const responseTime = Date.now() - startTime;
       await pool.execute(
         `INSERT INTO api_logs (user_id, endpoint, method, ip_address, response_status, response_time)
@@ -67,10 +73,11 @@ const logApiCall = async (req, res, next) => {
         ]
       );
     } catch (error) {
-      console.error('API 로그 기록 실패:', error);
+      // 테이블이 없거나 에러가 발생해도 무시 (서버 동작에 영향 없음)
+      // console.error('API 로그 기록 실패:', error);
     }
   });
-
+  
   next();
 };
 
