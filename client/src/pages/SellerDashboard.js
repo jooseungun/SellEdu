@@ -22,7 +22,8 @@ import {
   AppBar,
   Toolbar,
   CircularProgress,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
