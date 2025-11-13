@@ -22,21 +22,42 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // joosu 판매자 계정 찾기
-    const seller = await env.DB.prepare(
+    // joosu 판매자 계정 찾기, 없으면 생성
+    let seller = await env.DB.prepare(
       'SELECT id FROM users WHERE username = ?'
     )
       .bind('joosu')
-      .first();
+      .first<{ id: number }>();
 
+    let sellerId: number;
+    
     if (!seller) {
-      return new Response(
-        JSON.stringify({ error: '판매자 계정 joosu를 찾을 수 없습니다. 먼저 회원가입해주세요.' }),
-        { status: 404, headers: corsHeaders }
-      );
+      // joosu 계정이 없으면 생성
+      const encoder = new TextEncoder();
+      const data = encoder.encode('joosu123'); // 기본 비밀번호
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const result = await env.DB.prepare(
+        `INSERT INTO users (username, email, password_hash, name, role, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      )
+        .bind('joosu', 'joosu@selledu.com', passwordHash, '조수', 'seller')
+        .run();
+      
+      sellerId = result.meta.last_row_id;
+      
+      // seller 테이블에 레코드 생성
+      await env.DB.prepare(
+        `INSERT INTO sellers (user_id, grade, commission_rate, total_sales_amount, recent_sales_amount, recent_months)
+         VALUES (?, 'BRONZE', 10.00, 0.00, 0.00, 3)`
+      )
+        .bind(sellerId)
+        .run();
+    } else {
+      sellerId = seller.id;
     }
-
-    const sellerId = (seller as any).id;
 
     // 가비지 데이터
     const contentsData = [

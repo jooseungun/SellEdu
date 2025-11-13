@@ -88,10 +88,41 @@ const AdminDashboard = () => {
         const data = response.data || [];
         setPendingContents(Array.isArray(data) ? data : []);
       } else if (tabValue === 1) {
-        // 상품관리: 모든 승인된 콘텐츠 조회
-        const response = await api.get('/contents');
-        const data = response.data?.contents || response.data || [];
-        setAllContents(Array.isArray(data) ? data : []);
+        // 상품관리: 모든 콘텐츠 조회 (상태 무관)
+        let contentsData = [];
+        try {
+          const response = await api.get('/admin/contents/all');
+          contentsData = response.data || [];
+        } catch (error) {
+          // all 엔드포인트가 없으면 approved만 조회
+          try {
+            const response = await api.get('/contents');
+            contentsData = response.data?.contents || response.data || [];
+          } catch (err) {
+            console.error('콘텐츠 조회 실패:', err);
+            contentsData = [];
+          }
+        }
+        
+        // 데이터가 없으면 자동으로 seed-contents 호출
+        if (contentsData.length === 0) {
+          try {
+            await api.post('/admin/seed-contents');
+            // seed 후 다시 조회
+            try {
+              const response = await api.get('/admin/contents/all');
+              contentsData = response.data || [];
+            } catch (err) {
+              const response = await api.get('/contents');
+              contentsData = response.data?.contents || response.data || [];
+            }
+          } catch (seedError) {
+            console.error('콘텐츠 데이터 생성 실패:', seedError);
+          }
+        }
+        
+        setAllContents(Array.isArray(contentsData) ? contentsData : []);
+        
         // 기존 approvedContents도 유지 (다른 탭에서 사용)
         const approvedResponse = await api.get('/admin/contents/approved').catch(() => ({ data: [] }));
         setApprovedContents(Array.isArray(approvedResponse.data) ? approvedResponse.data : []);
