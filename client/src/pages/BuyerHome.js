@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SubscriptionIcon from '@mui/icons-material/Subscription';
+import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CodeIcon from '@mui/icons-material/Code';
 import api from '../utils/api';
 
@@ -56,7 +56,7 @@ const BuyerHome = () => {
             구매자 페이지
           </Typography>
           <Button
-            startIcon={<SubscriptionIcon />}
+            startIcon={<SubscriptionsIcon />}
             onClick={() => navigate('/buyer/subscription')}
             sx={{ color: 'white', mr: 1 }}
           >
