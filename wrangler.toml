@@ -6,7 +6,7 @@ pages_build_output_dir = "client/build"
 [[d1_databases]]
 binding = "DB"
 database_name = "selledu-db"
-database_id = "YOUR_D1_DATABASE_ID"  # Cloudflare 대시보드에서 생성 후 ID 입력 필요
+database_id = "acef10dc-3987-4483-83ff-235b537d49a0"  # Cloudflare 대시보드에서 생성 후 ID 입력 필요
 
 [env.production]
 name = "selledu"
