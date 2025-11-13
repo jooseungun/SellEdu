@@ -30,8 +30,9 @@ import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import LogoutIcon from '@mui/icons-material/Logout';
 import api from '../utils/api';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
 
 const AdminDashboard = () => {
@@ -164,6 +165,16 @@ const AdminDashboard = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             관리자 대시보드
           </Typography>
+          <Button
+            startIcon={<LogoutIcon />}
+            onClick={() => {
+              removeToken();
+              navigate('/');
+            }}
+            sx={{ color: 'white' }}
+          >
+            로그아웃
+          </Button>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>

@@ -27,8 +27,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import CodeIcon from '@mui/icons-material/Code';
+import LogoutIcon from '@mui/icons-material/Logout';
 import api from '../utils/api';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -158,9 +159,19 @@ const SellerDashboard = () => {
           <Button
             startIcon={<CodeIcon />}
             onClick={() => navigate('/seller/api-guide')}
-            sx={{ color: 'white' }}
+            sx={{ color: 'white', mr: 1 }}
           >
             API 가이드
+          </Button>
+          <Button
+            startIcon={<LogoutIcon />}
+            onClick={() => {
+              removeToken();
+              navigate('/');
+            }}
+            sx={{ color: 'white' }}
+          >
+            로그아웃
           </Button>
         </Toolbar>
       </AppBar>

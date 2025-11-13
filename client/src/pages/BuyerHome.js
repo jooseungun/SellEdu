@@ -22,7 +22,10 @@ import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CodeIcon from '@mui/icons-material/Code';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import InfoIcon from '@mui/icons-material/Info';
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
 import api from '../utils/api';
+import { getToken, removeToken } from '../utils/auth';
 
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
@@ -98,6 +101,11 @@ const BuyerHome = () => {
   const [tabValue, setTabValue] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!getToken());
+  }, []);
 
   useEffect(() => {
     fetchContents();
@@ -181,10 +189,31 @@ const BuyerHome = () => {
           <Button
             startIcon={<CodeIcon />}
             onClick={() => navigate('/buyer/api-guide')}
-            sx={{ color: 'white' }}
+            sx={{ color: 'white', mr: 1 }}
           >
             API 가이드
           </Button>
+          {isLoggedIn ? (
+            <Button
+              startIcon={<LogoutIcon />}
+              onClick={() => {
+                removeToken();
+                setIsLoggedIn(false);
+                navigate('/');
+              }}
+              sx={{ color: 'white' }}
+            >
+              로그아웃
+            </Button>
+          ) : (
+            <Button
+              startIcon={<LoginIcon />}
+              onClick={() => navigate('/login')}
+              sx={{ color: 'white' }}
+            >
+              로그인
+            </Button>
+          )}
         </Toolbar>
       </AppBar>
 
