@@ -39,8 +39,10 @@ export async function onRequestGet({ request, env }: {
         u.username as seller_username
       FROM contents c
       LEFT JOIN users u ON c.seller_id = u.id
-      WHERE c.status = 'pending'
-      ORDER BY c.created_at DESC`
+      WHERE c.status IN ('pending', 'reviewing')
+      ORDER BY 
+        CASE WHEN c.status = 'reviewing' THEN 0 ELSE 1 END,
+        c.created_at DESC`
     ).all();
 
     return new Response(

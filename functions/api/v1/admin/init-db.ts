@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }: {
         category TEXT NOT NULL,
         grade TEXT DEFAULT '베이직' CHECK(grade IN ('베이직', '프리미엄', '스탠다드', '개별구매')),
         age_rating TEXT DEFAULT 'All' CHECK(age_rating IN ('All', '15', '18')),
-        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'rejected', 'suspended')),
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'reviewing', 'approved', 'rejected', 'suspended')),
         display_order INTEGER DEFAULT 0,
         content_area TEXT DEFAULT 'default',
         purchase_count INTEGER DEFAULT 0,

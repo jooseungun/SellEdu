@@ -288,12 +288,19 @@ const SellerDashboard = () => {
                     <TableRow key={content.id}>
                       <TableCell>{content.title}</TableCell>
                       <TableCell>
-                        {getStatusChip(content.status, content.is_reapply)}
-                        {content.rejection_reason && (
-                          <Typography variant="caption" color="error" display="block">
-                            사유: {content.rejection_reason}
-                          </Typography>
-                        )}
+                        <Box>
+                          {getStatusChip(content.status, content.is_reapply)}
+                          {content.rejection_reason && (
+                            <Box sx={{ mt: 1, p: 1.5, bgcolor: 'error.light', borderRadius: 1, border: '1px solid', borderColor: 'error.main' }}>
+                              <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'error.dark', display: 'block', mb: 0.5 }}>
+                                거부 사유:
+                              </Typography>
+                              <Typography variant="body2" color="error.dark">
+                                {content.rejection_reason}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
                       </TableCell>
                       <TableCell>{content.price?.toLocaleString()}원</TableCell>
                       <TableCell>{content.purchase_count || 0}</TableCell>

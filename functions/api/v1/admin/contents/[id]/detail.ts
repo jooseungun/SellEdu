@@ -16,6 +16,16 @@ export async function onRequestGet({ params, env }: {
   try {
     const contentId = params.id;
 
+    // 상세 페이지를 본 경우 상태를 'reviewing'으로 변경 (pending인 경우만)
+    await env.DB.prepare(
+      `UPDATE contents 
+       SET status = 'reviewing',
+           updated_at = datetime('now')
+       WHERE id = ? AND status = 'pending'`
+    )
+      .bind(contentId)
+      .run();
+
     // 콘텐츠 상세 정보 조회
     const contentResult = await env.DB.prepare(
       `SELECT

@@ -65,6 +65,8 @@ export async function onRequestGet({ request, env }: {
         c.avg_rating,
         c.review_count,
         c.duration,
+        c.rejection_reason,
+        c.is_reapply,
         c.created_at,
         c.updated_at,
         u.username as seller_username

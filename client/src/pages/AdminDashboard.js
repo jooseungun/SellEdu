@@ -371,7 +371,11 @@ const AdminDashboard = () => {
                       <TableCell>{content.seller_username}</TableCell>
                       <TableCell>{content.price?.toLocaleString()}원</TableCell>
                       <TableCell>
-                        <Chip label="심사대기" color="warning" size="small" />
+                        {content.status === 'reviewing' ? (
+                          <Chip label="심사중" color="info" size="small" />
+                        ) : (
+                          <Chip label="심사대기" color="warning" size="small" />
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -866,144 +870,252 @@ const AdminDashboard = () => {
         {/* 콘텐츠 상세 정보 다이얼로그 */}
         <Dialog
           open={contentDetailDialogOpen} 
-          onClose={() => setContentDetailDialogOpen(false)}
+          onClose={() => {
+            setContentDetailDialogOpen(false);
+            // 다이얼로그 닫을 때 목록 새로고침
+            if (tabValue === 0) {
+              fetchData();
+            }
+          }}
           maxWidth="lg"
           fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+            }
+          }}
         >
-          <DialogTitle>
+          <DialogTitle sx={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            pb: 2
+          }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6">콘텐츠 상세 정보</Typography>
-              {contentDetail?.status === 'pending' && (
-                <Chip label="심사 대기" color="warning" size="small" />
-              )}
+              <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                콘텐츠 심사 상세 정보
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {contentDetail?.status === 'reviewing' && (
+                  <Chip label="심사중" color="info" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                )}
+                {contentDetail?.status === 'pending' && (
+                  <Chip label="심사 대기" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                )}
+                {contentDetail?.is_reapply && (
+                  <Chip label="재심사" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                )}
+              </Box>
             </Box>
           </DialogTitle>
-          <DialogContent>
+          <DialogContent sx={{ mt: 3 }}>
             {contentDetail && (
               <Box>
                 {/* 썸네일 */}
                 {contentDetail.thumbnail_url && (
-                  <Box sx={{ mb: 3, textAlign: 'center' }}>
+                  <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
                     <Box
                       component="img"
                       src={contentDetail.thumbnail_url}
                       alt={contentDetail.title}
-                      sx={{ maxWidth: '100%', maxHeight: 300, borderRadius: 2, objectFit: 'contain' }}
+                      sx={{ 
+                        maxWidth: '100%', 
+                        maxHeight: 400, 
+                        borderRadius: 3, 
+                        objectFit: 'contain',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                      }}
                     />
                   </Box>
                 )}
 
                 {/* 기본 정보 */}
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
-                  {contentDetail.title}
-                </Typography>
-                <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip label={contentDetail.category} color="primary" />
-                  <Chip label={contentDetail.grade || '베이직'} />
-                  <Chip label={contentDetail.age_rating || 'All'} variant="outlined" />
-                  {contentDetail.is_reapply && (
-                    <Chip label="재심사" color="warning" />
-                  )}
+                <Box sx={{ mb: 3, pb: 3, borderBottom: '2px solid', borderColor: 'divider' }}>
+                  <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
+                    {contentDetail.title}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    <Chip 
+                      label={contentDetail.category} 
+                      color="primary" 
+                      sx={{ fontWeight: 'bold', fontSize: '0.875rem', height: 28 }}
+                    />
+                    <Chip 
+                      label={contentDetail.grade || '베이직'} 
+                      sx={{ 
+                        bgcolor: '#FF9800', 
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '0.875rem',
+                        height: 28
+                      }} 
+                    />
+                    <Chip 
+                      label={contentDetail.age_rating || 'All'} 
+                      variant="outlined" 
+                      sx={{ fontWeight: 'bold', fontSize: '0.875rem', height: 28 }}
+                    />
+                  </Box>
                 </Box>
 
                 {/* 설명 */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                    설명
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
+                    📝 설명
                   </Typography>
                   <Box 
                     dangerouslySetInnerHTML={{ __html: contentDetail.description || '' }}
                     sx={{ 
-                      p: 2, 
+                      p: 3, 
                       bgcolor: 'grey.50', 
-                      borderRadius: 1,
-                      '& img': { maxWidth: '100%', height: 'auto' }
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      minHeight: 100,
+                      '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
+                      '& p': { marginBottom: 1 }
                     }}
                   />
                 </Box>
 
                 {/* 상세 설명 */}
                 {contentDetail.detailed_description && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      상세 설명
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
+                      📄 상세 설명
                     </Typography>
                     <Box 
                       dangerouslySetInnerHTML={{ __html: contentDetail.detailed_description }}
                       sx={{ 
-                        p: 2, 
+                        p: 3, 
                         bgcolor: 'grey.50', 
-                        borderRadius: 1,
-                        '& img': { maxWidth: '100%', height: 'auto' }
+                        borderRadius: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        minHeight: 100,
+                        '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
+                        '& p': { marginBottom: 1 }
                       }}
                     />
                   </Box>
                 )}
 
                 {/* 상품 정보 */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={3} sx={{ mb: 4 }}>
                   <Grid item xs={12} sm={6}>
-                    <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        기본 정보
-                      </Typography>
-                      <Typography variant="body2">가격: {contentDetail.price?.toLocaleString() || 0}원</Typography>
-                      <Typography variant="body2">판매자: {contentDetail.seller_username || '-'}</Typography>
-                      <Typography variant="body2">이용가능 일수: {contentDetail.education_period || '-'}일</Typography>
-                      <Typography variant="body2">등록일: {contentDetail.created_at ? new Date(contentDetail.created_at).toLocaleString('ko-KR') : '-'}</Typography>
-                    </Box>
+                    <Card variant="outlined" sx={{ height: '100%', bgcolor: 'primary.light', bgcolor: 'rgba(102, 126, 234, 0.05)' }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+                          💰 기본 정보
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">가격</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                              {contentDetail.price?.toLocaleString() || 0}원
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">판매자</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                              {contentDetail.seller_username || '-'}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">이용가능 일수</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                              {contentDetail.education_period || '-'}일
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">등록일</Typography>
+                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                              {contentDetail.created_at ? new Date(contentDetail.created_at).toLocaleString('ko-KR') : '-'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                        판매 기간
-                      </Typography>
-                      {contentDetail.is_always_on_sale ? (
-                        <Typography variant="body2" color="primary">기간 지정 없음 (항상 판매)</Typography>
-                      ) : (
-                        <>
-                          <Typography variant="body2">
-                            시작일: {contentDetail.sale_start_date 
-                              ? new Date(contentDetail.sale_start_date).toLocaleDateString('ko-KR') 
-                              : '-'}
+                    <Card variant="outlined" sx={{ height: '100%', bgcolor: 'rgba(102, 126, 234, 0.05)' }}>
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+                          📅 판매 기간
+                        </Typography>
+                        {contentDetail.is_always_on_sale ? (
+                          <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                            기간 지정 없음 (항상 판매)
                           </Typography>
-                          <Typography variant="body2">
-                            종료일: {contentDetail.sale_end_date 
-                              ? new Date(contentDetail.sale_end_date).toLocaleDateString('ko-KR') 
-                              : '-'}
-                          </Typography>
-                        </>
-                      )}
-                    </Box>
+                        ) : (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">시작일</Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                {contentDetail.sale_start_date 
+                                  ? new Date(contentDetail.sale_start_date).toLocaleDateString('ko-KR') 
+                                  : '-'}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">종료일</Typography>
+                              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                                {contentDetail.sale_end_date 
+                                  ? new Date(contentDetail.sale_end_date).toLocaleDateString('ko-KR') 
+                                  : '-'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
                   </Grid>
                 </Grid>
 
                 {/* 차시 정보 */}
                 {contentDetail.lessons && contentDetail.lessons.length > 0 && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
-                      강의 차시 ({contentDetail.lessons.length}개)
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', mb: 3, color: 'primary.main' }}>
+                      📚 강의 차시 ({contentDetail.lessons.length}개)
                     </Typography>
                     {contentDetail.lessons.map((lesson, index) => (
-                      <Card key={lesson.id || index} variant="outlined" sx={{ mb: 2 }}>
+                      <Card 
+                        key={lesson.id || index} 
+                        variant="outlined" 
+                        sx={{ 
+                          mb: 2,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: 3,
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
                         <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                              {lesson.lesson_number || index + 1}차시. {lesson.title}
-                            </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                            <Box>
+                              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                {lesson.lesson_number || index + 1}차시. {lesson.title}
+                              </Typography>
+                              {lesson.description && (
+                                <Typography variant="body2" color="text.secondary">
+                                  {lesson.description}
+                                </Typography>
+                              )}
+                            </Box>
                             {lesson.duration && (
-                              <Chip label={`${lesson.duration}분`} size="small" variant="outlined" />
+                              <Chip 
+                                label={`${lesson.duration}분`} 
+                                size="small" 
+                                color="primary"
+                                sx={{ fontWeight: 'bold' }}
+                              />
                             )}
                           </Box>
-                          {lesson.description && (
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                              {lesson.description}
-                            </Typography>
-                          )}
                           {lesson.cdn_link && (
-                            <Box sx={{ mt: 2 }}>
-                              <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                콘텐츠 링크:
+                            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+                              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 1 }}>
+                                콘텐츠 링크
                               </Typography>
                               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                                 <TextField
@@ -1012,6 +1124,7 @@ const AdminDashboard = () => {
                                   value={lesson.cdn_link}
                                   InputProps={{ readOnly: true }}
                                   sx={{ 
+                                    bgcolor: 'white',
                                     '& .MuiInputBase-input': { 
                                       fontSize: '0.75rem',
                                       fontFamily: 'monospace'
@@ -1019,11 +1132,13 @@ const AdminDashboard = () => {
                                   }}
                                 />
                                 <Button
-                                  size="small"
-                                  variant="outlined"
+                                  size="medium"
+                                  variant="contained"
+                                  color="primary"
                                   onClick={() => {
                                     window.open(lesson.cdn_link, '_blank');
                                   }}
+                                  sx={{ minWidth: 100 }}
                                 >
                                   미리보기
                                 </Button>
@@ -1038,11 +1153,18 @@ const AdminDashboard = () => {
 
                 {/* 거부 사유 (재심사인 경우) */}
                 {contentDetail.rejection_reason && (
-                  <Box sx={{ mt: 2, p: 2, bgcolor: 'error.light', borderRadius: 1 }}>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: 'error.dark' }}>
-                      이전 거부 사유
+                  <Box sx={{ 
+                    mt: 2, 
+                    p: 3, 
+                    bgcolor: 'error.light', 
+                    borderRadius: 2,
+                    border: '2px solid',
+                    borderColor: 'error.main'
+                  }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', color: 'error.dark', mb: 2 }}>
+                      ⚠️ 이전 거부 사유
                     </Typography>
-                    <Typography variant="body2" color="error.dark">
+                    <Typography variant="body1" color="error.dark" sx={{ whiteSpace: 'pre-wrap' }}>
                       {contentDetail.rejection_reason}
                     </Typography>
                   </Box>
@@ -1050,8 +1172,19 @@ const AdminDashboard = () => {
               </Box>
             )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setContentDetailDialogOpen(false)}>닫기</Button>
+          <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button 
+              onClick={() => {
+                setContentDetailDialogOpen(false);
+                if (tabValue === 0) {
+                  fetchData();
+                }
+              }}
+              variant="outlined"
+              size="large"
+            >
+              닫기
+            </Button>
           </DialogActions>
         </Dialog>
       </Container>
