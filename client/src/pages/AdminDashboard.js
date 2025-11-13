@@ -637,6 +637,59 @@ const AdminDashboard = () => {
             <Button onClick={handleUpdateOrder} variant="contained">변경</Button>
           </DialogActions>
         </Dialog>
+
+        {/* 역할 변경 다이얼로그 */}
+        <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)}>
+          <DialogTitle>사용자 역할 변경</DialogTitle>
+          <DialogContent>
+            {selectedUser && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  사용자: {selectedUser.username} ({selectedUser.name})
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  현재 역할: {
+                    selectedUser.role === 'admin' ? '관리자' :
+                    selectedUser.role === 'seller' ? '판매자' : '구매자'
+                  }
+                </Typography>
+              </Box>
+            )}
+            <FormControl fullWidth margin="normal">
+              <InputLabel>새로운 역할</InputLabel>
+              <Select
+                value={newRole}
+                label="새로운 역할"
+                onChange={(e) => setNewRole(e.target.value)}
+              >
+                <MenuItem value="buyer">구매자</MenuItem>
+                <MenuItem value="seller">판매자</MenuItem>
+                <MenuItem value="admin">관리자</MenuItem>
+              </Select>
+            </FormControl>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setRoleDialogOpen(false)}>취소</Button>
+            <Button 
+              onClick={async () => {
+                try {
+                  await api.put('/admin/users/update-role', {
+                    userId: selectedUser.id,
+                    role: newRole
+                  });
+                  alert('역할이 변경되었습니다.');
+                  setRoleDialogOpen(false);
+                  fetchData();
+                } catch (error) {
+                  alert(error.response?.data?.error || '역할 변경에 실패했습니다.');
+                }
+              }} 
+              variant="contained"
+            >
+              변경
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </>
   );
