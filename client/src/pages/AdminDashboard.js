@@ -740,6 +740,110 @@ const AdminDashboard = () => {
             )}
           </Paper>
         )}
+
+        {/* 제휴할인 신청 관리 */}
+        {tabValue === 5 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              제휴할인 신청 관리
+            </Typography>
+            {partnershipRequests.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  제휴할인 신청이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>신청자</TableCell>
+                      <TableCell>고객사 명</TableCell>
+                      <TableCell>제휴사</TableCell>
+                      <TableCell>상태</TableCell>
+                      <TableCell>신청일</TableCell>
+                      <TableCell>작업</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {partnershipRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LocalOfferIcon
+                              sx={{ color: '#f5576c', fontSize: 20 }}
+                              titleAccess="제휴할인 신청"
+                            />
+                            <Typography variant="body2">{request.name || request.username}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>{request.company_name}</TableCell>
+                        <TableCell>
+                          {request.type === 'malgn' ? '맑은소프트 (-30%)' : '훌라로 (+150%)'}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              request.status === 'approved' ? '승인' :
+                              request.status === 'rejected' ? '거부' :
+                              request.status === 'reviewing' ? '심사중' : '대기'
+                            }
+                            size="small"
+                            color={
+                              request.status === 'approved' ? 'success' :
+                              request.status === 'rejected' ? 'error' :
+                              request.status === 'reviewing' ? 'info' : 'warning'
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {request.created_at ? new Date(request.created_at).toLocaleDateString('ko-KR') : '-'}
+                        </TableCell>
+                        <TableCell>
+                          {request.status === 'pending' || request.status === 'reviewing' ? (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Button
+                                size="small"
+                                color="success"
+                                onClick={async () => {
+                                  try {
+                                    await api.post(`/admin/partnership/${request.id}/approve`);
+                                    alert('제휴할인 신청이 승인되었습니다.');
+                                    fetchData();
+                                  } catch (error) {
+                                    alert('승인 처리에 실패했습니다.');
+                                  }
+                                }}
+                              >
+                                승인
+                              </Button>
+                              <Button
+                                size="small"
+                                color="error"
+                                onClick={() => {
+                                  setSelectedPartnershipRequest(request);
+                                  setPartnershipRejectReason('');
+                                  setPartnershipRejectDialogOpen(true);
+                                }}
+                              >
+                                거부
+                              </Button>
+                            </Box>
+                          ) : request.status === 'rejected' && request.rejection_reason ? (
+                            <Typography variant="caption" color="error">
+                              거부 사유: {request.rejection_reason}
+                            </Typography>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </Paper>
+        )}
           </>
         )}
 
