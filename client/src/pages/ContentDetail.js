@@ -33,7 +33,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import api from '../utils/api';
-import { getToken } from '../utils/auth';
+import { getToken, getUserName } from '../utils/auth';
 
 // 가비지 데이터 생성 함수 (BuyerHome과 동일)
 const generateMockContent = (id) => {
