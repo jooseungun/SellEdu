@@ -149,6 +149,7 @@ const SellerDashboard = () => {
     }
     const statusMap = {
       'pending': { label: '심사대기', color: 'warning' },
+      'reviewing': { label: '심사중', color: 'info' },
       'approved': { label: '판매중', color: 'success' },
       'rejected': { label: '거부됨', color: 'error' },
       'suspended': { label: '판매중지', color: 'default' }
