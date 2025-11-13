@@ -49,19 +49,36 @@ router.post(
       const userId = result.insertId;
 
       // 구매자/판매자 정보 생성 (관리자는 제외)
-      if (role !== 'admin') {
-        if (role === 'buyer' || !role) {
+      const userRole = role || 'buyer';
+      if (userRole !== 'admin') {
+        // 기본적으로 구매자 정보 생성
+        try {
           await pool.execute(
             'INSERT INTO buyers (user_id) VALUES (?)',
             [userId]
           );
+        } catch (buyerError) {
+          // 이미 존재하는 경우 무시
+          if (buyerError.code !== 'ER_DUP_ENTRY') {
+            console.error('구매자 정보 생성 실패:', buyerError);
+            throw buyerError;
+          }
         }
 
-        if (role === 'seller') {
-          await pool.execute(
-            'INSERT INTO sellers (user_id) VALUES (?)',
-            [userId]
-          );
+        // 판매자 역할인 경우 판매자 정보도 생성
+        if (userRole === 'seller') {
+          try {
+            await pool.execute(
+              'INSERT INTO sellers (user_id) VALUES (?)',
+              [userId]
+            );
+          } catch (sellerError) {
+            // 이미 존재하는 경우 무시
+            if (sellerError.code !== 'ER_DUP_ENTRY') {
+              console.error('판매자 정보 생성 실패:', sellerError);
+              throw sellerError;
+            }
+          }
         }
       }
 
