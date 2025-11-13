@@ -15,16 +15,21 @@
    - 권한 승인
    - `SellEdu` 저장소 선택
 
-### 3단계: 빌드 설정
+### 3단계: 빌드 설정 (중요!)
 **프로젝트 이름**: `selledu` (또는 원하는 이름)
 
 **프로덕션 브랜치**: `main`
 
 **빌드 설정**:
-- **Framework preset**: `Create React App`
+- **Framework preset**: `Create React App` 또는 `None`
+- **Root directory**: `/` (기본값, 변경하지 않음)
 - **Build command**: `cd client && npm install && npm run build`
 - **Build output directory**: `client/build`
-- **Root directory**: `/` (기본값)
+
+> ⚠️ **중요**: 
+> - Root directory는 반드시 `/` (루트)로 설정해야 합니다
+> - Build output directory는 `client/build`로 설정합니다
+> - React 앱은 `client/build` 폴더에 빌드되며, Cloudflare Pages가 이 폴더를 서빙합니다
 
 ### 4단계: 환경 변수 설정
 **Environment variables** 섹션에서 다음 변수 추가:
@@ -40,6 +45,21 @@ REACT_APP_API_URL=https://your-api-domain.com/api/v1
 - "Save and Deploy" 클릭
 - 약 2-3분 후 배포 완료
 - 자동 생성된 URL로 접속 가능 (예: `https://selledu.pages.dev`)
+
+## 📁 프로젝트 구조
+
+```
+SellEdu/
+├── client/              # React 프론트엔드
+│   ├── public/
+│   │   ├── index.html   # React 앱의 진입점
+│   │   ├── _redirects   # SPA 라우팅 설정
+│   │   └── _headers     # 보안 헤더 설정
+│   ├── src/             # React 소스 코드
+│   └── build/           # 빌드 출력 (자동 생성)
+├── server/              # Node.js 백엔드
+└── cloudflare-pages.json  # Cloudflare Pages 설정
+```
 
 ## 🔧 백엔드 API 배포 옵션
 
@@ -122,6 +142,13 @@ REACT_APP_API_URL=https://your-railway-app.up.railway.app/api/v1
 1. Cloudflare Pages 대시보드에서 빌드 로그 확인
 2. 로컬에서 빌드 테스트: `cd client && npm run build`
 3. 환경 변수 확인
+4. **Root directory**가 `/`로 설정되어 있는지 확인
+5. **Build output directory**가 `client/build`로 설정되어 있는지 확인
+
+### 404 에러 발생 시
+1. `client/public/_redirects` 파일이 있는지 확인
+2. 빌드 출력 디렉토리가 올바른지 확인
+3. SPA 라우팅 설정 확인
 
 ### API 연결 실패 시
 1. CORS 설정 확인
@@ -135,3 +162,12 @@ REACT_APP_API_URL=https://your-railway-app.up.railway.app/api/v1
 3. **캐싱**: Cloudflare의 캐싱 정책 활용
 4. **보안**: Cloudflare의 DDoS 보호 자동 적용
 
+## ✅ 체크리스트
+
+배포 전 확인사항:
+- [ ] `client/public/index.html`이 존재하는가?
+- [ ] `client/public/_redirects` 파일이 있는가?
+- [ ] `client/public/_headers` 파일이 있는가?
+- [ ] Root directory가 `/`로 설정되어 있는가?
+- [ ] Build output directory가 `client/build`로 설정되어 있는가?
+- [ ] 환경 변수가 올바르게 설정되어 있는가?
