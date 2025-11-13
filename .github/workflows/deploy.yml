@@ -1,9 +1,13 @@
 name: Deploy to Vercel
 
+# Cloudflare Pages를 사용 중이므로 Vercel 배포는 비활성화합니다
+# 필요시 수동으로 실행 가능합니다
+
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:  # 수동 실행만 가능
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   deploy:
