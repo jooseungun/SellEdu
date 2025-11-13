@@ -449,6 +449,73 @@ const SellerDashboard = () => {
             <Button onClick={handleEditSubmit} variant="contained">수정 및 재심사 신청</Button>
           </DialogActions>
         </Dialog>
+
+        {/* 거부 사유 확인 다이얼로그 */}
+        <Dialog
+          open={rejectionReasonDialogOpen}
+          onClose={() => setRejectionReasonDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.12)'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)',
+            color: 'white',
+            pb: 2
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              거부 사유 확인
+            </Typography>
+          </DialogTitle>
+          <DialogContent sx={{ mt: 3 }}>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                아래 사유로 콘텐츠가 거부되었습니다.
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ 
+              p: 3, 
+              bgcolor: 'grey.50', 
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              minHeight: 150
+            }}>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.8,
+                  color: 'text.primary'
+                }}
+              >
+                {selectedRejectionReason || '거부 사유가 없습니다.'}
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
+              <Typography variant="caption" color="text.secondary">
+                💡 거부 사유를 확인하신 후, 콘텐츠를 수정하여 재심사를 신청하실 수 있습니다.
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Button 
+              onClick={() => setRejectionReasonDialogOpen(false)}
+              variant="contained"
+              color="primary"
+              size="large"
+              fullWidth
+            >
+              확인
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </>
   );
