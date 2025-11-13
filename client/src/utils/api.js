@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getAuthHeaders } from './auth';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://selledu-api.up.railway.app/api/v1',
+  baseURL: process.env.REACT_APP_API_URL || '/api/v1',
   headers: {
     'Content-Type': 'application/json'
   }
