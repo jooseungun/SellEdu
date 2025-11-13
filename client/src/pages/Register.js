@@ -11,11 +11,33 @@ const Register = () => {
     password: '',
     passwordConfirm: '',
     name: '',
-    phone: '',
     mobile: ''
   });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+
+  // 휴대폰 번호 포맷팅 (000-0000-0000)
+  const formatMobileNumber = (value) => {
+    // 숫자만 추출
+    const numbers = value.replace(/[^\d]/g, '');
+    
+    // 11자리 제한
+    const limited = numbers.slice(0, 11);
+    
+    // 하이픈 추가
+    if (limited.length <= 3) {
+      return limited;
+    } else if (limited.length <= 7) {
+      return `${limited.slice(0, 3)}-${limited.slice(3)}`;
+    } else {
+      return `${limited.slice(0, 3)}-${limited.slice(3, 7)}-${limited.slice(7)}`;
+    }
+  };
+
+  const handleMobileChange = (e) => {
+    const formatted = formatMobileNumber(e.target.value);
+    setFormData({ ...formData, mobile: formatted });
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -64,8 +86,7 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         name: formData.name,
-        phone: formData.phone,
-        mobile: formData.mobile,
+        mobile: formData.mobile.replace(/[^\d]/g, ''), // 하이픈 제거하여 숫자만 전송
         role: 'buyer' // 기본값
       });
 
@@ -177,17 +198,13 @@ const Register = () => {
           />
           <TextField
             fullWidth
-            label="전화번호"
-            margin="normal"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-          <TextField
-            fullWidth
             label="휴대폰번호"
             margin="normal"
             value={formData.mobile}
-            onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+            onChange={handleMobileChange}
+            placeholder="010-0000-0000"
+            inputProps={{ maxLength: 13 }}
+            helperText="숫자만 입력하면 자동으로 하이픈이 추가됩니다."
           />
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
             회원가입

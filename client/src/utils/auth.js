@@ -18,4 +18,23 @@ export const getAuthHeaders = () => {
   };
 };
 
+// 토큰에서 사용자 정보 추출
+export const getUserFromToken = () => {
+  try {
+    const token = getToken();
+    if (!token) return null;
+    
+    // Base64 디코딩
+    const decoded = JSON.parse(atob(token));
+    return decoded;
+  } catch (error) {
+    console.error('Token decode error:', error);
+    return null;
+  }
+};
 
+// 관리자 권한 확인
+export const isAdmin = () => {
+  const user = getUserFromToken();
+  return user?.role === 'admin';
+};

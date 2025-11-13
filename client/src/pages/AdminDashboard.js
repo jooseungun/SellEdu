@@ -35,8 +35,9 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import StoreIcon from '@mui/icons-material/Store';
 import api from '../utils/api';
-import { getToken, removeToken } from '../utils/auth';
+import { getToken, removeToken, isAdmin } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -52,15 +53,24 @@ const AdminDashboard = () => {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [approveForm, setApproveForm] = useState({ display_order: 0, content_area: 'default' });
   const [rejectReason, setRejectReason] = useState('');
   const [orderForm, setOrderForm] = useState({});
+  const [newRole, setNewRole] = useState('buyer');
 
   useEffect(() => {
     // 로그인 체크
     if (!getToken()) {
       navigate('/login?from=/admin');
+      return;
+    }
+    // 관리자 권한 체크
+    if (!isAdmin()) {
+      alert('관리자만 접근할 수 있습니다.');
+      navigate('/');
       return;
     }
     fetchData();
@@ -451,12 +461,12 @@ const AdminDashboard = () => {
                       <TableCell>아이디</TableCell>
                       <TableCell>이름</TableCell>
                       <TableCell>이메일</TableCell>
-                      <TableCell>전화번호</TableCell>
                       <TableCell>휴대폰</TableCell>
                       <TableCell>역할</TableCell>
                       <TableCell>구매자 등급</TableCell>
                       <TableCell>판매자 등급</TableCell>
                       <TableCell>가입일</TableCell>
+                      <TableCell>작업</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -488,7 +498,6 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.phone || '-'}</TableCell>
                         <TableCell>{user.mobile || '-'}</TableCell>
                         <TableCell>
                           <Chip
@@ -519,6 +528,19 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>
                           {user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="small"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setNewRole(user.role);
+                              setRoleDialogOpen(true);
+                            }}
+                          >
+                            역할 변경
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

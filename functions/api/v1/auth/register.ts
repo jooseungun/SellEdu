@@ -11,7 +11,7 @@ export async function onRequestPost({ request, env }: {
     const body = await request.json();
 
     // Validation
-    const { username, email, password, name, phone, mobile, role } = body;
+    const { username, email, password, name, mobile, role } = body;
 
     if (!username || !email || !password || !name) {
       return new Response(
@@ -81,13 +81,13 @@ export async function onRequestPost({ request, env }: {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Insert user
-    const userRole = role || 'buyer';
+    // Insert user (role은 항상 'buyer'로 고정, 관리자는 관리자 페이지에서만 지정 가능)
+    const userRole = 'buyer'; // 회원가입 시에는 항상 buyer로 고정
     const result = await env.DB.prepare(
-      `INSERT INTO users (username, email, password_hash, name, phone, mobile, role, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      `INSERT INTO users (username, email, password_hash, name, mobile, role, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     )
-      .bind(username, email, passwordHash, name, phone || null, mobile || null, userRole)
+      .bind(username, email, passwordHash, name, mobile || null, userRole)
       .run();
 
     const userId = result.meta.last_row_id;
