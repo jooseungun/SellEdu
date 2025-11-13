@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
+// Health Check 엔드포인트
+router.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // 인증 관련
 const authRoutes = require('./auth');
 const contentRoutes = require('./content');
