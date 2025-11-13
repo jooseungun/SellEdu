@@ -1,0 +1,91 @@
+// Cloudflare Pages Function for admin user management
+
+// 회원 목록 조회
+export async function onRequestGet({ request, env }: {
+  request: Request;
+  env: {
+    DB: D1Database;
+  };
+}): Promise<Response> {
+  try {
+    // 모든 회원 조회 (비밀번호 해시 제외)
+    const users = await env.DB.prepare(
+      `SELECT 
+        u.id,
+        u.username,
+        u.email,
+        u.name,
+        u.birth_date,
+        u.phone,
+        u.mobile,
+        u.role,
+        u.created_at,
+        u.updated_at,
+        b.grade as buyer_grade,
+        b.total_purchase_amount,
+        s.grade as seller_grade,
+        s.total_sales_amount
+      FROM users u
+      LEFT JOIN buyers b ON u.id = b.user_id
+      LEFT JOIN sellers s ON u.id = s.user_id
+      ORDER BY u.created_at DESC`
+    )
+      .all<{
+        id: number;
+        username: string;
+        email: string;
+        name: string;
+        birth_date: string | null;
+        phone: string | null;
+        mobile: string | null;
+        role: string;
+        created_at: string;
+        updated_at: string;
+        buyer_grade: string | null;
+        total_purchase_amount: number | null;
+        seller_grade: string | null;
+        total_sales_amount: number | null;
+      }>();
+
+    return new Response(
+      JSON.stringify(users.results || []),
+      { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        } 
+      }
+    );
+  } catch (error: any) {
+    console.error('Get users error:', error);
+    return new Response(
+      JSON.stringify({ error: '회원 목록 조회에 실패했습니다.', details: error.message }),
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        } 
+      }
+    );
+  }
+}
+
+// OPTIONS 요청 처리 (CORS preflight)
+export async function onRequestOptions(): Promise<Response> {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}
+

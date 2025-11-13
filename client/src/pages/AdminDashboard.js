@@ -31,6 +31,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import PersonIcon from '@mui/icons-material/Person';
+import StoreIcon from '@mui/icons-material/Store';
 import api from '../utils/api';
 import { getToken, removeToken } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
@@ -42,6 +45,7 @@ const AdminDashboard = () => {
   const [approvedContents, setApprovedContents] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [gradePolicies, setGradePolicies] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -83,6 +87,10 @@ const AdminDashboard = () => {
         const response = await api.get('/admin/grade-policies');
         const data = response.data || [];
         setGradePolicies(Array.isArray(data) ? data : []);
+      } else if (tabValue === 4) {
+        const response = await api.get('/admin/users');
+        const data = response.data || [];
+        setUsers(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
@@ -95,6 +103,8 @@ const AdminDashboard = () => {
         setReviews([]);
       } else if (tabValue === 3) {
         setGradePolicies([]);
+      } else if (tabValue === 4) {
+        setUsers([]);
       }
       setError('프로토타입 버전: 백엔드 서버가 연결되지 않았습니다. 화면만 표시됩니다.');
     } finally {
@@ -417,6 +427,105 @@ const AdminDashboard = () => {
                 </Box>
               ))}
             </Box>
+          </Paper>
+        )}
+
+        {/* 회원 관리 */}
+        {tabValue === 4 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              회원 관리
+            </Typography>
+            {users.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  등록된 회원이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>아이디</TableCell>
+                      <TableCell>이름</TableCell>
+                      <TableCell>이메일</TableCell>
+                      <TableCell>전화번호</TableCell>
+                      <TableCell>휴대폰</TableCell>
+                      <TableCell>역할</TableCell>
+                      <TableCell>구매자 등급</TableCell>
+                      <TableCell>판매자 등급</TableCell>
+                      <TableCell>가입일</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.id}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {user.role === 'admin' && (
+                              <AdminPanelSettingsIcon 
+                                sx={{ color: '#f5576c', fontSize: 20 }} 
+                                titleAccess="관리자"
+                              />
+                            )}
+                            {user.role === 'seller' && (
+                              <StoreIcon 
+                                sx={{ color: '#667eea', fontSize: 20 }} 
+                                titleAccess="판매자"
+                              />
+                            )}
+                            {user.role === 'buyer' && (
+                              <PersonIcon 
+                                sx={{ color: '#4CAF50', fontSize: 20 }} 
+                                titleAccess="구매자"
+                              />
+                            )}
+                            <Typography variant="body2">{user.username}</Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone || '-'}</TableCell>
+                        <TableCell>{user.mobile || '-'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={
+                              user.role === 'admin' ? '관리자' :
+                              user.role === 'seller' ? '판매자' : '구매자'
+                            }
+                            size="small"
+                            color={
+                              user.role === 'admin' ? 'error' :
+                              user.role === 'seller' ? 'primary' : 'success'
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {user.buyer_grade ? (
+                            <Chip label={user.buyer_grade} size="small" variant="outlined" />
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.seller_grade ? (
+                            <Chip label={user.seller_grade} size="small" variant="outlined" />
+                          ) : (
+                            '-'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {user.created_at ? new Date(user.created_at).toLocaleDateString('ko-KR') : '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Paper>
         )}
           </>
