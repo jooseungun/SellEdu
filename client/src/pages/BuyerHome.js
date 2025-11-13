@@ -121,7 +121,26 @@ const BuyerHome = () => {
         }
       });
       const data = response.data?.contents || response.data || [];
-      setContents(Array.isArray(data) ? data : []);
+      let contentsData = Array.isArray(data) ? data : [];
+      
+      // 데이터가 없으면 자동으로 seed-contents 호출
+      if (contentsData.length === 0 && !search) {
+        try {
+          await api.post('/admin/seed-contents');
+          // seed 후 다시 조회
+          const retryResponse = await api.get('/contents', {
+            params: { 
+              search,
+              category: selectedCategory !== '전체' ? selectedCategory : ''
+            }
+          });
+          contentsData = retryResponse.data?.contents || retryResponse.data || [];
+        } catch (seedError) {
+          console.error('콘텐츠 데이터 생성 실패:', seedError);
+        }
+      }
+      
+      setContents(Array.isArray(contentsData) ? contentsData : []);
     } catch (error) {
       console.error('콘텐츠 목록 조회 실패:', error);
       // 에러 발생 시 빈 배열로 설정

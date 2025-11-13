@@ -93,12 +93,42 @@ export async function onRequestPost({ request, env }: {
       { title: '블록체인 이해', description: '블록체인 기술의 원리와 활용을 이해합니다.', category: 'IT', price: 29900, grade: '프리미엄', age: 'All', duration: 60 }
     ];
 
+    // 기존 콘텐츠 개수 확인
+    const existingCount = await env.DB.prepare(
+      'SELECT COUNT(*) as count FROM contents WHERE seller_id = ?'
+    )
+      .bind(sellerId)
+      .first<{ count: number }>();
+
+    if (existingCount && existingCount.count > 0) {
+      return new Response(
+        JSON.stringify({
+          message: '이미 콘텐츠 데이터가 존재합니다.',
+          existing: existingCount.count,
+          skipped: true
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
     let insertedCount = 0;
     const errors: string[] = [];
 
     for (let i = 0; i < contentsData.length; i++) {
       const content = contentsData[i];
       try {
+        // 중복 체크: 같은 제목의 콘텐츠가 이미 있는지 확인
+        const existing = await env.DB.prepare(
+          'SELECT id FROM contents WHERE seller_id = ? AND title = ?'
+        )
+          .bind(sellerId, content.title)
+          .first<{ id: number }>();
+
+        if (existing) {
+          console.log(`콘텐츠 "${content.title}"는 이미 존재합니다. 건너뜁니다.`);
+          continue;
+        }
+
         const result = await env.DB.prepare(
           `INSERT INTO contents (
             seller_id, title, description, thumbnail_url, price, category, 
@@ -126,6 +156,7 @@ export async function onRequestPost({ request, env }: {
         insertedCount++;
       } catch (error: any) {
         errors.push(`${content.title}: ${error.message}`);
+        console.error(`콘텐츠 "${content.title}" 삽입 실패:`, error);
       }
     }
 

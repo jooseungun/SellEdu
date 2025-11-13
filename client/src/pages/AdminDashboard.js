@@ -107,17 +107,22 @@ const AdminDashboard = () => {
         // 데이터가 없으면 자동으로 seed-contents 호출
         if (contentsData.length === 0) {
           try {
-            await api.post('/admin/seed-contents');
+            console.log('콘텐츠 데이터가 없어 자동 생성 중...');
+            const seedResponse = await api.post('/admin/seed-contents');
+            console.log('콘텐츠 데이터 생성 결과:', seedResponse.data);
             // seed 후 다시 조회
             try {
               const response = await api.get('/admin/contents/all');
               contentsData = response.data || [];
+              console.log('생성된 콘텐츠 수:', contentsData.length);
             } catch (err) {
+              console.error('all 엔드포인트 조회 실패, approved만 조회:', err);
               const response = await api.get('/contents');
               contentsData = response.data?.contents || response.data || [];
             }
           } catch (seedError) {
             console.error('콘텐츠 데이터 생성 실패:', seedError);
+            // seed 실패해도 계속 진행
           }
         }
         
