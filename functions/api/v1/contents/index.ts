@@ -59,15 +59,6 @@ export async function onRequestGet({ request, env }: {
       WHERE c.status = 'approved'
     `;
 
-    // 판매 기간 필터링
-    const now = new Date().toISOString();
-    query += ` AND (
-      c.is_always_on_sale = 1 OR
-      (c.sale_start_date IS NULL OR c.sale_start_date <= ?) AND
-      (c.sale_end_date IS NULL OR c.sale_end_date >= ?)
-    )`;
-    params.push(now, now);
-
     const params: any[] = [];
     const now = new Date().toISOString();
 

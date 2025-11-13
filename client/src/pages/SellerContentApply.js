@@ -29,6 +29,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import api from '../utils/api';
+import { getToken } from '../utils/auth';
 
 const SellerContentApply = () => {
   const navigate = useNavigate();
@@ -85,8 +86,8 @@ const SellerContentApply = () => {
         }
       });
 
-      if (response.data.thumbnail_url) {
-        setFormData({ ...formData, thumbnail_url: response.data.thumbnail_url });
+      if (response.thumbnail_url) {
+        setFormData({ ...formData, thumbnail_url: response.thumbnail_url });
         alert('썸네일이 업로드되었습니다.');
       }
     } catch (error) {
