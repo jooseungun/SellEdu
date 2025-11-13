@@ -1,5 +1,12 @@
 name = "selledu-pages"
 compatibility_date = "2024-01-01"
+pages_build_output_dir = "client/build"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "selledu-db"
+database_id = "YOUR_D1_DATABASE_ID"  # Cloudflare 대시보드에서 생성 후 ID 입력 필요
 
 [env.production]
 name = "selledu"

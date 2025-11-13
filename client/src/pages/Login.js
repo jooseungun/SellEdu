@@ -31,14 +31,22 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 프로토타입: 실제 로그인 처리 없이 알럿만 표시
-    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 로그인 처리가 되지 않습니다.');
-    
-    // 더미 토큰 설정 (프로토타입용)
-    setToken('prototype-token-' + Date.now());
-    
-    // 메인 페이지로 이동
-    navigate('/');
+    try {
+      const response = await api.post('/auth/login', {
+        username: formData.username,
+        password: formData.password
+      });
+
+      if (response.data.token) {
+        setToken(response.data.token);
+        // 로그인 성공 후 이전 페이지로 이동하거나 메인 페이지로 이동
+        const from = new URLSearchParams(window.location.search).get('from') || '/';
+        navigate(from);
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.';
+      alert(errorMessage);
+    }
   };
 
   const handleFindId = async () => {

@@ -1,0 +1,10 @@
+{
+  "name": "selledu-functions",
+  "version": "1.0.0",
+  "description": "Cloudflare Pages Functions for SellEdu",
+  "type": "module",
+  "dependencies": {
+    "jose": "^5.2.0"
+  }
+}
+

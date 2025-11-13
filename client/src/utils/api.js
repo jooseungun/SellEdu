@@ -15,10 +15,9 @@ const getApiUrl = () => {
     return 'http://localhost:3000/api/v1';
   }
   
-  // 프로덕션에서는 백엔드 서버 주소 필요
-  // 백엔드가 배포되지 않았다면 에러 메시지 표시
-  console.warn('⚠️ REACT_APP_API_URL이 설정되지 않았습니다. 백엔드 서버 주소를 설정해주세요.');
-  return '/api/v1'; // 기본값 (백엔드 서버가 같은 도메인에 있을 경우)
+  // 프로덕션: Cloudflare Pages Functions 사용
+  // Cloudflare Pages Functions는 /api/* 경로로 자동 라우팅됨
+  return '/api/v1';
 };
 
 const api = axios.create({

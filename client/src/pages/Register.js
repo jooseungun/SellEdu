@@ -58,11 +58,25 @@ const Register = () => {
       return;
     }
 
-    // 프로토타입: 실제 회원가입 처리 없이 알럿만 표시
-    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 회원가입 처리가 되지 않습니다.');
-    
-    // 로그인 페이지로 이동
-    navigate('/login');
+    try {
+      const response = await api.post('/auth/register', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        mobile: formData.mobile,
+        role: 'buyer' // 기본값
+      });
+
+      if (response.data.message) {
+        alert('회원가입이 완료되었습니다. 로그인해주세요.');
+        navigate('/login');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || '회원가입에 실패했습니다.';
+      setSubmitError(errorMessage);
+    }
   };
 
   return (
