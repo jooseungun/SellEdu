@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
 const { logApiCall } = require('./middleware/auth');
+const initAdmin = require('./database/initAdmin');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// 서버 시작 시 관리자 계정 초기화
+initAdmin().catch(err => {
+  console.error('관리자 계정 초기화 실패:', err);
+});
 
 // 미들웨어
 app.use(cors());

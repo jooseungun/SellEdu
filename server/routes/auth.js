@@ -71,7 +71,18 @@ router.post(
       });
     } catch (error) {
       console.error('회원가입 실패:', error);
-      res.status(500).json({ error: '회원가입에 실패했습니다.' });
+      console.error('에러 상세:', error.message);
+      console.error('에러 스택:', error.stack);
+      
+      // 데이터베이스 에러 처리
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ error: '이미 사용 중인 아이디 또는 이메일입니다.' });
+      }
+      
+      res.status(500).json({ 
+        error: error.message || '회원가입에 실패했습니다.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 );
