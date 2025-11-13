@@ -135,12 +135,22 @@ const SellerContentApply = () => {
     }
 
     try {
+      // 날짜를 ISO 형식으로 변환 (00:00:00 기준)
+      const saleStartDate = formData.sale_start_date 
+        ? new Date(formData.sale_start_date.split('T')[0] + 'T00:00:00').toISOString()
+        : null;
+      const saleEndDate = formData.is_always_on_sale 
+        ? null 
+        : (formData.sale_end_date 
+          ? new Date(formData.sale_end_date.split('T')[0] + 'T00:00:00').toISOString()
+          : null);
+
       await api.post('/contents/apply', {
         ...formData,
         price: parseFloat(formData.price) || 0,
         education_period: parseInt(formData.education_period) || null,
-        sale_start_date: formData.sale_start_date || null,
-        sale_end_date: formData.is_always_on_sale ? null : (formData.sale_end_date || null),
+        sale_start_date: saleStartDate,
+        sale_end_date: saleEndDate,
         lessons: lessons.map((lesson, index) => ({
           lesson_number: index + 1,
           title: lesson.title,
@@ -305,43 +315,66 @@ const SellerContentApply = () => {
                 </FormControl>
               </Grid>
 
-              {/* 판매 시작일 */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="판매 시작일"
-                  type="datetime-local"
-                  value={formData.sale_start_date}
-                  onChange={(e) => setFormData({ ...formData, sale_start_date: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-
-              {/* 판매 종료일 */}
-              <Grid item xs={12} sm={6}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.is_always_on_sale}
-                          onChange={(e) => setFormData({ ...formData, is_always_on_sale: e.target.checked })}
-                        />
-                      }
-                      label="기간지정없음"
-                    />
-                  </FormGroup>
-                  {!formData.is_always_on_sale && (
-                    <TextField
-                      fullWidth
-                      label="판매 종료일"
-                      type="datetime-local"
-                      value={formData.sale_end_date}
-                      onChange={(e) => setFormData({ ...formData, sale_end_date: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                      disabled={formData.is_always_on_sale}
-                    />
-                  )}
+              {/* 판매 기간 */}
+              <Grid item xs={12}>
+                <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
+                    판매 기간 설정
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={5}>
+                      <TextField
+                        fullWidth
+                        label="판매 시작일"
+                        type="date"
+                        value={formData.sale_start_date ? formData.sale_start_date.split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          // 날짜만 입력하면 00:00:00으로 설정
+                          setFormData({ ...formData, sale_start_date: date ? `${date}T00:00:00` : '' });
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={5}>
+                      <TextField
+                        fullWidth
+                        label="판매 종료일"
+                        type="date"
+                        value={formData.sale_end_date ? formData.sale_end_date.split('T')[0] : ''}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          // 날짜만 입력하면 00:00:00으로 설정
+                          setFormData({ ...formData, sale_end_date: date ? `${date}T00:00:00` : '' });
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        disabled={formData.is_always_on_sale}
+                        sx={{
+                          '& .MuiInputBase-input.Mui-disabled': {
+                            WebkitTextFillColor: '#9e9e9e',
+                            bgcolor: '#f5f5f5'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={2}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.is_always_on_sale}
+                            onChange={(e) => setFormData({ ...formData, is_always_on_sale: e.target.checked })}
+                          />
+                        }
+                        label="기간지정없음"
+                        sx={{ 
+                          mt: 1,
+                          '& .MuiFormControlLabel-label': {
+                            fontSize: '0.875rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
                 </Box>
               </Grid>
 
