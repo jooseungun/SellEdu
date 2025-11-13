@@ -210,7 +210,7 @@ const SellerDashboard = () => {
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
             <Tab label="판매 현황" />
-            <Tab label="내 콘텐츠 관리" />
+            <Tab label="내 콘텐츠 현황" />
             <Tab label="정산 내역" />
           </Tabs>
           <Button
