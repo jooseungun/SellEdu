@@ -7,6 +7,13 @@ export async function onRequestGet({ request, env }: {
     DB: D1Database;
   };
 }): Promise<Response> {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  };
+
   try {
     // 모든 회원 조회 (비밀번호 해시 제외)
     const result = await env.DB.prepare(
@@ -29,20 +36,15 @@ export async function onRequestGet({ request, env }: {
       LEFT JOIN buyers b ON u.id = b.user_id
       LEFT JOIN sellers s ON u.id = s.user_id
       ORDER BY u.created_at DESC`
-    )
-      .all();
+    ).all();
     
     const users = result.results || [];
+
     return new Response(
       JSON.stringify(users),
       { 
         status: 200, 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        } 
+        headers: corsHeaders
       }
     );
   } catch (error: any) {
@@ -51,12 +53,7 @@ export async function onRequestGet({ request, env }: {
       JSON.stringify({ error: '회원 목록 조회에 실패했습니다.', details: error.message }),
       { 
         status: 500, 
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        } 
+        headers: corsHeaders
       }
     );
   }
@@ -74,4 +71,3 @@ export async function onRequestOptions(): Promise<Response> {
     }
   });
 }
-
