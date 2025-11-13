@@ -50,13 +50,34 @@ export async function onRequestGet({ request, env }: {
         c.review_count,
         c.duration,
         c.status,
+        c.sale_start_date,
+        c.sale_end_date,
+        c.is_always_on_sale,
         u.username as seller_username
       FROM contents c
       LEFT JOIN users u ON c.seller_id = u.id
       WHERE c.status = 'approved'
     `;
 
+    // 판매 기간 필터링
+    const now = new Date().toISOString();
+    query += ` AND (
+      c.is_always_on_sale = 1 OR
+      (c.sale_start_date IS NULL OR c.sale_start_date <= ?) AND
+      (c.sale_end_date IS NULL OR c.sale_end_date >= ?)
+    )`;
+    params.push(now, now);
+
     const params: any[] = [];
+    const now = new Date().toISOString();
+
+    // 판매 기간 필터링
+    query += ` AND (
+      c.is_always_on_sale = 1 OR
+      (c.sale_start_date IS NULL OR c.sale_start_date <= ?) AND
+      (c.sale_end_date IS NULL OR c.sale_end_date >= ?)
+    )`;
+    params.push(now, now);
 
     if (search) {
       query += ' AND (c.title LIKE ? OR c.description LIKE ?)';
