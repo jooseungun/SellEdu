@@ -109,29 +109,23 @@ const BuyerHome = () => {
 
   useEffect(() => {
     fetchContents();
-  }, []);
-
-  // 프로토타입: 초기 로드 시 가비지 데이터 설정
-  useEffect(() => {
-    if (contents.length === 0 && !loading) {
-      const mockData = generateMockContents();
-      setContents(mockData);
-    }
-  }, [loading, contents.length]);
+  }, [search, selectedCategory]);
 
   const fetchContents = async () => {
     setLoading(true);
     try {
       const response = await api.get('/contents', {
-        params: { search }
+        params: { 
+          search,
+          category: selectedCategory !== '전체' ? selectedCategory : ''
+        }
       });
-      const data = response.data.contents || response.data || [];
+      const data = response.data?.contents || response.data || [];
       setContents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('콘텐츠 목록 조회 실패:', error);
-      // 프로토타입: 가비지 데이터 사용
-      const mockData = generateMockContents();
-      setContents(mockData);
+      // 에러 발생 시 빈 배열로 설정
+      setContents([]);
     } finally {
       setLoading(false);
     }
