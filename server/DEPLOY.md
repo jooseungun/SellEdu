@@ -2,6 +2,9 @@
 
 ## 🚀 Railway로 배포하기 (권장)
 
+### 💰 비용: 무료!
+Railway는 **월 $5 크레딧을 무료로 제공**합니다. 소규모 프로젝트에는 충분합니다!
+
 ### 1단계: Railway 계정 생성
 1. https://railway.app 접속
 2. GitHub 계정으로 로그인
@@ -80,10 +83,13 @@ REACT_APP_API_URL=https://your-railway-app.up.railway.app/api/v1
 
 ## 🚀 Render로 배포하기
 
+### 💰 비용: 완전 무료!
+Render는 **무료 티어를 제공**합니다. 개발/테스트용으로 완벽합니다!
+
 ### 1단계: Render 계정 생성
 1. https://render.com 접속
 2. GitHub 계정으로 로그인
-3. 무료 티어 제공
+3. 무료 티어 제공 (15분 비활성 시 슬리프 모드)
 
 ### 2단계: Web Service 생성
 1. "New" → "Web Service" 선택
