@@ -76,7 +76,38 @@ const AdminDashboard = () => {
       navigate('/');
       return;
     }
-    fetchData();
+    
+    // 데이터베이스 초기화 확인 및 실행
+    const initializeDatabase = async () => {
+      try {
+        // 먼저 데이터 조회 시도
+        await api.get('/admin/contents/pending').catch(() => {
+          // 테이블이 없으면 초기화
+          throw new Error('TABLE_NOT_FOUND');
+        });
+        // 테이블이 있으면 정상적으로 fetchData 실행
+        fetchData();
+      } catch (error) {
+        if (error.message === 'TABLE_NOT_FOUND' || 
+            error.response?.data?.details?.includes('no such table')) {
+          console.log('데이터베이스 테이블이 없어 초기화를 시작합니다...');
+          try {
+            const initResponse = await api.post('/admin/init-db');
+            console.log('데이터베이스 초기화 완료:', initResponse.data);
+            alert('데이터베이스가 초기화되었습니다. 페이지를 새로고침합니다.');
+            window.location.reload();
+          } catch (initError) {
+            console.error('데이터베이스 초기화 실패:', initError);
+            alert('데이터베이스 초기화에 실패했습니다. 관리자에게 문의하세요.');
+          }
+        } else {
+          // 다른 에러면 그냥 fetchData 실행
+          fetchData();
+        }
+      }
+    };
+    
+    initializeDatabase();
   }, [tabValue, navigate]);
 
   const fetchData = async () => {
@@ -104,8 +135,25 @@ const AdminDashboard = () => {
           }
         }
         
+        // 에러 응답에서 needsInit 확인
+        if (contentsData.length === 0 && typeof contentsData === 'object' && contentsData.needsInit) {
+          console.log('데이터베이스 초기화가 필요합니다.');
+          try {
+            const initResponse = await api.post('/admin/init-db');
+            console.log('데이터베이스 초기화 완료:', initResponse.data);
+            // 초기화 후 다시 조회
+            const response = await api.get('/admin/contents/all').catch(() => 
+              api.get('/contents').then(r => ({ data: r.data?.contents || r.data || [] }))
+            );
+            contentsData = response.data || [];
+          } catch (initError) {
+            console.error('데이터베이스 초기화 실패:', initError);
+            setError('데이터베이스 초기화가 필요합니다. 관리자에게 문의하세요.');
+          }
+        }
+        
         // 데이터가 없으면 자동으로 seed-contents 호출
-        if (contentsData.length === 0) {
+        if (contentsData.length === 0 && Array.isArray(contentsData)) {
           try {
             console.log('콘텐츠 데이터가 없어 자동 생성 중...');
             const seedResponse = await api.post('/admin/seed-contents');

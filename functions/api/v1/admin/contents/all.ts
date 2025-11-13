@@ -14,6 +14,22 @@ export async function onRequestGet({ request, env }: {
   };
 
   try {
+    // 테이블 존재 확인
+    const tableCheck = await env.DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='contents'"
+    ).first();
+
+    if (!tableCheck) {
+      return new Response(
+        JSON.stringify({ 
+          error: '데이터베이스 테이블이 없습니다.',
+          details: 'contents 테이블이 존재하지 않습니다. /api/v1/admin/init-db를 호출하여 데이터베이스를 초기화해주세요.',
+          needsInit: true
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     const result = await env.DB.prepare(
       `SELECT
         c.id,
@@ -49,8 +65,15 @@ export async function onRequestGet({ request, env }: {
     );
   } catch (error: any) {
     console.error('Get all contents error:', error);
+    const errorMessage = error.message || 'Unknown error';
+    const needsInit = errorMessage.includes('no such table') || errorMessage.includes('TABLE_NOT_FOUND');
+    
     return new Response(
-      JSON.stringify({ error: '콘텐츠 목록 조회에 실패했습니다.', details: error.message }),
+      JSON.stringify({ 
+        error: '콘텐츠 목록 조회에 실패했습니다.', 
+        details: errorMessage,
+        needsInit
+      }),
       { status: 500, headers: corsHeaders }
     );
   }
