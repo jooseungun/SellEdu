@@ -83,27 +83,6 @@ const ContentDetail = () => {
     // 프로토타입: 실제 리뷰 작성 처리 없이 알럿만 표시
     alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 리뷰 작성이 되지 않습니다.');
     setReviewDialogOpen(false);
-    return;
-    
-    /* 원래 코드 (주석 처리)
-    if (!getToken()) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      await api.post('/reviews', {
-        content_id: parseInt(id),
-        rating: reviewForm.rating,
-        comment: reviewForm.comment
-      });
-      alert('리뷰가 작성되었습니다.');
-      setReviewDialogOpen(false);
-      setReviewForm({ rating: 5, comment: '' });
-      fetchReviews();
-    } catch (error) {
-      alert(error.response?.data?.error || '리뷰 작성에 실패했습니다.');
-    }
   };
 
   if (loading) return <Container>로딩 중...</Container>;
