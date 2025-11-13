@@ -8,9 +8,7 @@ import {
   Card, 
   CardContent,
   Fade,
-  useTheme,
-  AppBar,
-  Toolbar
+  useTheme
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StoreIcon from '@mui/icons-material/Store';
@@ -36,27 +34,46 @@ const Landing = () => {
 
   return (
     <>
-      <AppBar position="fixed" sx={{ background: 'rgba(102, 126, 234, 0.9)', backdropFilter: 'blur(10px)' }}>
-        <Toolbar sx={{ justifyContent: 'flex-end' }}>
-          {isLoggedIn ? (
-            <Button
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              sx={{ color: 'white' }}
-            >
-              로그아웃
-            </Button>
-          ) : (
-            <Button
-              startIcon={<LoginIcon />}
-              onClick={() => navigate('/login')}
-              sx={{ color: 'white' }}
-            >
-              로그인
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
+      <Box
+        sx={{
+          position: 'fixed',
+          top: 16,
+          right: 16,
+          zIndex: 1000
+        }}
+      >
+        {isLoggedIn ? (
+          <Button
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
+            variant="contained"
+            sx={{
+              background: 'rgba(255,255,255,0.9)',
+              color: '#667eea',
+              '&:hover': {
+                background: 'rgba(255,255,255,1)',
+              }
+            }}
+          >
+            로그아웃
+          </Button>
+        ) : (
+          <Button
+            startIcon={<LoginIcon />}
+            onClick={() => navigate('/login')}
+            variant="contained"
+            sx={{
+              background: 'rgba(255,255,255,0.9)',
+              color: '#667eea',
+              '&:hover': {
+                background: 'rgba(255,255,255,1)',
+              }
+            }}
+          >
+            로그인
+          </Button>
+        )}
+      </Box>
       <Box
         sx={{
           minHeight: '100vh',
@@ -67,7 +84,6 @@ const Landing = () => {
           justifyContent: 'center',
           position: 'relative',
           overflow: 'hidden',
-          pt: 8,
           '&::before': {
             content: '""',
             position: 'absolute',

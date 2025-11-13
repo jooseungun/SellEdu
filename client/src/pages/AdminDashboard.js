@@ -54,12 +54,15 @@ const AdminDashboard = () => {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [contentDetailDialogOpen, setContentDetailDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [contentDetail, setContentDetail] = useState(null);
   const [approveForm, setApproveForm] = useState({ display_order: 0, content_area: 'default' });
   const [rejectReason, setRejectReason] = useState('');
   const [orderForm, setOrderForm] = useState({});
   const [newRole, setNewRole] = useState('buyer');
+  const [allContents, setAllContents] = useState([]);
 
   useEffect(() => {
     // 로그인 체크
@@ -85,9 +88,13 @@ const AdminDashboard = () => {
         const data = response.data || [];
         setPendingContents(Array.isArray(data) ? data : []);
       } else if (tabValue === 1) {
-        const response = await api.get('/admin/contents/approved');
-        const data = response.data || [];
-        setApprovedContents(Array.isArray(data) ? data : []);
+        // 상품관리: 모든 승인된 콘텐츠 조회
+        const response = await api.get('/contents');
+        const data = response.data?.contents || response.data || [];
+        setAllContents(Array.isArray(data) ? data : []);
+        // 기존 approvedContents도 유지 (다른 탭에서 사용)
+        const approvedResponse = await api.get('/admin/contents/approved').catch(() => ({ data: [] }));
+        setApprovedContents(Array.isArray(approvedResponse.data) ? approvedResponse.data : []);
       } else if (tabValue === 2) {
         const response = await api.get('/admin/reviews');
         const data = response.data || [];
@@ -205,7 +212,7 @@ const AdminDashboard = () => {
         
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
           <Tab label="콘텐츠 승인심사" />
-          <Tab label="판매콘텐츠 관리" />
+          <Tab label="상품관리" />
           <Tab label="후기 관리" />
           <Tab label="등급 정책" />
           <Tab label="회원 관리" />
@@ -284,82 +291,90 @@ const AdminDashboard = () => {
           </Paper>
         )}
 
-        {/* 판매콘텐츠 관리 */}
+        {/* 상품관리 */}
         {tabValue === 1 && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              판매중인 콘텐츠 관리
+              상품관리
             </Typography>
-            <Box sx={{ mb: 2 }}>
-              <FormControl sx={{ minWidth: 200, mr: 2 }}>
-                <InputLabel>영역별 필터</InputLabel>
-                <Select
-                  value="all"
-                  label="영역별 필터"
-                  onChange={(e) => {
-                    // 필터링 로직 추가 가능
-                  }}
-                >
-                  <MenuItem value="all">전체</MenuItem>
-                  <MenuItem value="default">기본</MenuItem>
-                  <MenuItem value="popular">인기</MenuItem>
-                  <MenuItem value="new">신규</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>제목</TableCell>
-                    <TableCell>영역</TableCell>
-                    <TableCell>정렬순서</TableCell>
-                    <TableCell>평점</TableCell>
-                    <TableCell>후기 수</TableCell>
-                    <TableCell>작업</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {approvedContents.map((content) => (
-                    <TableRow key={content.id}>
-                      <TableCell>{content.title}</TableCell>
-                      <TableCell>{content.content_area || 'default'}</TableCell>
-                      <TableCell>{content.display_order}</TableCell>
-                      <TableCell>{content.avg_rating ? content.avg_rating.toFixed(1) : '-'}</TableCell>
-                      <TableCell>{content.review_count || 0}</TableCell>
-                      <TableCell>
-                        <Button
-                          size="small"
-                          onClick={() => {
-                            setOrderForm({ content_id: content.id, display_order: content.display_order, content_area: content.content_area || 'default' });
-                            setOrderDialogOpen(true);
-                          }}
-                          sx={{ mr: 1 }}
-                        >
-                          정렬변경
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          onClick={async () => {
-                            if (!window.confirm('판매를 중지하시겠습니까?')) return;
-                            try {
-                              await api.post(`/admin/contents/${content.id}/suspend`);
-                              alert('판매가 중지되었습니다.');
-                              fetchData();
-                            } catch (error) {
-                              alert(error.response?.data?.error || '판매 중지에 실패했습니다.');
-                            }
-                          }}
-                        >
-                          판매중지
-                        </Button>
-                      </TableCell>
+            {allContents.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  등록된 상품이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>ID</TableCell>
+                      <TableCell>과정명</TableCell>
+                      <TableCell>카테고리</TableCell>
+                      <TableCell>판매자</TableCell>
+                      <TableCell>가격</TableCell>
+                      <TableCell>등급</TableCell>
+                      <TableCell>구매수</TableCell>
+                      <TableCell>평점</TableCell>
+                      <TableCell>상태</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {allContents.map((content) => (
+                      <TableRow key={content.id}>
+                        <TableCell>{content.id}</TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              cursor: 'pointer',
+                              color: 'primary.main',
+                              '&:hover': {
+                                textDecoration: 'underline'
+                              }
+                            }}
+                            onClick={async () => {
+                              try {
+                                const response = await api.get(`/contents/${content.id}`);
+                                setContentDetail(response.data);
+                                setContentDetailDialogOpen(true);
+                              } catch (error) {
+                                alert('상세 정보를 불러오는데 실패했습니다.');
+                              }
+                            }}
+                          >
+                            {content.title}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={content.category} size="small" />
+                        </TableCell>
+                        <TableCell>{content.seller_username || '-'}</TableCell>
+                        <TableCell>{content.price?.toLocaleString() || 0}원</TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={content.grade || '베이직'} 
+                            size="small" 
+                            color={content.grade === '프리미엄' ? 'warning' : 'default'}
+                          />
+                        </TableCell>
+                        <TableCell>{content.purchase_count || 0}</TableCell>
+                        <TableCell>
+                          {content.avg_rating ? `${parseFloat(content.avg_rating).toFixed(1)}점` : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={content.status === 'approved' ? '승인' : content.status}
+                            size="small"
+                            color={content.status === 'approved' ? 'success' : 'default'}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Paper>
         )}
 
