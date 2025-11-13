@@ -198,6 +198,7 @@ const AdminDashboard = () => {
           <Tab label="판매콘텐츠 관리" />
           <Tab label="후기 관리" />
           <Tab label="등급 정책" />
+          <Tab label="회원 관리" />
         </Tabs>
 
         {loading ? (

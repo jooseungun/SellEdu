@@ -9,7 +9,7 @@ export async function onRequestGet({ request, env }: {
 }): Promise<Response> {
   try {
     // 모든 회원 조회 (비밀번호 해시 제외)
-    const users = await env.DB.prepare(
+    const result = await env.DB.prepare(
       `SELECT 
         u.id,
         u.username,
@@ -30,25 +30,11 @@ export async function onRequestGet({ request, env }: {
       LEFT JOIN sellers s ON u.id = s.user_id
       ORDER BY u.created_at DESC`
     )
-      .all<{
-        id: number;
-        username: string;
-        email: string;
-        name: string;
-        birth_date: string | null;
-        phone: string | null;
-        mobile: string | null;
-        role: string;
-        created_at: string;
-        updated_at: string;
-        buyer_grade: string | null;
-        total_purchase_amount: number | null;
-        seller_grade: string | null;
-        total_sales_amount: number | null;
-      }>();
-
+      .all();
+    
+    const users = result.results || [];
     return new Response(
-      JSON.stringify(users.results || []),
+      JSON.stringify(users),
       { 
         status: 200, 
         headers: { 

@@ -37,3 +37,20 @@ temp/
 
 # Coverage
 coverage/
+
+# Documentation files (not needed in production)
+*.md
+!README.md
+
+# Video files
+*.mp4
+*.avi
+*.mov
+
+# Office files
+*.docx
+*.xlsx
+*.pptx
+
+# Server files (not needed for Cloudflare Pages)
+server/
