@@ -35,6 +35,10 @@ api.interceptors.request.use(
     if (headers.Authorization) {
       config.headers.Authorization = headers.Authorization;
     }
+    // FormData를 사용하는 경우 Content-Type을 제거하여 브라우저가 자동으로 설정하도록 함
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => {

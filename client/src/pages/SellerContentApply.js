@@ -80,12 +80,8 @@ const SellerContentApply = () => {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
-      // FormData는 Content-Type을 자동으로 설정하므로 헤더에서 제거
-      const response = await api.post('/upload/thumbnail', uploadFormData, {
-        headers: {
-          'Content-Type': undefined // 브라우저가 자동으로 multipart/form-data 설정
-        }
-      });
+      // FormData는 axios 인터셉터에서 Content-Type이 자동으로 제거됨
+      const response = await api.post('/upload/thumbnail', uploadFormData);
 
       if (response.data?.thumbnail_url) {
         setFormData({ ...formData, thumbnail_url: response.data.thumbnail_url });
