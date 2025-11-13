@@ -80,14 +80,15 @@ const SellerContentApply = () => {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
+      // FormData는 Content-Type을 자동으로 설정하므로 헤더에서 제거
       const response = await api.post('/upload/thumbnail', uploadFormData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': undefined // 브라우저가 자동으로 multipart/form-data 설정
         }
       });
 
-      if (response.thumbnail_url) {
-        setFormData({ ...formData, thumbnail_url: response.thumbnail_url });
+      if (response.data?.thumbnail_url) {
+        setFormData({ ...formData, thumbnail_url: response.data.thumbnail_url });
         alert('썸네일이 업로드되었습니다.');
       }
     } catch (error) {
