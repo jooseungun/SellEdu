@@ -26,31 +26,59 @@ import api from '../utils/api';
 
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
-  const categories = ['로맨스', '액션', '드라마', '코미디', '스릴러', '판타지', '블록버스터', '강추', '프랑스'];
+  const categories = [
+    '인문교양', '전문직무', '공통직무', '자격증', 'IT', '외국어', 
+    '어학', '경영직무', '법정교육', '직무', '산업기술지식', '경영일반'
+  ];
   const grades = ['베이직', '프리미엄', '스탠다드', '개별구매'];
   const ages = ['All', '15', '18'];
   
   const titles = [
-    '러브 스토리', '마약상', '김진행', '고래의 꿈', '발렌타인 스위트 데이',
-    '윈터', '인피니트', '시네마', '고질라 X 콩', '듄 파트 2',
-    '시민덕희', '나폴레옹', '노량', '엘리멘탈', '멜로가 체질',
-    '라라랜드', '플라워 가든', '더 선샤인', '마이러브 섬머', '러브 스토리',
-    '엘리멘탈', '멜로가 체질', '라라랜드', '플라워 가든', '더 선샤인'
+    '프로젝트 관리 실무', '데이터 분석 기초', 'Python 프로그래밍', '영어 회화 초급', '토익 700점 달성',
+    '경영 전략 수립', '마케팅 기초', '인사 관리 실무', '회계 원리', '세무 실무',
+    '정보보안 기초', '클라우드 컴퓨팅', '웹 개발 입문', '데이터베이스 설계', '네트워크 기초',
+    '인문학 특강', '문학 감상법', '역사 이해', '철학 입문', '예술 감상',
+    '자격증 준비반', '공인중개사', '회계사', '변호사', '의사',
+    '산업기술 특강', '4차 산업혁명', 'AI 기초', '빅데이터 분석', '블록체인 이해'
   ];
   
   const descriptions = [
-    '조금씩 마주하게 된 삶들... 잊혀져 몰랐던 삶들이 그려진다.',
-    '간략 설명글이 노출됩니다. 어느 정도까지 적어야 할까요. 오늘도 하루가 지나가고 있습니다.',
-    '황홀한 사랑, 순수한 희망, 격렬한 열정… 이 곳에서 모든 감정이 폭발한다!',
-    '소니 픽처스에서 배급하는 리들리 스콧 감독의 영화. 나폴레옹 보나파르트의 일생을 그리는 영화이다.',
-    '간략설명',
-    '간략 설명글이 노출됩니다. 어느 정도까지 적어야 할까요. 오늘도 하루가 지나가고 있습니다. 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에 러브스토리에'
+    '실무에서 바로 활용할 수 있는 프로젝트 관리 방법론을 학습합니다.',
+    '데이터 분석의 기초부터 고급 기법까지 체계적으로 배웁니다.',
+    'Python 프로그래밍 언어의 기초부터 실전 프로젝트까지 진행합니다.',
+    '일상 회화부터 비즈니스 영어까지 단계별로 학습합니다.',
+    '토익 700점 달성을 위한 체계적인 학습 커리큘럼입니다.',
+    '경영 전략 수립의 이론과 실무를 함께 학습합니다.',
+    '마케팅의 기초 개념부터 디지털 마케팅까지 다룹니다.',
+    '인사 관리의 실무 노하우를 배웁니다.',
+    '회계의 기본 원리를 이해하고 실무에 적용합니다.',
+    '세무 실무의 핵심을 학습합니다.',
+    '정보보안의 기초 개념과 실무를 학습합니다.',
+    '클라우드 컴퓨팅의 개념과 활용 방법을 배웁니다.',
+    '웹 개발의 기초부터 실전 프로젝트까지 진행합니다.',
+    '데이터베이스 설계의 원리와 실무를 학습합니다.',
+    '네트워크의 기초 개념을 이해합니다.',
+    '인문학적 사고를 기르는 특강입니다.',
+    '문학 작품을 깊이 있게 감상하는 방법을 배웁니다.',
+    '역사를 통해 현재를 이해합니다.',
+    '철학의 기본 개념을 이해합니다.',
+    '예술 작품을 감상하는 방법을 배웁니다.',
+    '자격증 취득을 위한 체계적인 준비 과정입니다.',
+    '공인중개사 자격증 취득을 위한 강의입니다.',
+    '회계사 자격증 취득을 위한 강의입니다.',
+    '변호사 자격증 취득을 위한 강의입니다.',
+    '의사 국가고시 준비를 위한 강의입니다.',
+    '산업기술의 최신 동향을 학습합니다.',
+    '4차 산업혁명의 핵심 기술을 이해합니다.',
+    '인공지능의 기초 개념을 학습합니다.',
+    '빅데이터 분석 방법을 배웁니다.',
+    '블록체인 기술의 원리와 활용을 이해합니다.'
   ];
 
   return titles.map((title, index) => ({
     id: index + 1,
     title,
-    description: descriptions[index % descriptions.length],
+    description: descriptions[index] || descriptions[0],
     thumbnail_url: `https://picsum.photos/300/400?random=${index + 1}`,
     price: [9900, 14900, 19900, 24900, 29900, 0][index % 6],
     category: categories[index % categories.length],
@@ -75,17 +103,27 @@ const BuyerHome = () => {
     fetchContents();
   }, []);
 
+  // 프로토타입: 초기 로드 시 가비지 데이터 설정
+  useEffect(() => {
+    if (contents.length === 0 && !loading) {
+      const mockData = generateMockContents();
+      setContents(mockData);
+    }
+  }, [loading, contents.length]);
+
   const fetchContents = async () => {
     setLoading(true);
     try {
       const response = await api.get('/contents', {
         params: { search }
       });
-      setContents(response.data.contents || []);
+      const data = response.data.contents || response.data || [];
+      setContents(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('콘텐츠 목록 조회 실패:', error);
       // 프로토타입: 가비지 데이터 사용
-      setContents(generateMockContents());
+      const mockData = generateMockContents();
+      setContents(mockData);
     } finally {
       setLoading(false);
     }
@@ -101,7 +139,10 @@ const BuyerHome = () => {
     return colorMap[grade] || '#757575';
   };
 
-  const categories = ['전체', '로맨스', '액션', '드라마', '코미디', '스릴러', '판타지', '블록버스터', '강추', '프랑스'];
+  const categories = [
+    '전체', '인문교양', '전문직무', '공통직무', '자격증', 'IT', 
+    '외국어', '어학', '경영직무', '법정교육', '직무', '산업기술지식', '경영일반'
+  ];
   const filteredContents = selectedCategory === '전체' 
     ? contents 
     : contents.filter(c => c.category === selectedCategory);
@@ -233,8 +274,8 @@ const BuyerHome = () => {
                       </Typography>
                     </Box>
                   ) : (
-                    filteredContents.map((content) => (
-                      <Grid item xs={6} sm={4} md={3} lg={2.4} key={content.id}>
+                    filteredContents.map((content, index) => (
+                      <Grid item xs={6} sm={4} md={3} lg={2.4} key={content.id || index}>
                         <Card
                           sx={{
                             bgcolor: '#2a2a2a',
