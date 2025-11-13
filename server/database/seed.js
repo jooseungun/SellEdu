@@ -69,6 +69,11 @@ async function seed() {
   }
 }
 
-seed();
+// 직접 실행된 경우에만 시드 실행
+if (require.main === module) {
+  seed();
+}
+
+module.exports = seed;
 
 

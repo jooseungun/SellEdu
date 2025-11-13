@@ -39,6 +39,35 @@ async function migrate() {
     }
 
     console.log('✅ 데이터베이스 마이그레이션 완료');
+    
+    // 마이그레이션 후 추가 필드가 필요한 경우 실행
+    try {
+      const migrationPath = path.join(__dirname, 'migration_add_fields.sql');
+      if (fs.existsSync(migrationPath)) {
+        const migration = fs.readFileSync(migrationPath, 'utf8');
+        const migrationStatements = migration
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--'));
+        
+        for (const statement of migrationStatements) {
+          if (statement.trim()) {
+            try {
+              await connection.query(statement);
+            } catch (err) {
+              // 이미 존재하는 필드는 무시
+              if (!err.message.includes('Duplicate column name')) {
+                console.warn('마이그레이션 경고:', err.message);
+              }
+            }
+          }
+        }
+        console.log('✅ 추가 필드 마이그레이션 완료');
+      }
+    } catch (migrationError) {
+      console.warn('추가 마이그레이션 경고:', migrationError.message);
+    }
+    
   } catch (error) {
     console.error('❌ 마이그레이션 실패:', error);
     process.exit(1);
@@ -49,6 +78,11 @@ async function migrate() {
   }
 }
 
-migrate();
+// 직접 실행된 경우에만 마이그레이션 실행
+if (require.main === module) {
+  migrate();
+}
+
+module.exports = migrate;
 
 

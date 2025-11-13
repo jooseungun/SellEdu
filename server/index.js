@@ -9,9 +9,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 서버 시작 시 관리자 계정 초기화
-initAdmin().catch(err => {
-  console.error('관리자 계정 초기화 실패:', err);
-});
+// 데이터베이스 연결 후 실행되도록 약간의 지연 추가
+setTimeout(() => {
+  initAdmin().catch(err => {
+    console.error('관리자 계정 초기화 실패:', err);
+    // 에러가 발생해도 서버는 계속 실행
+  });
+}, 2000);
 
 // 미들웨어
 app.use(cors({
