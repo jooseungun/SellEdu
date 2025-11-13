@@ -20,8 +20,8 @@ import { setToken } from '../utils/auth';
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
-    password: ''
+    username: 'admin',
+    password: 'admin'
   });
   const [findIdDialogOpen, setFindIdDialogOpen] = useState(false);
   const [findPasswordDialogOpen, setFindPasswordDialogOpen] = useState(false);
