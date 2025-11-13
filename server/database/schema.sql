@@ -236,3 +236,4 @@ CREATE TABLE IF NOT EXISTS api_logs (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+

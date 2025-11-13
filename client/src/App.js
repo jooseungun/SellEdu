@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import Header from './components/Header';
-import Home from './pages/Home';
+import Landing from './pages/Landing';
+import BuyerHome from './pages/BuyerHome';
 import ContentDetail from './pages/ContentDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -13,10 +13,10 @@ import AdminDashboard from './pages/AdminDashboard';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: '#667eea',
     },
     secondary: {
-      main: '#dc004e',
+      main: '#f5576c',
     },
   },
 });
@@ -26,9 +26,9 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Header />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/buyer" element={<BuyerHome />} />
           <Route path="/content/:id" element={<ContentDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -41,4 +41,5 @@ function App() {
 }
 
 export default App;
+
 
