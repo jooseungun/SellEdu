@@ -50,7 +50,7 @@ const Login = () => {
       } else {
         alert('로그인 응답이 올바르지 않습니다.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login error:', error);
       const errorMessage = error.response?.data?.error || error.message || '로그인에 실패했습니다.';
       const errorDetails = error.response?.data?.details || '';
