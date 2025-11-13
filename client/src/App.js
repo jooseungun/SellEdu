@@ -10,6 +10,7 @@ import ContentDetail from './pages/ContentDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SellerDashboard from './pages/SellerDashboard';
+import SellerContentApply from './pages/SellerContentApply';
 import SellerApiGuide from './pages/SellerApiGuide';
 import AdminDashboard from './pages/AdminDashboard';
 
