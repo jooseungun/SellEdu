@@ -170,6 +170,12 @@ const AdminDashboard = () => {
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+        
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
           <Tab label="콘텐츠 승인심사" />
           <Tab label="판매콘텐츠 관리" />
@@ -177,6 +183,12 @@ const AdminDashboard = () => {
           <Tab label="등급 정책" />
         </Tabs>
 
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
         {/* 콘텐츠 승인심사 */}
         {tabValue === 0 && (
           <Paper sx={{ p: 3 }}>
