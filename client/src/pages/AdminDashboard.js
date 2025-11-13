@@ -31,6 +31,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import api from '../utils/api';
+import { getToken } from '../utils/auth';
+import { CircularProgress, Alert } from '@mui/material';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -39,6 +41,8 @@ const AdminDashboard = () => {
   const [approvedContents, setApprovedContents] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [gradePolicies, setGradePolicies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -49,26 +53,54 @@ const AdminDashboard = () => {
   const [orderForm, setOrderForm] = useState({});
 
   useEffect(() => {
+    // 로그인 체크
+    if (!getToken()) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     fetchData();
-  }, [tabValue]);
+  }, [tabValue, navigate]);
 
   const fetchData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       if (tabValue === 0) {
         const response = await api.get('/admin/contents/pending');
-        setPendingContents(response.data || []);
+        const data = response.data || [];
+        setPendingContents(Array.isArray(data) ? data : []);
       } else if (tabValue === 1) {
         const response = await api.get('/admin/contents/approved');
-        setApprovedContents(response.data || []);
+        const data = response.data || [];
+        setApprovedContents(Array.isArray(data) ? data : []);
       } else if (tabValue === 2) {
         const response = await api.get('/admin/reviews');
-        setReviews(response.data || []);
+        const data = response.data || [];
+        setReviews(Array.isArray(data) ? data : []);
       } else if (tabValue === 3) {
         const response = await api.get('/admin/grade-policies');
-        setGradePolicies(response.data || []);
+        const data = response.data || [];
+        setGradePolicies(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
+      const errorMessage = error.response?.data?.error || '데이터를 불러오는데 실패했습니다.';
+      setError(errorMessage);
+      
+      // 401 에러인 경우 로그인 페이지로 리다이렉트
+      if (error.response?.status === 401) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+      
+      // 403 에러인 경우 관리자 권한이 없다는 메시지
+      if (error.response?.status === 403) {
+        setError('관리자 권한이 필요합니다.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
