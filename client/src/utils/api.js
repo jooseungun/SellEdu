@@ -1,11 +1,32 @@
 import axios from 'axios';
 import { getAuthHeaders } from './auth';
 
+// 백엔드 API URL 설정
+// 개발 환경: 로컬 서버 또는 환경 변수
+// 프로덕션: 백엔드 서버 주소 (Railway, Render 등)
+const getApiUrl = () => {
+  // 환경 변수가 설정되어 있으면 사용
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // 개발 환경에서는 로컬 서버 사용
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000/api/v1';
+  }
+  
+  // 프로덕션에서는 백엔드 서버 주소 필요
+  // 백엔드가 배포되지 않았다면 에러 메시지 표시
+  console.warn('⚠️ REACT_APP_API_URL이 설정되지 않았습니다. 백엔드 서버 주소를 설정해주세요.');
+  return '/api/v1'; // 기본값 (백엔드 서버가 같은 도메인에 있을 경우)
+};
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api/v1',
+  baseURL: getApiUrl(),
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 10000 // 10초 타임아웃
 });
 
 // 요청 인터셉터: 토큰 자동 추가
@@ -26,11 +47,32 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // 인증 실패 시 로그인 페이지로 리다이렉트
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    // 네트워크 에러 또는 서버 연결 실패
+    if (!error.response) {
+      console.error('API 서버에 연결할 수 없습니다:', error.message);
+      if (error.code === 'ECONNABORTED') {
+        alert('요청 시간이 초과되었습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+      } else if (error.message.includes('Network Error')) {
+        alert('네트워크 오류가 발생했습니다. 백엔드 서버 주소를 확인해주세요.');
+      }
+      return Promise.reject(error);
     }
+    
+    // 401 에러: 인증 실패
+    if (error.response.status === 401) {
+      localStorage.removeItem('token');
+      // 로그인 페이지가 아닌 경우에만 리다이렉트
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    
+    // 405 에러: Method Not Allowed
+    if (error.response.status === 405) {
+      console.error('405 에러: API 엔드포인트가 올바르지 않거나 백엔드 서버가 실행되지 않았습니다.');
+      alert('API 서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+    }
+    
     return Promise.reject(error);
   }
 );
