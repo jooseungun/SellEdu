@@ -15,15 +15,20 @@ import StoreIcon from '@mui/icons-material/Store';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { getToken, removeToken } from '../utils/auth';
+import { getToken, removeToken, getUserName } from '../utils/auth';
 
 const Landing = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    setIsLoggedIn(!!getToken());
+    const token = getToken();
+    setIsLoggedIn(!!token);
+    if (token) {
+      setUserName(getUserName());
+    }
   }, []);
 
   const handleLogout = () => {
@@ -34,46 +39,62 @@ const Landing = () => {
 
   return (
     <>
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 16,
-          right: 16,
-          zIndex: 1000
-        }}
-      >
-        {isLoggedIn ? (
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-            variant="contained"
-            sx={{
-              background: 'rgba(255,255,255,0.9)',
-              color: '#667eea',
-              '&:hover': {
-                background: 'rgba(255,255,255,1)',
-              }
-            }}
-          >
-            로그아웃
-          </Button>
-        ) : (
-          <Button
-            startIcon={<LoginIcon />}
-            onClick={() => navigate('/login')}
-            variant="contained"
-            sx={{
-              background: 'rgba(255,255,255,0.9)',
-              color: '#667eea',
-              '&:hover': {
-                background: 'rgba(255,255,255,1)',
-              }
-            }}
-          >
-            로그인
-          </Button>
-        )}
-      </Box>
+             <Box
+               sx={{
+                 position: 'fixed',
+                 top: 16,
+                 right: 16,
+                 zIndex: 1000,
+                 display: 'flex',
+                 gap: 1,
+                 alignItems: 'center'
+               }}
+             >
+               {isLoggedIn && userName && (
+                 <Typography
+                   variant="body1"
+                   sx={{
+                     color: 'white',
+                     fontWeight: 'bold',
+                     textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                     mr: 1
+                   }}
+                 >
+                   {userName}님 환영합니다
+                 </Typography>
+               )}
+               {isLoggedIn ? (
+                 <Button
+                   startIcon={<LogoutIcon />}
+                   onClick={handleLogout}
+                   variant="contained"
+                   sx={{
+                     background: 'rgba(255,255,255,0.9)',
+                     color: '#667eea',
+                     '&:hover': {
+                       background: 'rgba(255,255,255,1)',
+                     }
+                   }}
+                 >
+                   로그아웃
+                 </Button>
+               ) : (
+                 <Button
+                   startIcon={<LoginIcon />}
+                   onClick={() => navigate('/login')}
+                   variant="contained"
+                   sx={{
+                     background: 'rgba(255,255,255,0.9)',
+                     color: '#667eea',
+                     '&:hover': {
+                       background: 'rgba(255,255,255,1)',
+                     }
+                   }}
+                 >
+                   로그인
+                 </Button>
+               )}
+             </Box>
       <Box
         sx={{
           minHeight: '100vh',

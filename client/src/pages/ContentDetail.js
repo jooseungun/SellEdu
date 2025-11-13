@@ -238,21 +238,6 @@ const ContentDetail = () => {
     alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 구매 처리가 되지 않습니다.');
   };
 
-  const handleCart = () => {
-    if (!getToken()) {
-      navigate('/login');
-      return;
-    }
-    alert('장바구니에 추가되었습니다.');
-  };
-
-  const handleSubscription = () => {
-    if (!getToken()) {
-      navigate('/login');
-      return;
-    }
-    alert('정기구독 신청 기능은 현재 개발 중입니다.');
-  };
 
   const handleReviewSubmit = async () => {
     alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 리뷰 작성이 되지 않습니다.');
@@ -329,6 +314,11 @@ const ContentDetail = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             콘텐츠 상세
           </Typography>
+          {getToken() && getUserName() && (
+            <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
+              {getUserName()}님 환영합니다
+            </Typography>
+          )}
           <Button
             startIcon={<CodeIcon />}
             onClick={() => navigate('/buyer/api-guide')}
@@ -339,7 +329,7 @@ const ContentDetail = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4, color: '#000' }}>
         {/* Breadcrumbs */}
         <Breadcrumbs sx={{ mb: 3 }}>
           <Link color="inherit" onClick={() => navigate('/')} sx={{ cursor: 'pointer' }}>
@@ -359,9 +349,12 @@ const ContentDetail = () => {
               <CardMedia
                 component="img"
                 height="450"
-                image={content.thumbnail_url || 'https://via.placeholder.com/800x450'}
+                image={content.thumbnail_url || `https://picsum.photos/800/450?random=${content.id}`}
                 alt={content.title}
                 sx={{ objectFit: 'cover' }}
+                onError={(e) => {
+                  e.target.src = `https://picsum.photos/800/450?random=${content.id}`;
+                }}
               />
             </Card>
 
@@ -558,7 +551,7 @@ const ContentDetail = () => {
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
               <Typography variant="h6" gutterBottom>
-                수강료
+                구매 가격
               </Typography>
               <Box sx={{ mb: 3 }}>
                 {content.price > 0 ? (
@@ -597,10 +590,13 @@ const ContentDetail = () => {
                   variant="contained"
                   size="large"
                   startIcon={<ShoppingCartIcon />}
-                  onClick={handleCart}
+                  onClick={() => {
+                    alert('현재 개발중입니다.');
+                  }}
                   sx={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    py: 1.5
+                    py: 1.5,
+                    mb: 1
                   }}
                 >
                   장바구니
@@ -614,25 +610,8 @@ const ContentDetail = () => {
                     py: 1.5
                   }}
                 >
-                  수강신청
+                  구매
                 </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={handleSubscription}
-                  sx={{ py: 1.5 }}
-                >
-                  정기구독신청
-                </Button>
-              </Box>
-
-              <Box sx={{ mt: 3, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>정기구독이란?</strong>
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  정기구독 상품 가입을 통해 과정이나 마이크로러닝 콘텐츠를 제공하는 서비스입니다.
-                </Typography>
               </Box>
             </Paper>
           </Grid>

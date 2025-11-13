@@ -19,6 +19,11 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormControl,
+  FormLabel,
   AppBar,
   Toolbar,
   CircularProgress,
@@ -29,8 +34,9 @@ import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
 import CodeIcon from '@mui/icons-material/Code';
 import LogoutIcon from '@mui/icons-material/Logout';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import api from '../utils/api';
-import { getToken, removeToken } from '../utils/auth';
+import { getToken, removeToken, getUserName } from '../utils/auth';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -182,16 +188,29 @@ const SellerDashboard = () => {
           >
             SellEdu
           </Typography>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            판매자 대시보드
-          </Typography>
-          <Button
-            startIcon={<CodeIcon />}
-            onClick={() => navigate('/seller/api-guide')}
-            sx={{ color: 'white', mr: 1 }}
-          >
-            API 가이드
-          </Button>
+                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                   판매자 대시보드
+                 </Typography>
+                 {getToken() && getUserName() && (
+                   <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
+                     {getUserName()}님 환영합니다
+                   </Typography>
+                 )}
+                 <Button
+                   startIcon={<LocalOfferIcon />}
+                   onClick={() => setPartnershipDialogOpen(true)}
+                   sx={{ color: 'white', mr: 1 }}
+                   disabled={hasPartnershipRequest}
+                 >
+                   제휴할인
+                 </Button>
+                 <Button
+                   startIcon={<CodeIcon />}
+                   onClick={() => navigate('/seller/api-guide')}
+                   sx={{ color: 'white', mr: 1 }}
+                 >
+                   API 가이드
+                 </Button>
           <Button
             startIcon={<LogoutIcon />}
             onClick={() => {

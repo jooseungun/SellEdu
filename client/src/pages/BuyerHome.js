@@ -11,21 +11,30 @@ import {
   AppBar,
   Toolbar,
   Button,
-  Tabs,
-  Tab,
   Chip,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  FormControl,
+  FormLabel,
+  TextField
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CodeIcon from '@mui/icons-material/Code';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import InfoIcon from '@mui/icons-material/Info';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SearchIcon from '@mui/icons-material/Search';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import api from '../utils/api';
-import { getToken, removeToken } from '../utils/auth';
+import { getToken, removeToken, getUserName } from '../utils/auth';
 
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
@@ -98,13 +107,21 @@ const BuyerHome = () => {
   const navigate = useNavigate();
   const [contents, setContents] = useState([]);
   const [search, setSearch] = useState('');
-  const [tabValue, setTabValue] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [partnershipDialogOpen, setPartnershipDialogOpen] = useState(false);
+  const [partnershipType, setPartnershipType] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(!!getToken());
+    const token = getToken();
+    setIsLoggedIn(!!token);
+    if (token) {
+      setUserName(getUserName());
+    }
   }, []);
 
   useEffect(() => {
@@ -205,12 +222,18 @@ const BuyerHome = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             구매자 페이지
           </Typography>
+          {isLoggedIn && userName && (
+            <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
+              {userName}님 환영합니다
+            </Typography>
+          )}
           <Button
-            startIcon={<SubscriptionsIcon />}
-            onClick={() => navigate('/buyer/subscription')}
+            startIcon={<LocalOfferIcon />}
+            onClick={() => setPartnershipDialogOpen(true)}
             sx={{ color: 'white', mr: 1 }}
+            disabled={hasPartnershipRequest}
           >
-            구독
+            제휴할인
           </Button>
           <Button
             startIcon={<CodeIcon />}
@@ -245,25 +268,9 @@ const BuyerHome = () => {
 
       <Box sx={{ bgcolor: '#1a1a1a', minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 4 }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={(e, v) => setTabValue(v)} 
-            sx={{ 
-              mb: 3,
-              '& .MuiTab-root': {
-                color: 'white',
-                '&.Mui-selected': {
-                  color: '#667eea'
-                }
-              }
-            }}
-          >
-            <Tab label="전체 콘텐츠" />
-            <Tab label="구독 콘텐츠" />
-          </Tabs>
 
           {/* 검색 및 카테고리 필터 */}
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: 4, display: 'flex', gap: 1, alignItems: 'center' }}>
             <TextField
               fullWidth
               placeholder="콘텐츠 검색"
@@ -274,6 +281,11 @@ const BuyerHome = () => {
                 if (e.key === 'Enter') {
                   fetchContents();
                 }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)', mr: 1 }} />
+                )
               }}
               sx={{
                 mb: 2,
@@ -320,16 +332,15 @@ const BuyerHome = () => {
             </Box>
           ) : (
             <>
-              {tabValue === 0 && (
-                <Grid container spacing={2}>
-                  {filteredContents.length === 0 ? (
-                    <Box sx={{ width: '100%', textAlign: 'center', py: 8 }}>
-                      <Typography variant="h6" sx={{ color: 'white' }}>
-                        콘텐츠가 없습니다.
-                      </Typography>
-                    </Box>
-                  ) : (
-                    filteredContents.map((content, index) => (
+              <Grid container spacing={2}>
+                {filteredContents.length === 0 ? (
+                  <Box sx={{ width: '100%', textAlign: 'center', py: 8 }}>
+                    <Typography variant="h6" sx={{ color: 'white' }}>
+                      콘텐츠가 없습니다.
+                    </Typography>
+                  </Box>
+                ) : (
+                  filteredContents.map((content, index) => (
                       <Grid item xs={6} sm={4} md={3} lg={2.4} key={content.id || index}>
                         <Card
                           sx={{
@@ -349,9 +360,12 @@ const BuyerHome = () => {
                             <CardMedia
                               component="img"
                               height="240"
-                              image={content.thumbnail_url || 'https://via.placeholder.com/300x400'}
+                              image={content.thumbnail_url || `https://picsum.photos/300/400?random=${content.id}`}
                               alt={content.title}
                               sx={{ objectFit: 'cover' }}
+                              onError={(e) => {
+                                e.target.src = `https://picsum.photos/300/400?random=${content.id}`;
+                              }}
                             />
                             {/* 오버레이 정보 */}
                             <Box
@@ -462,7 +476,7 @@ const BuyerHome = () => {
                                 </Typography>
                               ) : (
                                 <Chip
-                                  label="구독"
+                                  label="무료"
                                   size="small"
                                   sx={{
                                     bgcolor: '#4CAF50',
@@ -487,26 +501,6 @@ const BuyerHome = () => {
                 </Grid>
               )}
 
-              {tabValue === 1 && (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
-                    구독 콘텐츠
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                    구독 콘텐츠는 구독 페이지에서 확인할 수 있습니다.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate('/buyer/subscription')}
-                    sx={{
-                      mt: 2,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                    }}
-                  >
-                    구독 페이지로 이동
-                  </Button>
-                </Box>
-              )}
             </>
           )}
         </Container>

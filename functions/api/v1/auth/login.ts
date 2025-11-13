@@ -148,6 +148,7 @@ export async function onRequestPost({ request, env }: {
       const tokenData = {
         userId: user.id,
         username: user.username,
+        name: user.name,
         role: user.role,
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
       };

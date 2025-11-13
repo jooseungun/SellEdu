@@ -38,7 +38,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import StoreIcon from '@mui/icons-material/Store';
 import api from '../utils/api';
-import { getToken, removeToken, isAdmin } from '../utils/auth';
+import { getToken, removeToken, isAdmin, getUserName } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -284,19 +284,24 @@ const AdminDashboard = () => {
           >
             홈으로
           </Button>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            관리자 대시보드
-          </Typography>
-          <Button
-            startIcon={<LogoutIcon />}
-            onClick={() => {
-              removeToken();
-              navigate('/');
-            }}
-            sx={{ color: 'white' }}
-          >
-            로그아웃
-          </Button>
+                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                   관리자 대시보드
+                 </Typography>
+                 {getToken() && getUserName() && (
+                   <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
+                     {getUserName()}님 환영합니다
+                   </Typography>
+                 )}
+                 <Button
+                   startIcon={<LogoutIcon />}
+                   onClick={() => {
+                     removeToken();
+                     navigate('/');
+                   }}
+                   sx={{ color: 'white' }}
+                 >
+                   로그아웃
+                 </Button>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -1184,6 +1189,58 @@ const AdminDashboard = () => {
               size="large"
             >
               닫기
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 제휴할인 거부 다이얼로그 */}
+        <Dialog open={partnershipRejectDialogOpen} onClose={() => setPartnershipRejectDialogOpen(false)}>
+          <DialogTitle>제휴할인 신청 거부</DialogTitle>
+          <DialogContent>
+            {selectedPartnershipRequest && (
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  신청자: {selectedPartnershipRequest.name || selectedPartnershipRequest.username}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  고객사: {selectedPartnershipRequest.company_name}
+                </Typography>
+              </Box>
+            )}
+            <TextField
+              fullWidth
+              label="거부 사유"
+              multiline
+              rows={4}
+              margin="normal"
+              value={partnershipRejectReason}
+              onChange={(e) => setPartnershipRejectReason(e.target.value)}
+              placeholder="거부 사유를 입력해주세요..."
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPartnershipRejectDialogOpen(false)}>취소</Button>
+            <Button
+              onClick={async () => {
+                if (!partnershipRejectReason) {
+                  alert('거부 사유를 입력해주세요.');
+                  return;
+                }
+                try {
+                  await api.post(`/admin/partnership/${selectedPartnershipRequest.id}/reject`, {
+                    reason: partnershipRejectReason
+                  });
+                  alert('제휴할인 신청이 거부되었습니다.');
+                  setPartnershipRejectDialogOpen(false);
+                  fetchData();
+                } catch (error) {
+                  alert('거부 처리에 실패했습니다.');
+                }
+              }}
+              variant="contained"
+              color="error"
+            >
+              거부
             </Button>
           </DialogActions>
         </Dialog>

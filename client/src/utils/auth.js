@@ -38,3 +38,9 @@ export const isAdmin = () => {
   const user = getUserFromToken();
   return user?.role === 'admin';
 };
+
+// 사용자 이름 가져오기
+export const getUserName = () => {
+  const user = getUserFromToken();
+  return user?.name || user?.username || '';
+};
