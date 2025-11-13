@@ -705,6 +705,68 @@ const AdminDashboard = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* 콘텐츠 상세 정보 다이얼로그 */}
+        <Dialog 
+          open={contentDetailDialogOpen} 
+          onClose={() => setContentDetailDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>상품 상세 정보</DialogTitle>
+          <DialogContent>
+            {contentDetail && (
+              <Box>
+                <Typography variant="h6" gutterBottom>
+                  {contentDetail.title}
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Chip label={contentDetail.category} sx={{ mr: 1 }} />
+                  <Chip label={contentDetail.grade} sx={{ mr: 1 }} />
+                  <Chip label={contentDetail.age_rating || 'All'} />
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  {contentDetail.description}
+                </Typography>
+                {contentDetail.detailed_description && (
+                  <Typography variant="body2" paragraph>
+                    {contentDetail.detailed_description}
+                  </Typography>
+                )}
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>상품 정보</Typography>
+                  <Typography variant="body2">가격: {contentDetail.price?.toLocaleString() || 0}원</Typography>
+                  <Typography variant="body2">판매자: {contentDetail.seller_username || '-'}</Typography>
+                  <Typography variant="body2">구매 수: {contentDetail.purchase_count || 0}건</Typography>
+                  <Typography variant="body2">평점: {contentDetail.avg_rating ? parseFloat(contentDetail.avg_rating).toFixed(1) : 0}점</Typography>
+                  <Typography variant="body2">리뷰 수: {contentDetail.review_count || 0}개</Typography>
+                  <Typography variant="body2">수강 시간: {contentDetail.duration || 0}분</Typography>
+                  <Typography variant="body2">등록일: {contentDetail.created_at ? new Date(contentDetail.created_at).toLocaleDateString('ko-KR') : '-'}</Typography>
+                </Box>
+                {contentDetail.lessons && contentDetail.lessons.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>강의 차시 ({contentDetail.lessons.length}개)</Typography>
+                    {contentDetail.lessons.map((lesson, index) => (
+                      <Box key={lesson.id || index} sx={{ mb: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+                        <Typography variant="body2">
+                          {lesson.lesson_number || index + 1}차시. {lesson.title}
+                        </Typography>
+                        {lesson.duration && (
+                          <Typography variant="caption" color="text.secondary">
+                            {lesson.duration}분
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setContentDetailDialogOpen(false)}>닫기</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </>
   );
