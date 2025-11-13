@@ -183,9 +183,14 @@ const ContentDetail = () => {
   }, [id]);
 
   const fetchContent = async () => {
+    setLoading(true);
     try {
       const response = await api.get(`/contents/${id}`);
-      setContent(response.data);
+      if (response.data && response.data.id) {
+        setContent(response.data);
+      } else {
+        throw new Error('Invalid response data');
+      }
     } catch (error) {
       console.error('콘텐츠 조회 실패:', error);
       // 프로토타입: API 실패 시 가비지 데이터 표시
@@ -423,9 +428,17 @@ const ContentDetail = () => {
                   <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
                     과정소개
                   </Typography>
-                  <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line', lineHeight: 1.8 }}>
-                    {content.detailed_description || content.description}
-                  </Typography>
+                  <Box 
+                    sx={{ 
+                      '& p': { mb: 2, lineHeight: 1.8 },
+                      '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
+                      '& ul, & ol': { pl: 3, mb: 2 },
+                      '& li': { mb: 1 }
+                    }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: content.detailed_description || content.description || '' 
+                    }}
+                  />
                   <Divider sx={{ my: 3 }} />
                   <Typography variant="h6" gutterBottom>
                     과정정보

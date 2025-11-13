@@ -269,7 +269,7 @@ const BuyerHome = () => {
         <Container maxWidth="xl" sx={{ pt: 4 }}>
 
           {/* 검색 및 카테고리 필터 */}
-          <Box sx={{ mb: 4, display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Box sx={{ mb: 4 }}>
             <TextField
               fullWidth
               placeholder="콘텐츠 검색"
