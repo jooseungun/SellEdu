@@ -50,8 +50,12 @@ const AdminDashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [gradePolicies, setGradePolicies] = useState([]);
   const [users, setUsers] = useState([]);
+  const [partnershipRequests, setPartnershipRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [partnershipRejectDialogOpen, setPartnershipRejectDialogOpen] = useState(false);
+  const [selectedPartnershipRequest, setSelectedPartnershipRequest] = useState(null);
+  const [partnershipRejectReason, setPartnershipRejectReason] = useState('');
   
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -198,11 +202,15 @@ const AdminDashboard = () => {
         const response = await api.get('/admin/grade-policies');
         const data = response.data || [];
         setGradePolicies(Array.isArray(data) ? data : []);
-      } else if (tabValue === 4) {
-        const response = await api.get('/admin/users');
-        const data = response.data || [];
-        setUsers(Array.isArray(data) ? data : []);
-      }
+            } else if (tabValue === 4) {
+              const response = await api.get('/admin/users');
+              const data = response.data || [];
+              setUsers(Array.isArray(data) ? data : []);
+            } else if (tabValue === 5) {
+              const response = await api.get('/admin/partnership/requests');
+              const data = response.data || [];
+              setPartnershipRequests(Array.isArray(data) ? data : []);
+            }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
       // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
@@ -317,6 +325,7 @@ const AdminDashboard = () => {
           <Tab label="후기 관리" />
           <Tab label="등급 정책" />
           <Tab label="회원 관리" />
+          <Tab label="제휴할인 신청" />
         </Tabs>
 
         {loading ? (

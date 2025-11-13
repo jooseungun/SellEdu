@@ -505,6 +505,81 @@ const BuyerHome = () => {
           )}
         </Container>
       </Box>
+
+      {/* 제휴할인 신청 다이얼로그 */}
+      <Dialog
+        open={partnershipDialogOpen}
+        onClose={() => setPartnershipDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>제휴할인 신청</DialogTitle>
+        <DialogContent>
+          <FormControl component="fieldset" fullWidth sx={{ mt: 2 }}>
+            <FormLabel component="legend">제휴사 선택</FormLabel>
+            <RadioGroup
+              value={partnershipType}
+              onChange={(e) => setPartnershipType(e.target.value)}
+            >
+              <FormControlLabel
+                value="malgn"
+                control={<Radio />}
+                label="맑은소프트 이용고객 - 30% 할인"
+                disabled={hasPartnershipRequest}
+              />
+              <FormControlLabel
+                value="hula"
+                control={<Radio />}
+                label="훌라로 이용고객 +150% 할인"
+                disabled={hasPartnershipRequest}
+              />
+            </RadioGroup>
+          </FormControl>
+          {partnershipType && (
+            <TextField
+              fullWidth
+              label="고객사 명"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              margin="normal"
+              disabled={hasPartnershipRequest}
+            />
+          )}
+          {hasPartnershipRequest && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                심사중입니다. 심사 완료 후 적용됩니다.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPartnershipDialogOpen(false)}>취소</Button>
+          <Button
+            onClick={async () => {
+              if (!partnershipType || !companyName) {
+                alert('제휴사를 선택하고 고객사 명을 입력해주세요.');
+                return;
+              }
+              try {
+                await api.post('/partnership/apply', {
+                  type: partnershipType,
+                  company_name: companyName
+                });
+                alert('제휴할인 신청이 완료되었습니다. 관리자 승인 후 적용됩니다.');
+                setHasPartnershipRequest(true);
+                setPartnershipDialogOpen(false);
+              } catch (error) {
+                alert('신청에 실패했습니다.');
+              }
+            }}
+            variant="contained"
+            disabled={hasPartnershipRequest}
+          >
+            신청
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
