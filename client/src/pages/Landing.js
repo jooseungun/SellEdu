@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -8,38 +8,77 @@ import {
   Card, 
   CardContent,
   Fade,
-  useTheme
+  useTheme,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StoreIcon from '@mui/icons-material/Store';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import LoginIcon from '@mui/icons-material/Login';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { getToken, removeToken } from '../utils/auth';
 
 const Landing = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!getToken());
+  }, []);
+
+  const handleLogout = () => {
+    removeToken();
+    setIsLoggedIn(false);
+    navigate('/');
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-          pointerEvents: 'none',
-        }
-      }}
-    >
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+    <>
+      <AppBar position="fixed" sx={{ background: 'rgba(102, 126, 234, 0.9)', backdropFilter: 'blur(10px)' }}>
+        <Toolbar sx={{ justifyContent: 'flex-end' }}>
+          {isLoggedIn ? (
+            <Button
+              startIcon={<LogoutIcon />}
+              onClick={handleLogout}
+              sx={{ color: 'white' }}
+            >
+              로그아웃
+            </Button>
+          ) : (
+            <Button
+              startIcon={<LoginIcon />}
+              onClick={() => navigate('/login')}
+              sx={{ color: 'white' }}
+            >
+              로그인
+            </Button>
+          )}
+        </Toolbar>
+      </AppBar>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+          pt: 8,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+            pointerEvents: 'none',
+          }
+        }}
+      >
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
         <Fade in={true} timeout={1000}>
           <Box sx={{ textAlign: 'center', mb: 6 }}>
             <Typography
