@@ -411,6 +411,8 @@ const AdminDashboard = () => {
             </Box>
           </Paper>
         )}
+          </>
+        )}
 
         {/* 승인 다이얼로그 */}
         <Dialog open={approveDialogOpen} onClose={() => setApproveDialogOpen(false)}>
