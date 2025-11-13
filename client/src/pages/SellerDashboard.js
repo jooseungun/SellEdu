@@ -37,7 +37,9 @@ const SellerDashboard = () => {
   const [settlements, setSettlements] = useState([]);
   const [tabValue, setTabValue] = useState(0);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [rejectionReasonDialogOpen, setRejectionReasonDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
+  const [selectedRejectionReason, setSelectedRejectionReason] = useState('');
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -289,17 +291,25 @@ const SellerDashboard = () => {
                     <TableRow key={content.id}>
                       <TableCell>{content.title}</TableCell>
                       <TableCell>
-                        <Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                           {getStatusChip(content.status, content.is_reapply)}
-                          {content.rejection_reason && (
-                            <Box sx={{ mt: 1, p: 1.5, bgcolor: 'error.light', borderRadius: 1, border: '1px solid', borderColor: 'error.main' }}>
-                              <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'error.dark', display: 'block', mb: 0.5 }}>
-                                거부 사유:
-                              </Typography>
-                              <Typography variant="body2" color="error.dark">
-                                {content.rejection_reason}
-                              </Typography>
-                            </Box>
+                          {content.status === 'rejected' && content.rejection_reason && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => {
+                                setSelectedRejectionReason(content.rejection_reason);
+                                setRejectionReasonDialogOpen(true);
+                              }}
+                              sx={{ 
+                                mt: 0.5,
+                                textTransform: 'none',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              사유 확인
+                            </Button>
                           )}
                         </Box>
                       </TableCell>
