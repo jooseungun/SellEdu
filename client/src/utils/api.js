@@ -49,7 +49,7 @@ api.interceptors.response.use(
     // 네트워크 에러 또는 서버 연결 실패
     if (!error.response) {
       console.error('API 서버에 연결할 수 없습니다:', error.message);
-      // Cloudflare Pages Functions는 프로덕션에서만 작동하므로 개발 환경에서만 경고
+      // 개발 환경에서만 경고
       if (process.env.NODE_ENV === 'development') {
         if (error.code === 'ECONNABORTED') {
           alert('요청 시간이 초과되었습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
@@ -67,6 +67,13 @@ api.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
+    }
+    
+    // 500 에러: 서버 내부 오류
+    if (error.response.status === 500) {
+      const errorData = error.response.data;
+      console.error('500 에러:', errorData);
+      // 에러 메시지는 Login.js에서 처리하므로 여기서는 reject만
     }
     
     // 405 에러: Method Not Allowed

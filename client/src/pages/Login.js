@@ -31,21 +31,30 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!formData.username || !formData.password) {
+      alert('아이디와 비밀번호를 입력해주세요.');
+      return;
+    }
+
     try {
       const response = await api.post('/auth/login', {
         username: formData.username,
         password: formData.password
       });
 
-      if (response.data.token) {
+      if (response.data && response.data.token) {
         setToken(response.data.token);
         // 로그인 성공 후 이전 페이지로 이동하거나 메인 페이지로 이동
         const from = new URLSearchParams(window.location.search).get('from') || '/';
         navigate(from);
+      } else {
+        alert('로그인 응답이 올바르지 않습니다.');
       }
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.';
-      alert(errorMessage);
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.error || error.message || '로그인에 실패했습니다.';
+      const errorDetails = error.response?.data?.details || '';
+      alert(errorMessage + (errorDetails ? `\n상세: ${errorDetails}` : ''));
     }
   };
 
