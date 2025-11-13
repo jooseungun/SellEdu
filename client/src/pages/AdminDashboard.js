@@ -110,7 +110,7 @@ const AdminDashboard = () => {
             console.log('콘텐츠 데이터가 없어 자동 생성 중...');
             const seedResponse = await api.post('/admin/seed-contents');
             console.log('콘텐츠 데이터 생성 결과:', seedResponse.data);
-            // seed 후 다시 조회
+            // seed 후 다시 조회 (skipped여도 다시 조회)
             try {
               const response = await api.get('/admin/contents/all');
               contentsData = response.data || [];
@@ -122,7 +122,15 @@ const AdminDashboard = () => {
             }
           } catch (seedError) {
             console.error('콘텐츠 데이터 생성 실패:', seedError);
-            // seed 실패해도 계속 진행
+            // seed 실패해도 한 번 더 조회 시도
+            try {
+              const response = await api.get('/admin/contents/all').catch(() => 
+                api.get('/contents').then(r => ({ data: r.data?.contents || r.data || [] }))
+              );
+              contentsData = response.data || [];
+            } catch (retryError) {
+              console.error('재조회 실패:', retryError);
+            }
           }
         }
         

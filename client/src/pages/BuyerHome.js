@@ -126,8 +126,8 @@ const BuyerHome = () => {
       // 데이터가 없으면 자동으로 seed-contents 호출
       if (contentsData.length === 0 && !search) {
         try {
-          await api.post('/admin/seed-contents');
-          // seed 후 다시 조회
+          const seedResponse = await api.post('/admin/seed-contents');
+          // seed 후 다시 조회 (skipped여도 다시 조회)
           const retryResponse = await api.get('/contents', {
             params: { 
               search,
@@ -135,8 +135,21 @@ const BuyerHome = () => {
             }
           });
           contentsData = retryResponse.data?.contents || retryResponse.data || [];
+          console.log('콘텐츠 데이터 생성/조회 완료:', contentsData.length, '개');
         } catch (seedError) {
           console.error('콘텐츠 데이터 생성 실패:', seedError);
+          // seed 실패해도 한 번 더 조회 시도
+          try {
+            const retryResponse = await api.get('/contents', {
+              params: { 
+                search,
+                category: selectedCategory !== '전체' ? selectedCategory : ''
+              }
+            });
+            contentsData = retryResponse.data?.contents || retryResponse.data || [];
+          } catch (retryError) {
+            console.error('재조회 실패:', retryError);
+          }
         }
       }
       
