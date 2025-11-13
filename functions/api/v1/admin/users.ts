@@ -23,7 +23,6 @@ export async function onRequestGet({ request, env }: {
         u.email,
         u.name,
         u.birth_date,
-        u.phone,
         u.mobile,
         u.role,
         u.created_at,
