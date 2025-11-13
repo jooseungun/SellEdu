@@ -58,31 +58,11 @@ const Register = () => {
       return;
     }
 
-    try {
-      const { passwordConfirm, ...submitData } = formData;
-      const response = await api.post('/auth/register', submitData);
-      
-      if (response.data.message) {
-        alert('회원가입이 완료되었습니다.');
-        navigate('/login');
-      }
-    } catch (error) {
-      console.error('회원가입 오류:', error);
-      
-      // 에러 응답 형식 처리
-      if (error.response?.data) {
-        if (error.response.data.error) {
-          setSubmitError(error.response.data.error);
-        } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
-          const errorMessages = error.response.data.errors.map(err => err.msg || err.message).join(', ');
-          setSubmitError(errorMessages);
-        } else {
-          setSubmitError('회원가입에 실패했습니다.');
-        }
-      } else {
-        setSubmitError('회원가입에 실패했습니다. 네트워크 오류를 확인해주세요.');
-      }
-    }
+    // 프로토타입: 실제 회원가입 처리 없이 알럿만 표시
+    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 회원가입 처리가 되지 않습니다.');
+    
+    // 로그인 페이지로 이동
+    navigate('/login');
   };
 
   return (

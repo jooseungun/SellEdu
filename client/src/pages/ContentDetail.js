@@ -44,6 +44,15 @@ const ContentDetail = () => {
       setContent(response.data);
     } catch (error) {
       console.error('콘텐츠 조회 실패:', error);
+      // 프로토타입: API 실패 시 더미 데이터 표시
+      setContent({
+        id: id,
+        title: '프로토타입 콘텐츠',
+        description: '이 기능은 현재 개발 중입니다.',
+        price: 0,
+        thumbnail_url: '',
+        duration: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -55,6 +64,8 @@ const ContentDetail = () => {
       setReviews(response.data || []);
     } catch (error) {
       console.error('리뷰 조회 실패:', error);
+      // 프로토타입: API 실패 시 빈 배열로 설정
+      setReviews([]);
     }
   };
 
@@ -64,16 +75,17 @@ const ContentDetail = () => {
       return;
     }
 
-    try {
-      await api.post('/purchase', { content_id: parseInt(id) });
-      alert('구매가 완료되었습니다!');
-      fetchContent();
-    } catch (error) {
-      alert(error.response?.data?.error || '구매에 실패했습니다.');
-    }
+    // 프로토타입: 실제 구매 처리 없이 알럿만 표시
+    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 구매 처리가 되지 않습니다.');
   };
 
   const handleReviewSubmit = async () => {
+    // 프로토타입: 실제 리뷰 작성 처리 없이 알럿만 표시
+    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 리뷰 작성이 되지 않습니다.');
+    setReviewDialogOpen(false);
+    return;
+    
+    /* 원래 코드 (주석 처리)
     if (!getToken()) {
       navigate('/login');
       return;

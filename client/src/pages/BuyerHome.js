@@ -38,6 +38,8 @@ const BuyerHome = () => {
       setContents(response.data.contents || []);
     } catch (error) {
       console.error('콘텐츠 목록 조회 실패:', error);
+      // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
+      setContents([]);
     }
   };
 

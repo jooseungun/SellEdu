@@ -85,20 +85,17 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('데이터 조회 실패:', error);
-      const errorMessage = error.response?.data?.error || '데이터를 불러오는데 실패했습니다.';
-      setError(errorMessage);
-      
-      // 401 에러인 경우 로그인 페이지로 리다이렉트
-      if (error.response?.status === 401) {
-        alert('로그인이 필요합니다.');
-        navigate('/login');
-        return;
+      // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
+      if (tabValue === 0) {
+        setPendingContents([]);
+      } else if (tabValue === 1) {
+        setApprovedContents([]);
+      } else if (tabValue === 2) {
+        setReviews([]);
+      } else if (tabValue === 3) {
+        setGradePolicies([]);
       }
-      
-      // 403 에러인 경우 관리자 권한이 없다는 메시지
-      if (error.response?.status === 403) {
-        setError('관리자 권한이 필요합니다.');
-      }
+      setError('프로토타입 버전: 백엔드 서버가 연결되지 않았습니다. 화면만 표시됩니다.');
     } finally {
       setLoading(false);
     }
