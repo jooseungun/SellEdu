@@ -61,8 +61,33 @@ const SellerDashboard = () => {
       ]);
       
       // 배열인지 확인하고 안전하게 설정
-      const contentsData = contentsRes.data;
-      const contentsArray = Array.isArray(contentsData) ? contentsData : [];
+      let contentsData = contentsRes.data;
+      let contentsArray = Array.isArray(contentsData) ? contentsData : [];
+      
+      // 콘텐츠가 없으면 자동으로 seed-contents 호출 (joosu 계정으로 생성)
+      if (contentsArray.length === 0) {
+        try {
+          console.log('판매자 콘텐츠가 없어 자동 생성 중...');
+          const seedResponse = await api.post('/admin/seed-contents');
+          console.log('콘텐츠 데이터 생성 결과:', seedResponse.data);
+          // seed 후 다시 조회
+          const retryResponse = await api.get('/contents/seller/list');
+          contentsData = retryResponse.data;
+          contentsArray = Array.isArray(contentsData) ? contentsData : [];
+          console.log('생성된 콘텐츠 수:', contentsArray.length);
+        } catch (seedError) {
+          console.error('콘텐츠 데이터 생성 실패:', seedError);
+          // seed 실패해도 한 번 더 조회 시도
+          try {
+            const retryResponse = await api.get('/contents/seller/list');
+            contentsData = retryResponse.data;
+            contentsArray = Array.isArray(contentsData) ? contentsData : [];
+          } catch (retryError) {
+            console.error('재조회 실패:', retryError);
+          }
+        }
+      }
+      
       setContents(contentsArray);
       
       // 정산 내역도 안전하게 처리
@@ -230,7 +255,7 @@ const SellerDashboard = () => {
         {tabValue === 1 && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              내 콘텐츠 관리
+              내 콘텐츠 현황
             </Typography>
             {contents.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>

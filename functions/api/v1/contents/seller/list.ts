@@ -14,8 +14,40 @@ export async function onRequestGet({ request, env }: {
   };
 
   try {
-    // TODO: 실제로는 Authorization 헤더에서 토큰을 읽어서 판매자 ID를 확인해야 함
-    // 현재는 프로토타입이므로 모든 판매자의 콘텐츠를 반환
+    // Authorization 헤더에서 토큰 읽기
+    const authHeader = request.headers.get('Authorization');
+    let sellerId: number | null = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.substring(7);
+        const tokenData = JSON.parse(atob(token));
+        sellerId = tokenData.userId || null;
+      } catch (e) {
+        console.error('Token parsing error:', e);
+      }
+    }
+    
+    // 토큰이 없거나 sellerId가 없으면 joosu 계정의 콘텐츠 반환 (프로토타입)
+    if (!sellerId) {
+      const joosuUser = await env.DB.prepare(
+        'SELECT id FROM users WHERE username = ?'
+      )
+        .bind('joosu')
+        .first<{ id: number }>();
+      
+      if (joosuUser) {
+        sellerId = joosuUser.id;
+      }
+    }
+    
+    if (!sellerId) {
+      return new Response(
+        JSON.stringify([]),
+        { status: 200, headers: corsHeaders }
+      );
+    }
+    
     const result = await env.DB.prepare(
       `SELECT
         c.id,
@@ -38,9 +70,11 @@ export async function onRequestGet({ request, env }: {
         u.username as seller_username
       FROM contents c
       LEFT JOIN users u ON c.seller_id = u.id
-      WHERE u.role = 'seller'
+      WHERE c.seller_id = ?
       ORDER BY c.created_at DESC`
-    ).all();
+    )
+      .bind(sellerId)
+      .all();
 
     return new Response(
       JSON.stringify(result.results || []),
