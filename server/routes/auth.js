@@ -45,19 +45,21 @@ router.post(
 
       const userId = result.insertId;
 
-      // 구매자/판매자 정보 생성
-      if (role === 'buyer' || !role) {
-        await pool.execute(
-          'INSERT INTO buyers (user_id) VALUES (?)',
-          [userId]
-        );
-      }
+      // 구매자/판매자 정보 생성 (관리자는 제외)
+      if (role !== 'admin') {
+        if (role === 'buyer' || !role) {
+          await pool.execute(
+            'INSERT INTO buyers (user_id) VALUES (?)',
+            [userId]
+          );
+        }
 
-      if (role === 'seller') {
-        await pool.execute(
-          'INSERT INTO sellers (user_id) VALUES (?)',
-          [userId]
-        );
+        if (role === 'seller') {
+          await pool.execute(
+            'INSERT INTO sellers (user_id) VALUES (?)',
+            [userId]
+          );
+        }
       }
 
       res.status(201).json({

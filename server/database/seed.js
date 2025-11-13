@@ -6,13 +6,23 @@ async function seed() {
     console.log('🌱 시드 데이터 생성 시작...');
 
     // 관리자 계정 생성
-    const adminPassword = await bcrypt.hash('admin123', 10);
+    const adminPassword = await bcrypt.hash('admin', 10);
     const [adminResult] = await pool.execute(
-      `INSERT INTO users (username, email, password_hash, name, role)
-       VALUES ('admin', 'admin@selledu.com', ?, '관리자', 'admin')
-       ON DUPLICATE KEY UPDATE username = username`,
+      `INSERT INTO users (username, email, password_hash, name, role, mobile)
+       VALUES ('admin', 'admin@selledu.com', ?, '관리자', 'admin', '010-0000-0000')
+       ON DUPLICATE KEY UPDATE 
+         password_hash = VALUES(password_hash),
+         email = VALUES(email),
+         name = VALUES(name),
+         role = VALUES(role)`,
       [adminPassword]
     );
+    
+    if (adminResult.affectedRows > 0) {
+      console.log('✅ 관리자 계정 생성 완료 (admin/admin)');
+    } else {
+      console.log('ℹ️ 관리자 계정이 이미 존재합니다.');
+    }
 
     // 등급 정책 생성 (구매자)
     const buyerPolicies = [
