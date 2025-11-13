@@ -20,13 +20,16 @@ import {
   DialogActions,
   TextField,
   AppBar,
-  Toolbar
+  Toolbar,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import CodeIcon from '@mui/icons-material/Code';
 import api from '../utils/api';
+import { getToken } from '../utils/auth';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -36,12 +39,22 @@ const SellerDashboard = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedContent, setSelectedContent] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    // 로그인 체크
+    if (!getToken()) {
+      alert('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
     fetchData();
-  }, []);
+  }, [navigate]);
 
   const fetchData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [contentsRes, settlementsRes] = await Promise.all([
         api.get('/contents/seller/list'),
@@ -51,6 +64,22 @@ const SellerDashboard = () => {
       setSettlements(settlementsRes.data?.histories || []);
     } catch (error) {
       console.error('데이터 조회 실패:', error);
+      const errorMessage = error.response?.data?.error || '데이터를 불러오는데 실패했습니다.';
+      setError(errorMessage);
+      
+      // 401 에러인 경우 로그인 페이지로 리다이렉트
+      if (error.response?.status === 401) {
+        alert('로그인이 필요합니다.');
+        navigate('/login');
+        return;
+      }
+      
+      // 403 에러인 경우 판매자 권한이 없다는 메시지
+      if (error.response?.status === 403) {
+        setError('판매자 권한이 필요합니다. 관리자에게 문의하세요.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,6 +152,12 @@ const SellerDashboard = () => {
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+        
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
             <Tab label="판매 현황" />
@@ -140,6 +175,13 @@ const SellerDashboard = () => {
           </Button>
         </Box>
 
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+
         {tabValue === 0 && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -152,6 +194,11 @@ const SellerDashboard = () => {
               <Typography variant="body1">
                 총 판매액: {contents.reduce((sum, c) => sum + (parseFloat(c.total_sales) || 0), 0).toLocaleString()}원
               </Typography>
+              {contents.length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  아직 등록된 콘텐츠가 없습니다. "심사 신청" 버튼을 클릭하여 콘텐츠를 등록하세요.
+                </Typography>
+              )}
             </Box>
           </Paper>
         )}
@@ -161,20 +208,34 @@ const SellerDashboard = () => {
             <Typography variant="h6" gutterBottom>
               내 콘텐츠 관리
             </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>제목</TableCell>
-                    <TableCell>상태</TableCell>
-                    <TableCell>가격</TableCell>
-                    <TableCell>구매 수</TableCell>
-                    <TableCell>총 판매액</TableCell>
-                    <TableCell>작업</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {contents.map((content) => (
+            {contents.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  등록된 콘텐츠가 없습니다.
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/seller/apply')}
+                  sx={{ mt: 2 }}
+                >
+                  콘텐츠 심사 신청하기
+                </Button>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>제목</TableCell>
+                      <TableCell>상태</TableCell>
+                      <TableCell>가격</TableCell>
+                      <TableCell>구매 수</TableCell>
+                      <TableCell>총 판매액</TableCell>
+                      <TableCell>작업</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {contents.map((content) => (
                     <TableRow key={content.id}>
                       <TableCell>{content.title}</TableCell>
                       <TableCell>
@@ -201,9 +262,10 @@ const SellerDashboard = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
           </Paper>
         )}
 
@@ -212,28 +274,36 @@ const SellerDashboard = () => {
             <Typography variant="h6" gutterBottom>
               정산 내역
             </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>정산 기간</TableCell>
-                    <TableCell>정산 금액</TableCell>
-                    <TableCell>상태</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {settlements.map((settlement) => (
-                    <TableRow key={settlement.id}>
-                      <TableCell>
-                        {settlement.settlement_period_start} ~ {settlement.settlement_period_end}
-                      </TableCell>
-                      <TableCell>{settlement.seller_amount?.toLocaleString()}원</TableCell>
-                      <TableCell>{settlement.settlement_status}</TableCell>
+            {settlements.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  정산 내역이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>정산 기간</TableCell>
+                      <TableCell>정산 금액</TableCell>
+                      <TableCell>상태</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {settlements.map((settlement) => (
+                      <TableRow key={settlement.id}>
+                        <TableCell>
+                          {settlement.settlement_period_start} ~ {settlement.settlement_period_end}
+                        </TableCell>
+                        <TableCell>{settlement.seller_amount?.toLocaleString()}원</TableCell>
+                        <TableCell>{settlement.settlement_status}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
             <Box sx={{ mt: 3 }}>
               <Button
                 variant="contained"
@@ -253,6 +323,8 @@ const SellerDashboard = () => {
               </Button>
             </Box>
           </Paper>
+        )}
+          </>
         )}
 
         {/* 콘텐츠 수정 다이얼로그 */}
