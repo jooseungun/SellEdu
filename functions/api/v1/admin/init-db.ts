@@ -123,6 +123,58 @@ export async function onRequestPost({ request, env }: {
       `CREATE INDEX IF NOT EXISTS idx_lesson_content_id ON content_lessons(content_id)`,
       `CREATE INDEX IF NOT EXISTS idx_lesson_display_order ON content_lessons(display_order)`,
       
+      // 등급 정책 테이블 생성
+      `CREATE TABLE IF NOT EXISTS grade_policies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_type TEXT NOT NULL CHECK(user_type IN ('buyer', 'seller')),
+        grade_name TEXT NOT NULL,
+        min_amount REAL NOT NULL,
+        max_amount REAL,
+        discount_rate REAL DEFAULT 0.00,
+        commission_rate REAL DEFAULT 10.00,
+        period_type TEXT DEFAULT 'recent' CHECK(period_type IN ('total', 'recent')),
+        period_months INTEGER DEFAULT 3,
+        is_active INTEGER DEFAULT 1 CHECK(is_active IN (0, 1)),
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_type, grade_name)
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_grade_policy_user_type ON grade_policies(user_type)`,
+      
+      // 리뷰 테이블 생성
+      `CREATE TABLE IF NOT EXISTS reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+        comment TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_reviews_content_id ON reviews(content_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id)`,
+      
+      // 정산 내역 테이블 생성
+      `CREATE TABLE IF NOT EXISTS settlements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_id INTEGER NOT NULL,
+        content_id INTEGER,
+        purchase_id INTEGER,
+        amount REAL NOT NULL,
+        commission_rate REAL NOT NULL,
+        commission_amount REAL NOT NULL,
+        settlement_amount REAL NOT NULL,
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'requested', 'completed', 'cancelled')),
+        settlement_date TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_settlements_seller_id ON settlements(seller_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_settlements_status ON settlements(status)`,
+      
       // 관리자 계정 생성 (비밀번호: admin, SHA-256 해시)
       `INSERT OR IGNORE INTO users (username, email, password_hash, name, role, created_at, updated_at)
        VALUES (

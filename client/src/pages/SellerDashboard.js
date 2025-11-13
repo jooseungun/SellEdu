@@ -74,7 +74,8 @@ const SellerDashboard = () => {
       // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
       setContents([]);
       setSettlements([]);
-      setError('프로토타입 버전: 백엔드 서버가 연결되지 않았습니다. 화면만 표시됩니다.');
+      // API 에러는 콘솔에만 기록하고 빈 데이터로 표시
+      console.error('API 호출 실패:', error);
       
       // 403 에러인 경우 판매자 권한이 없다는 메시지
       if (error.response?.status === 403) {

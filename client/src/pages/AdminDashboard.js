@@ -122,7 +122,8 @@ const AdminDashboard = () => {
       } else if (tabValue === 4) {
         setUsers([]);
       }
-      setError('프로토타입 버전: 백엔드 서버가 연결되지 않았습니다. 화면만 표시됩니다.');
+      // API 에러는 콘솔에만 기록하고 빈 데이터로 표시
+      console.error('API 호출 실패:', error);
     } finally {
       setLoading(false);
     }
