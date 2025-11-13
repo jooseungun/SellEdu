@@ -35,7 +35,23 @@ const Login = () => {
       setToken(response.data.token);
       navigate('/');
     } catch (error) {
-      alert(error.response?.data?.error || '로그인에 실패했습니다.');
+      console.error('로그인 오류:', error);
+      
+      // 네트워크 에러 또는 서버 연결 실패
+      if (!error.response) {
+        if (error.message.includes('Network Error') || error.code === 'ECONNABORTED') {
+          alert('백엔드 서버에 연결할 수 없습니다.\n\n백엔드 서버가 배포되었는지 확인하고, Cloudflare Pages의 환경 변수 REACT_APP_API_URL이 올바르게 설정되었는지 확인해주세요.');
+        } else {
+          alert('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        return;
+      }
+      
+      // 서버 응답 에러
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          `로그인에 실패했습니다. (${error.response?.status})`;
+      alert(errorMessage);
     }
   };
 
