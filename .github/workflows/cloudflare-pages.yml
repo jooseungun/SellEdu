@@ -1,12 +1,16 @@
 name: Deploy to Cloudflare Pages
 
+# Cloudflare Pages가 Git과 직접 연동되어 있으므로 이 워크플로우는 비활성화합니다
+# Cloudflare Pages 대시보드에서 직접 배포가 관리됩니다
+
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:  # 수동 실행만 가능
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
 
 jobs:
   deploy:
