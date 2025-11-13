@@ -123,11 +123,22 @@ const SellerDashboard = () => {
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
-          <Tab label="판매 현황" />
-          <Tab label="내 콘텐츠 관리" />
-          <Tab label="정산 내역" />
-        </Tabs>
+        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
+            <Tab label="판매 현황" />
+            <Tab label="내 콘텐츠 관리" />
+            <Tab label="정산 내역" />
+          </Tabs>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/seller/apply')}
+            sx={{
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            }}
+          >
+            심사 신청
+          </Button>
+        </Box>
 
         {tabValue === 0 && (
           <Paper sx={{ p: 3 }}>
