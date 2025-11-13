@@ -261,7 +261,8 @@ const Landing = () => {
           </Box>
         </Fade>
       </Container>
-    </Box>
+      </Box>
+    </>
   );
 };
 
