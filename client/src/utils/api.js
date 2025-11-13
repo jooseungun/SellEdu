@@ -49,10 +49,13 @@ api.interceptors.response.use(
     // 네트워크 에러 또는 서버 연결 실패
     if (!error.response) {
       console.error('API 서버에 연결할 수 없습니다:', error.message);
-      if (error.code === 'ECONNABORTED') {
-        alert('요청 시간이 초과되었습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
-      } else if (error.message.includes('Network Error')) {
-        alert('네트워크 오류가 발생했습니다. 백엔드 서버 주소를 확인해주세요.');
+      // Cloudflare Pages Functions는 프로덕션에서만 작동하므로 개발 환경에서만 경고
+      if (process.env.NODE_ENV === 'development') {
+        if (error.code === 'ECONNABORTED') {
+          alert('요청 시간이 초과되었습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+        } else if (error.message.includes('Network Error')) {
+          alert('네트워크 오류가 발생했습니다. 백엔드 서버 주소를 확인해주세요.');
+        }
       }
       return Promise.reject(error);
     }

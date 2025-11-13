@@ -16,14 +16,26 @@ export async function onRequestPost({ request, env }: {
     if (!username || !email || !password || !name) {
       return new Response(
         JSON.stringify({ error: '필수 필드가 누락되었습니다.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
     if (password.length < 6) {
       return new Response(
         JSON.stringify({ error: '비밀번호는 최소 6자 이상이어야 합니다.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -32,7 +44,13 @@ export async function onRequestPost({ request, env }: {
     if (!emailRegex.test(email)) {
       return new Response(
         JSON.stringify({ error: '유효한 이메일 형식이 아닙니다.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -46,7 +64,13 @@ export async function onRequestPost({ request, env }: {
     if (existingUser) {
       return new Response(
         JSON.stringify({ error: '이미 사용 중인 아이디 또는 이메일입니다.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -100,14 +124,41 @@ export async function onRequestPost({ request, env }: {
           role: userRole
         }
       }),
-      { status: 201, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 201, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        } 
+      }
     );
   } catch (error: any) {
     console.error('Registration error:', error);
     return new Response(
       JSON.stringify({ error: '회원가입에 실패했습니다.', details: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } 
+      }
     );
   }
+}
+
+// OPTIONS 요청 처리 (CORS preflight)
+export async function onRequestOptions(): Promise<Response> {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
 }
 

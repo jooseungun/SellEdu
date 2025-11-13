@@ -17,7 +17,13 @@ export async function onRequestPost({ request, env }: {
     if (!username || !password) {
       return new Response(
         JSON.stringify({ error: '아이디와 비밀번호를 입력해주세요.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 400, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -38,7 +44,13 @@ export async function onRequestPost({ request, env }: {
     if (!user) {
       return new Response(
         JSON.stringify({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -52,7 +64,13 @@ export async function onRequestPost({ request, env }: {
     if (passwordHash !== user.password_hash) {
       return new Response(
         JSON.stringify({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          } 
+        }
       );
     }
 
@@ -78,14 +96,41 @@ export async function onRequestPost({ request, env }: {
           role: user.role
         }
       }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 200, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        } 
+      }
     );
   } catch (error: any) {
     console.error('Login error:', error);
     return new Response(
       JSON.stringify({ error: '로그인에 실패했습니다.', details: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        } 
+      }
     );
   }
+}
+
+// OPTIONS 요청 처리 (CORS preflight)
+export async function onRequestOptions(): Promise<Response> {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
 }
 
