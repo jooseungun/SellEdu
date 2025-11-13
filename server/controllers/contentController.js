@@ -226,7 +226,7 @@ class ContentController {
         LEFT JOIN purchases p ON c.id = p.content_id AND p.payment_status = 'completed'
         WHERE c.seller_id = ?
         GROUP BY c.id
-        ORDER BY c.created_at DESC`,
+        ORDER BY c.status ASC, c.created_at DESC`,
         [sellerId]
       );
 
@@ -234,6 +234,104 @@ class ContentController {
     } catch (error) {
       console.error('판매자 콘텐츠 조회 실패:', error);
       res.status(500).json({ error: '콘텐츠 목록을 불러오는데 실패했습니다.' });
+    }
+  }
+
+  // 콘텐츠 수정 및 재심사 신청
+  async updateContent(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { id } = req.params;
+      const { title, description, thumbnail_url, cdn_link, price, duration, tags, sale_start_date, sale_end_date, is_always_on_sale, lessons } = req.body;
+
+      // 판매자 정보 조회
+      const [sellers] = await pool.execute(
+        'SELECT id FROM sellers WHERE user_id = ?',
+        [req.user.id]
+      );
+
+      if (sellers.length === 0) {
+        return res.status(403).json({ error: '판매자 권한이 필요합니다.' });
+      }
+
+      const sellerId = sellers[0].id;
+
+      // 콘텐츠 소유권 확인
+      const [contents] = await pool.execute(
+        'SELECT * FROM contents WHERE id = ? AND seller_id = ?',
+        [id, sellerId]
+      );
+
+      if (contents.length === 0) {
+        return res.status(404).json({ error: '콘텐츠를 찾을 수 없습니다.' });
+      }
+
+      const content = contents[0];
+
+      // 콘텐츠 해시 재생성
+      const contentHash = crypto
+        .createHash('sha256')
+        .update(`${sellerId}-${cdn_link}-${title}`)
+        .digest('hex');
+
+      // 콘텐츠 업데이트
+      await pool.execute(
+        `UPDATE contents 
+         SET title = ?, description = ?, thumbnail_url = ?, cdn_link = ?, 
+             content_hash = ?, price = ?, duration = ?, tags = ?,
+             sale_start_date = ?, sale_end_date = ?, is_always_on_sale = ?,
+             status = 'pending',
+             is_reapply = TRUE,
+             rejection_reason = NULL,
+             updated_at = NOW()
+         WHERE id = ?`,
+        [
+          title,
+          description,
+          thumbnail_url,
+          cdn_link,
+          contentHash,
+          price,
+          duration || 0,
+          JSON.stringify(tags || []),
+          sale_start_date || null,
+          sale_end_date || null,
+          is_always_on_sale || false,
+          id
+        ]
+      );
+
+      // 기존 차시 삭제 후 재등록
+      await pool.execute('DELETE FROM content_lessons WHERE content_id = ?', [id]);
+
+      if (lessons && Array.isArray(lessons)) {
+        for (const lesson of lessons) {
+          await pool.execute(
+            `INSERT INTO content_lessons (content_id, lesson_number, title, cdn_link, duration, display_order)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              id,
+              lesson.lesson_number,
+              lesson.title,
+              lesson.cdn_link,
+              lesson.duration || 0,
+              lesson.display_order || 0
+            ]
+          );
+        }
+      }
+
+      res.json({
+        message: '콘텐츠가 수정되었고 재심사 신청이 완료되었습니다.',
+        content_id: id
+      });
+    } catch (error) {
+      console.error('콘텐츠 수정 실패:', error);
+      res.status(500).json({ error: '콘텐츠 수정에 실패했습니다.' });
     }
   }
 }

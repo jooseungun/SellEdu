@@ -7,6 +7,7 @@ const contentRoutes = require('./content');
 const purchaseRoutes = require('./purchase');
 const sellerRoutes = require('./seller');
 const adminRoutes = require('./admin');
+const reviewRoutes = require('./review');
 
 // API 버전
 const API_VERSION = process.env.API_VERSION || 'v1';
@@ -17,6 +18,7 @@ router.use(`/api/${API_VERSION}/contents`, contentRoutes);
 router.use(`/api/${API_VERSION}/purchase`, purchaseRoutes);
 router.use(`/api/${API_VERSION}/seller`, sellerRoutes);
 router.use(`/api/${API_VERSION}/admin`, adminRoutes);
+router.use(`/api/${API_VERSION}/reviews`, reviewRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

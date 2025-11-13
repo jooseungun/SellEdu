@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Grid, Card, CardContent, CardMedia, Typography, TextField, Box, AppBar, Toolbar, Button } from '@mui/material';
+import { 
+  Container, 
+  Grid, 
+  Card, 
+  CardContent, 
+  CardMedia, 
+  Typography, 
+  TextField, 
+  Box, 
+  AppBar, 
+  Toolbar, 
+  Button,
+  Tabs,
+  Tab
+} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SubscriptionIcon from '@mui/icons-material/Subscription';
+import CodeIcon from '@mui/icons-material/Code';
 import api from '../utils/api';
 
 const BuyerHome = () => {
   const navigate = useNavigate();
   const [contents, setContents] = useState([]);
   const [search, setSearch] = useState('');
+  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     fetchContents();
@@ -38,9 +55,27 @@ const BuyerHome = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             구매자 페이지
           </Typography>
+          <Button
+            startIcon={<SubscriptionIcon />}
+            onClick={() => navigate('/buyer/subscription')}
+            sx={{ color: 'white', mr: 1 }}
+          >
+            구독
+          </Button>
+          <Button
+            startIcon={<CodeIcon />}
+            onClick={() => navigate('/buyer/api-guide')}
+            sx={{ color: 'white' }}
+          >
+            API 가이드
+          </Button>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
+          <Tab label="전체 콘텐츠" />
+          <Tab label="구독 콘텐츠" />
+        </Tabs>
         <Box sx={{ mb: 4 }}>
           <TextField
             fullWidth
@@ -86,4 +121,3 @@ const BuyerHome = () => {
 };
 
 export default BuyerHome;
-

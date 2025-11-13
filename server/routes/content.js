@@ -29,6 +29,18 @@ router.get(
   contentController.getSellerContents.bind(contentController)
 );
 
+// 판매자용: 콘텐츠 수정 및 재심사 신청
+router.put(
+  '/:id',
+  authenticate,
+  [
+    body('title').notEmpty().withMessage('제목은 필수입니다.'),
+    body('cdn_link').notEmpty().withMessage('CDN 링크는 필수입니다.'),
+    body('price').isFloat({ min: 0 }).withMessage('가격은 0 이상이어야 합니다.')
+  ],
+  contentController.updateContent.bind(contentController)
+);
+
 module.exports = router;
 
 

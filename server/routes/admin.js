@@ -3,49 +3,35 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const pool = require('../config/database');
 const settlementService = require('../services/settlementService');
+const adminController = require('../controllers/adminController');
 
 // 모든 라우트에 관리자 권한 체크
 router.use(authenticate);
 router.use(authorize('admin'));
 
+// 심사 대기 목록 조회 (재심사 포함)
+router.get('/contents/pending', adminController.getPendingContents.bind(adminController));
+
 // 콘텐츠 승인
-router.post('/contents/:id/approve', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { display_order } = req.body;
+router.post('/contents/:id/approve', adminController.approveContent.bind(adminController));
 
-    await pool.execute(
-      `UPDATE contents 
-       SET status = 'approved', approved_at = NOW(), display_order = ?
-       WHERE id = ?`,
-      [display_order || 0, id]
-    );
+// 콘텐츠 거부 (미승인 사유 포함)
+router.post('/contents/:id/reject', adminController.rejectContent.bind(adminController));
 
-    res.json({ message: '콘텐츠가 승인되었습니다.' });
-  } catch (error) {
-    console.error('콘텐츠 승인 실패:', error);
-    res.status(500).json({ error: '콘텐츠 승인에 실패했습니다.' });
-  }
-});
+// 판매중인 콘텐츠 목록 조회
+router.get('/contents/approved', adminController.getApprovedContents.bind(adminController));
 
-// 콘텐츠 거부
-router.post('/contents/:id/reject', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { reason } = req.body;
+// 콘텐츠 정렬순서 변경
+router.put('/contents/order', adminController.updateContentOrder.bind(adminController));
 
-    await pool.execute(
-      `UPDATE contents SET status = 'rejected' WHERE id = ?`,
-      [id]
-    );
+// 콘텐츠 판매 중지
+router.post('/contents/:id/suspend', adminController.suspendContent.bind(adminController));
 
-    // 알림 발송 (추후 구현)
-    res.json({ message: '콘텐츠가 거부되었습니다.' });
-  } catch (error) {
-    console.error('콘텐츠 거부 실패:', error);
-    res.status(500).json({ error: '콘텐츠 거부에 실패했습니다.' });
-  }
-});
+// 콘텐츠 후기 관리
+router.get('/reviews', adminController.getContentReviews.bind(adminController));
+
+// 후기 삭제
+router.delete('/reviews/:id', adminController.deleteReview.bind(adminController));
 
 // 정산 완료 처리
 router.post('/settlements/:id/complete', async (req, res) => {
