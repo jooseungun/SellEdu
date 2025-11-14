@@ -29,28 +29,35 @@ export async function onRequestGet({ request, env }: {
         }
         base64Map['='] = 0;
         
+        // 토큰 정리 (불필요한 문자 제거)
+        const cleanedToken = token.replace(/[^A-Za-z0-9+/=]/g, '');
+        
         let binaryString = '';
-        for (let i = 0; i < token.length; i += 4) {
-          const enc1 = base64Map[token[i]] || 0;
-          const enc2 = base64Map[token[i + 1]] || 0;
-          const enc3 = base64Map[token[i + 2]] || 0;
-          const enc4 = base64Map[token[i + 3]] || 0;
+        for (let i = 0; i < cleanedToken.length; i += 4) {
+          const enc1 = base64Map[cleanedToken[i]] || 0;
+          const enc2 = base64Map[cleanedToken[i + 1] || '='] || 0;
+          const enc3 = base64Map[cleanedToken[i + 2] || '='] || 0;
+          const enc4 = base64Map[cleanedToken[i + 3] || '='] || 0;
           
           const bitmap = (enc1 << 18) | (enc2 << 12) | (enc3 << 6) | enc4;
           
-          if (token[i + 2] !== '=') {
+          if (cleanedToken[i + 2] && cleanedToken[i + 2] !== '=') {
             binaryString += String.fromCharCode((bitmap >> 16) & 255);
           }
-          if (token[i + 3] !== '=') {
+          if (cleanedToken[i + 3] && cleanedToken[i + 3] !== '=') {
             binaryString += String.fromCharCode((bitmap >> 8) & 255);
             binaryString += String.fromCharCode(bitmap & 255);
+          } else if (cleanedToken[i + 2] && cleanedToken[i + 2] !== '=') {
+            binaryString += String.fromCharCode((bitmap >> 8) & 255);
           }
         }
         
         const tokenData = JSON.parse(binaryString);
         sellerId = tokenData.userId || null;
+        console.log('Decoded token - userId:', sellerId, 'username:', tokenData.username);
       } catch (e) {
         console.error('Token parsing error:', e);
+        console.error('Token value:', authHeader.substring(7));
       }
     }
     

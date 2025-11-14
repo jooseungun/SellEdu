@@ -54,6 +54,7 @@ const SellerDashboard = () => {
   const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
   const [partnershipType, setPartnershipType] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
     // 로그인 체크
@@ -61,6 +62,9 @@ const SellerDashboard = () => {
       navigate('/login?from=/seller');
       return;
     }
+    // 사용자 이름 설정
+    const name = getUserName();
+    setUserName(name || '');
     fetchData();
   }, [navigate]);
 
@@ -77,29 +81,7 @@ const SellerDashboard = () => {
       let contentsData = contentsRes.data;
       let contentsArray = Array.isArray(contentsData) ? contentsData : [];
       
-      // 콘텐츠가 없으면 자동으로 seed-contents 호출 (joosu 계정으로 생성)
-      if (contentsArray.length === 0) {
-        try {
-          console.log('판매자 콘텐츠가 없어 자동 생성 중...');
-          const seedResponse = await api.post('/admin/seed-contents');
-          console.log('콘텐츠 데이터 생성 결과:', seedResponse.data);
-          // seed 후 다시 조회
-          const retryResponse = await api.get('/contents/seller/list');
-          contentsData = retryResponse.data;
-          contentsArray = Array.isArray(contentsData) ? contentsData : [];
-          console.log('생성된 콘텐츠 수:', contentsArray.length);
-        } catch (seedError) {
-          console.error('콘텐츠 데이터 생성 실패:', seedError);
-          // seed 실패해도 한 번 더 조회 시도
-          try {
-            const retryResponse = await api.get('/contents/seller/list');
-            contentsData = retryResponse.data;
-            contentsArray = Array.isArray(contentsData) ? contentsData : [];
-          } catch (retryError) {
-            console.error('재조회 실패:', retryError);
-          }
-        }
-      }
+      console.log('판매자 콘텐츠 조회 결과:', contentsArray.length, '개');
       
       setContents(contentsArray);
       
@@ -195,9 +177,9 @@ const SellerDashboard = () => {
                  <Typography variant="h6" sx={{ flexGrow: 1 }}>
                    판매자 대시보드
                  </Typography>
-                 {getToken() && getUserName() && (
+                 {userName && (
                    <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
-                     {getUserName()}님 환영합니다
+                     {userName}님 환영합니다
                    </Typography>
                  )}
                  <Button
