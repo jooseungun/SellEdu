@@ -42,50 +42,21 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // 파일을 base64로 변환하여 data URL 생성
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+    // 썸네일 URL 입력만 받음 (실제 파일 저장은 나중에 구현)
+    // 현재는 URL을 직접 입력하거나, 외부 스토리지 서비스 URL을 사용
+    // TODO: Cloudflare R2나 다른 스토리지에 실제 파일 저장 구현
     
-    // Base64 인코딩
-    const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    let base64 = '';
-    let i = 0;
-    
-    while (i < uint8Array.length) {
-      const byte1 = uint8Array[i++];
-      const byte2 = i < uint8Array.length ? uint8Array[i++] : undefined;
-      const byte3 = i < uint8Array.length ? uint8Array[i++] : undefined;
-      
-      const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
-      
-      base64 += base64Chars.charAt((bitmap >> 18) & 63);
-      base64 += base64Chars.charAt((bitmap >> 12) & 63);
-      
-      if (byte2 !== undefined) {
-        base64 += base64Chars.charAt((bitmap >> 6) & 63);
-      } else {
-        base64 += '=';
-      }
-      
-      if (byte3 !== undefined) {
-        base64 += base64Chars.charAt(bitmap & 63);
-      } else {
-        base64 += '=';
-      }
-    }
-    
-    // Data URL 생성
-    const thumbnailUrl = `data:${file.type};base64,${base64}`;
-
+    // 파일 정보만 반환하고, 실제 URL은 클라이언트에서 입력받거나
+    // 외부 스토리지 서비스(예: Imgur, Cloudinary 등)를 사용하도록 안내
     return new Response(
       JSON.stringify({
-        message: '썸네일 업로드 완료',
-        thumbnail_url: thumbnailUrl,
+        message: '썸네일 URL을 직접 입력해주세요.',
+        error: '현재는 파일 업로드 기능이 지원되지 않습니다. 썸네일 URL을 직접 입력해주세요.',
         file_name: file.name,
         file_size: file.size,
         file_type: file.type
       }),
-      { status: 200, headers: corsHeaders }
+      { status: 400, headers: corsHeaders }
     );
   } catch (error: any) {
     console.error('Thumbnail upload error:', error);
