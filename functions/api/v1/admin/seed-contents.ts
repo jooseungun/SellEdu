@@ -127,7 +127,9 @@ export async function onRequestPost({ request, env }: {
       { title: '4차 산업혁명', description: '4차 산업혁명의 핵심 기술을 이해합니다.', category: '산업기술지식', price: 14900, grade: '스탠다드', age: 'All', duration: 120 },
       { title: 'AI 기초', description: '인공지능의 기초 개념을 학습합니다.', category: 'IT', price: 19900, grade: '개별구매', age: 'All', duration: 90 },
       { title: '빅데이터 분석', description: '빅데이터 분석 방법을 배웁니다.', category: 'IT', price: 24900, grade: '베이직', age: 'All', duration: 150 },
-      { title: '블록체인 이해', description: '블록체인 기술의 원리와 활용을 이해합니다.', category: 'IT', price: 29900, grade: '프리미엄', age: 'All', duration: 60 }
+      { title: '블록체인 이해', description: '블록체인 기술의 원리와 활용을 이해합니다.', category: 'IT', price: 29900, grade: '프리미엄', age: 'All', duration: 60 },
+      { title: 'React 고급 개발', description: 'React의 고급 패턴과 최적화 기법을 학습합니다.', category: 'IT', price: 34900, grade: '스탠다드', age: 'All', duration: 180 },
+      { title: 'Node.js 백엔드 개발', description: 'Node.js를 활용한 서버 사이드 개발을 학습합니다.', category: 'IT', price: 39900, grade: '프리미엄', age: 'All', duration: 200 }
     ];
 
     // 기존 콘텐츠 개수 확인 (joosu와 jooss 모두)
