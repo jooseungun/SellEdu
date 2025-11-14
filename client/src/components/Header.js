@@ -1,14 +1,14 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 
 const Header = () => {
   const navigate = useNavigate();
   const token = getToken();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    removeToken();
     navigate('/');
   };
 

@@ -66,7 +66,7 @@ api.interceptors.response.use(
     
     // 401 에러: 인증 실패
     if (error.response.status === 401) {
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       // 로그인 페이지가 아닌 경우에만 리다이렉트
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
