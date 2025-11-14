@@ -23,15 +23,15 @@ export async function onRequestPost({ request, env }: {
     }
 
     // joosu 판매자 계정 찾기, 없으면 생성
-    let seller = await env.DB.prepare(
+    let joosuSeller = await env.DB.prepare(
       'SELECT id FROM users WHERE username = ?'
     )
       .bind('joosu')
       .first<{ id: number }>();
 
-    let sellerId: number;
+    let joosuSellerId: number;
     
-    if (!seller) {
+    if (!joosuSeller) {
       // joosu 계정이 없으면 생성
       const encoder = new TextEncoder();
       const data = encoder.encode('joosu123'); // 기본 비밀번호
@@ -46,17 +46,54 @@ export async function onRequestPost({ request, env }: {
         .bind('joosu', 'joosu@selledu.com', passwordHash, '조수', 'seller')
         .run();
       
-      sellerId = result.meta.last_row_id;
+      joosuSellerId = result.meta.last_row_id;
       
       // seller 테이블에 레코드 생성
       await env.DB.prepare(
         `INSERT INTO sellers (user_id, grade, commission_rate, total_sales_amount, recent_sales_amount, recent_months)
          VALUES (?, 'BRONZE', 10.00, 0.00, 0.00, 3)`
       )
-        .bind(sellerId)
+        .bind(joosuSellerId)
         .run();
     } else {
-      sellerId = seller.id;
+      joosuSellerId = joosuSeller.id;
+    }
+
+    // jooss 판매자 계정 찾기, 없으면 생성
+    let joossSeller = await env.DB.prepare(
+      'SELECT id FROM users WHERE username = ?'
+    )
+      .bind('jooss')
+      .first<{ id: number }>();
+
+    let joossSellerId: number;
+    
+    if (!joossSeller) {
+      // jooss 계정이 없으면 생성
+      const encoder = new TextEncoder();
+      const data = encoder.encode('jooss123'); // 기본 비밀번호
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const result = await env.DB.prepare(
+        `INSERT INTO users (username, email, password_hash, name, role, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
+      )
+        .bind('jooss', 'jooss@selledu.com', passwordHash, '조쓰', 'seller')
+        .run();
+      
+      joossSellerId = result.meta.last_row_id;
+      
+      // seller 테이블에 레코드 생성
+      await env.DB.prepare(
+        `INSERT INTO sellers (user_id, grade, commission_rate, total_sales_amount, recent_sales_amount, recent_months)
+         VALUES (?, 'BRONZE', 10.00, 0.00, 0.00, 3)`
+      )
+        .bind(joossSellerId)
+        .run();
+    } else {
+      joossSellerId = joossSeller.id;
     }
 
     // 가비지 데이터
@@ -93,18 +130,25 @@ export async function onRequestPost({ request, env }: {
       { title: '블록체인 이해', description: '블록체인 기술의 원리와 활용을 이해합니다.', category: 'IT', price: 29900, grade: '프리미엄', age: 'All', duration: 60 }
     ];
 
-    // 기존 콘텐츠 개수 확인
-    const existingCount = await env.DB.prepare(
+    // 기존 콘텐츠 개수 확인 (joosu와 jooss 모두)
+    const existingCountJoosu = await env.DB.prepare(
       'SELECT COUNT(*) as count FROM contents WHERE seller_id = ?'
     )
-      .bind(sellerId)
+      .bind(joosuSellerId)
       .first<{ count: number }>();
 
-    if (existingCount && existingCount.count > 0) {
+    const existingCountJooss = await env.DB.prepare(
+      'SELECT COUNT(*) as count FROM contents WHERE seller_id = ?'
+    )
+      .bind(joossSellerId)
+      .first<{ count: number }>();
+
+    if ((existingCountJoosu && existingCountJoosu.count > 0) || (existingCountJooss && existingCountJooss.count > 0)) {
       return new Response(
         JSON.stringify({
           message: '이미 콘텐츠 데이터가 존재합니다.',
-          existing: existingCount.count,
+          joosu: existingCountJoosu?.count || 0,
+          jooss: existingCountJooss?.count || 0,
           skipped: true
         }),
         { status: 200, headers: corsHeaders }
@@ -116,12 +160,15 @@ export async function onRequestPost({ request, env }: {
 
     for (let i = 0; i < contentsData.length; i++) {
       const content = contentsData[i];
+      // 콘텐츠 1-30은 joosu, 31-32는 jooss 소유
+      const currentSellerId = i < 30 ? joosuSellerId : joossSellerId;
+      
       try {
         // 중복 체크: 같은 제목의 콘텐츠가 이미 있는지 확인
         const existing = await env.DB.prepare(
           'SELECT id FROM contents WHERE seller_id = ? AND title = ?'
         )
-          .bind(sellerId, content.title)
+          .bind(currentSellerId, content.title)
           .first<{ id: number }>();
 
         if (existing) {
@@ -137,10 +184,10 @@ export async function onRequestPost({ request, env }: {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, ?, ?, 999, ?, datetime('now'), datetime('now'), datetime('now'))`
         )
           .bind(
-            sellerId,
+            currentSellerId,
             content.title,
             content.description,
-            `https://picsum.photos/300/400?random=${i + 1}`,
+            null, // 기본 썸네일 사용
             content.price,
             content.category,
             content.grade,

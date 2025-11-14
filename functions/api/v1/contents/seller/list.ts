@@ -54,19 +54,7 @@ export async function onRequestGet({ request, env }: {
       }
     }
     
-    // 토큰이 없거나 sellerId가 없으면 joosu 계정의 콘텐츠 반환 (프로토타입)
-    if (!sellerId) {
-      const joosuUser = await env.DB.prepare(
-        'SELECT id FROM users WHERE username = ?'
-      )
-        .bind('joosu')
-        .first<{ id: number }>();
-      
-      if (joosuUser) {
-        sellerId = joosuUser.id;
-      }
-    }
-    
+    // 토큰이 없거나 sellerId가 없으면 빈 배열 반환 (자신의 콘텐츠만 조회)
     if (!sellerId) {
       return new Response(
         JSON.stringify([]),
