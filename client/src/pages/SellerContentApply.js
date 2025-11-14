@@ -51,7 +51,39 @@ const SellerContentApply = () => {
     '산업기술지식', '경영일반'
   ];
 
-  // 썸네일 업로드 기능 제거 - URL 직접 입력으로 변경
+  const [uploading, setUploading] = useState(false);
+
+  const handleThumbnailChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 파일 업로드
+    setUploading(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      const response = await api.post('/upload/thumbnail', uploadFormData);
+
+      if (response.data?.thumbnail_url) {
+        setFormData({ ...formData, thumbnail_url: response.data.thumbnail_url });
+        alert('썸네일이 업로드되었습니다.');
+      } else {
+        alert('썸네일 업로드에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Thumbnail upload error:', error);
+      alert('썸네일 업로드에 실패했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleAddLesson = () => {
     setLessons([...lessons, { title: '', cdn_link: '', duration: 0 }]);
@@ -187,61 +219,73 @@ const SellerContentApply = () => {
                 />
               </Grid>
 
-              {/* 썸네일 URL 입력 */}
+              {/* 썸네일 업로드 */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" gutterBottom>
-                  썸네일 URL (선택사항)
+                  썸네일 (선택사항)
                 </Typography>
-                <TextField
-                  fullWidth
-                  label="썸네일 이미지 URL"
-                  margin="normal"
-                  value={formData.thumbnail_url || ''}
-                  onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-                  placeholder="https://example.com/image.jpg (없으면 기본 이미지 사용)"
-                  helperText="썸네일 URL을 입력하세요. 입력하지 않으면 기본 이미지가 사용됩니다."
-                />
-                {formData.thumbnail_url && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-                      썸네일 미리보기:
-                    </Typography>
-                    <Box
-                      component="img"
-                      src={formData.thumbnail_url}
-                      alt="썸네일 미리보기"
-                      onError={(e) => {
-                        e.target.src = '/default-thumbnail.svg';
-                      }}
-                      sx={{ 
-                        maxWidth: 200, 
-                        maxHeight: 150, 
-                        objectFit: 'cover', 
-                        borderRadius: 1,
-                        border: '1px solid #ddd'
-                      }}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<AddIcon />}
+                    disabled={uploading}
+                  >
+                    {uploading ? '업로드 중...' : '썸네일 업로드'}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleThumbnailChange}
                     />
-                  </Box>
-                )}
-                {!formData.thumbnail_url && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-                      기본 썸네일:
-                    </Typography>
-                    <Box
-                      component="img"
-                      src="/default-thumbnail.svg"
-                      alt="기본 썸네일"
-                      sx={{ 
-                        maxWidth: 200, 
-                        maxHeight: 150, 
-                        objectFit: 'cover', 
-                        borderRadius: 1,
-                        border: '1px solid #ddd'
-                      }}
-                    />
-                  </Box>
-                )}
+                  </Button>
+                  {formData.thumbnail_url && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        component="img"
+                        src={formData.thumbnail_url}
+                        alt="썸네일 미리보기"
+                        onError={(e) => {
+                          e.target.src = '/default-thumbnail.svg';
+                        }}
+                        sx={{ 
+                          maxWidth: 200, 
+                          maxHeight: 150, 
+                          objectFit: 'cover', 
+                          borderRadius: 1,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={() => setFormData({ ...formData, thumbnail_url: '' })}
+                      >
+                        제거
+                      </Button>
+                    </Box>
+                  )}
+                  {!formData.thumbnail_url && (
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
+                        기본 썸네일이 사용됩니다:
+                      </Typography>
+                      <Box
+                        component="img"
+                        src="/default-thumbnail.svg"
+                        alt="기본 썸네일"
+                        sx={{ 
+                          maxWidth: 200, 
+                          maxHeight: 150, 
+                          objectFit: 'cover', 
+                          borderRadius: 1,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Box>
               </Grid>
 
               {/* 판매희망가격 */}
