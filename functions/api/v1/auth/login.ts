@@ -58,14 +58,38 @@ export async function onRequestPost({ request, env }: {
       tableExists = !!tableCheck;
       
       if (!tableExists) {
-        console.error('users table does not exist');
-        return new Response(
-          JSON.stringify({ 
-            error: '데이터베이스 테이블이 없습니다.',
-            details: 'users 테이블이 생성되지 않았습니다. D1 데이터베이스에 스키마를 적용해주세요.'
-          }),
-          { status: 500, headers: corsHeaders }
-        );
+        console.error('users table does not exist, attempting to create...');
+        // 테이블이 없으면 자동으로 생성 시도
+        try {
+          await env.DB.exec(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT UNIQUE NOT NULL,
+              email TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL,
+              name TEXT NOT NULL,
+              birth_date TEXT,
+              phone TEXT,
+              mobile TEXT,
+              role TEXT DEFAULT 'buyer' CHECK(role IN ('buyer', 'seller', 'admin')),
+              created_at TEXT DEFAULT (datetime('now')),
+              updated_at TEXT DEFAULT (datetime('now'))
+            );
+            CREATE INDEX IF NOT EXISTS idx_username ON users(username);
+            CREATE INDEX IF NOT EXISTS idx_email ON users(email);
+          `);
+          console.log('users table created successfully');
+          tableExists = true;
+        } catch (createError: any) {
+          console.error('Failed to create users table:', createError);
+          return new Response(
+            JSON.stringify({ 
+              error: '데이터베이스 테이블 생성에 실패했습니다.',
+              details: createError.message || 'Unknown error'
+            }),
+            { status: 500, headers: corsHeaders }
+          );
+        }
       }
     } catch (tableCheckError: any) {
       console.error('Table check error:', tableCheckError);
