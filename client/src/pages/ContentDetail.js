@@ -149,7 +149,7 @@ const generateMockContent = (id) => {
     title: titles[index],
     description: descriptions[index],
     detailed_description: detailedDescriptions[index],
-    thumbnail_url: `https://picsum.photos/800/450?random=${contentId}`,
+    thumbnail_url: null, // 기본 썸네일 사용
     price: [9900, 14900, 19900, 24900, 29900, 0][index % 6],
     category: categories[index % categories.length],
     grade: grades[index % grades.length],
@@ -354,11 +354,11 @@ const ContentDetail = () => {
               <CardMedia
                 component="img"
                 height="450"
-                image={content.thumbnail_url || `https://picsum.photos/800/450?random=${content.id}`}
+                image={content.thumbnail_url || '/default-thumbnail.svg'}
                 alt={content.title}
                 sx={{ objectFit: 'cover' }}
                 onError={(e) => {
-                  e.target.src = `https://picsum.photos/800/450?random=${content.id}`;
+                  e.target.src = '/default-thumbnail.svg';
                 }}
               />
             </Card>

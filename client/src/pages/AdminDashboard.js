@@ -1036,22 +1036,23 @@ const AdminDashboard = () => {
             {contentDetail && (
               <Box>
                 {/* 썸네일 */}
-                {contentDetail.thumbnail_url && (
-                  <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
-                    <Box
-                      component="img"
-                      src={contentDetail.thumbnail_url}
-                      alt={contentDetail.title}
-                      sx={{ 
-                        maxWidth: '100%', 
-                        maxHeight: 400, 
-                        borderRadius: 3, 
-                        objectFit: 'contain',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                      }}
-                    />
-                  </Box>
-                )}
+                <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
+                  <Box
+                    component="img"
+                    src={contentDetail.thumbnail_url || '/default-thumbnail.svg'}
+                    alt={contentDetail.title}
+                    sx={{ 
+                      maxWidth: '100%', 
+                      maxHeight: 400, 
+                      borderRadius: 3, 
+                      objectFit: 'contain',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}
+                    onError={(e) => {
+                      e.target.src = '/default-thumbnail.svg';
+                    }}
+                  />
+                </Box>
 
                 {/* 기본 정보 */}
                 <Box sx={{ mb: 3, pb: 3, borderBottom: '2px solid', borderColor: 'divider' }}>

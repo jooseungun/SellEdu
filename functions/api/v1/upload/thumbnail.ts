@@ -42,16 +42,40 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // 프로토타입: 실제 파일 저장 대신 임시 URL 반환
-    // TODO: Cloudflare R2나 다른 스토리지에 실제 파일 저장 구현
-    const fileId = `thumb_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    const fileExtension = file.name.split('.').pop();
-    const thumbnailUrl = `https://picsum.photos/400/300?random=${fileId}`; // 임시로 랜덤 이미지 URL 반환
-
-    // 실제 구현 시:
-    // 1. Cloudflare R2에 파일 업로드
-    // 2. 또는 Base64로 인코딩하여 DB에 저장 (작은 파일의 경우)
-    // 3. 또는 외부 스토리지 서비스 사용
+    // 파일을 base64로 변환하여 data URL 생성
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Base64 인코딩
+    const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    let base64 = '';
+    let i = 0;
+    
+    while (i < uint8Array.length) {
+      const byte1 = uint8Array[i++];
+      const byte2 = i < uint8Array.length ? uint8Array[i++] : undefined;
+      const byte3 = i < uint8Array.length ? uint8Array[i++] : undefined;
+      
+      const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
+      
+      base64 += base64Chars.charAt((bitmap >> 18) & 63);
+      base64 += base64Chars.charAt((bitmap >> 12) & 63);
+      
+      if (byte2 !== undefined) {
+        base64 += base64Chars.charAt((bitmap >> 6) & 63);
+      } else {
+        base64 += '=';
+      }
+      
+      if (byte3 !== undefined) {
+        base64 += base64Chars.charAt(bitmap & 63);
+      } else {
+        base64 += '=';
+      }
+    }
+    
+    // Data URL 생성
+    const thumbnailUrl = `data:${file.type};base64,${base64}`;
 
     return new Response(
       JSON.stringify({

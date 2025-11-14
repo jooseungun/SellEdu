@@ -90,7 +90,7 @@ const generateMockContents = () => {
     id: index + 1,
     title,
     description: descriptions[index] || descriptions[0],
-    thumbnail_url: `https://picsum.photos/300/400?random=${index + 1}`,
+    thumbnail_url: null, // 기본 썸네일 사용
     price: [9900, 14900, 19900, 24900, 29900, 0][index % 6],
     category: categories[index % categories.length],
     grade: grades[index % grades.length],
@@ -359,11 +359,11 @@ const BuyerHome = () => {
                             <CardMedia
                               component="img"
                               height="240"
-                              image={content.thumbnail_url || `https://picsum.photos/300/400?random=${content.id}`}
+                              image={content.thumbnail_url || '/default-thumbnail.svg'}
                               alt={content.title}
                               sx={{ objectFit: 'cover' }}
                               onError={(e) => {
-                                e.target.src = `https://picsum.photos/300/400?random=${content.id}`;
+                                e.target.src = '/default-thumbnail.svg';
                               }}
                             />
                             {/* 오버레이 정보 */}

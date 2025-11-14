@@ -45,8 +45,11 @@ const Home = () => {
               <CardMedia
                 component="img"
                 height="200"
-                image={content.thumbnail_url || '/placeholder.jpg'}
+                image={content.thumbnail_url || '/default-thumbnail.svg'}
                 alt={content.title}
+                onError={(e) => {
+                  e.target.src = '/default-thumbnail.svg';
+                }}
               />
               <CardContent>
                 <Typography variant="h6" component="div" noWrap>
