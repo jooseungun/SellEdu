@@ -176,11 +176,44 @@ export async function onRequestPost({ request, env }: {
         role: user.role,
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
       };
-      token = btoa(JSON.stringify(tokenData));
+      
+      // Base64 인코딩 함수 (Cloudflare Workers 환경에서 btoa가 없을 수 있음)
+      const base64Encode = (str: string): string => {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        let result = '';
+        let i = 0;
+        
+        while (i < bytes.length) {
+          const a = bytes[i++];
+          const b = i < bytes.length ? bytes[i++] : 0;
+          const c = i < bytes.length ? bytes[i++] : 0;
+          
+          const bitmap = (a << 16) | (b << 8) | c;
+          
+          result += base64Chars.charAt((bitmap >> 18) & 63);
+          result += base64Chars.charAt((bitmap >> 12) & 63);
+          result += i - 2 < bytes.length ? base64Chars.charAt((bitmap >> 6) & 63) : '=';
+          result += i - 1 < bytes.length ? base64Chars.charAt(bitmap & 63) : '=';
+        }
+        
+        return result;
+      };
+      
+      token = base64Encode(JSON.stringify(tokenData));
     } catch (tokenError: any) {
       console.error('Token generation error:', tokenError);
+      console.error('Token error details:', {
+        message: tokenError.message,
+        stack: tokenError.stack,
+        name: tokenError.name
+      });
       return new Response(
-        JSON.stringify({ error: '토큰 생성 중 오류가 발생했습니다.' }),
+        JSON.stringify({ 
+          error: '토큰 생성 중 오류가 발생했습니다.',
+          details: tokenError.message || 'Unknown token error'
+        }),
         { status: 500, headers: corsHeaders }
       );
     }
