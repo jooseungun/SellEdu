@@ -177,8 +177,7 @@ export async function onRequestPost({ request, env }: {
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
       };
       
-      // Base64 인코딩 - 표준 base64 사용 (Cloudflare Workers는 btoa를 지원하지 않을 수 있으므로 직접 구현)
-      // 하지만 실제로는 표준 base64와 호환되도록 구현
+      // Base64 인코딩 - 표준 base64 구현 (정확한 패딩 처리)
       const base64Encode = (str: string): string => {
         const encoder = new TextEncoder();
         const bytes = encoder.encode(str);
@@ -187,16 +186,28 @@ export async function onRequestPost({ request, env }: {
         let i = 0;
         
         while (i < bytes.length) {
-          const a = bytes[i++];
-          const b = i < bytes.length ? bytes[i++] : 0;
-          const c = i < bytes.length ? bytes[i++] : 0;
+          const byte1 = bytes[i++];
+          const byte2 = i < bytes.length ? bytes[i++] : undefined;
+          const byte3 = i < bytes.length ? bytes[i++] : undefined;
           
-          const bitmap = (a << 16) | (b << 8) | c;
+          // 3바이트를 24비트로 변환
+          const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
           
+          // 4개의 6비트로 나누어 base64 문자로 변환
           result += base64Chars.charAt((bitmap >> 18) & 63);
           result += base64Chars.charAt((bitmap >> 12) & 63);
-          result += i - 2 < bytes.length ? base64Chars.charAt((bitmap >> 6) & 63) : '=';
-          result += i - 1 < bytes.length ? base64Chars.charAt(bitmap & 63) : '=';
+          
+          if (byte2 !== undefined) {
+            result += base64Chars.charAt((bitmap >> 6) & 63);
+          } else {
+            result += '=';
+          }
+          
+          if (byte3 !== undefined) {
+            result += base64Chars.charAt(bitmap & 63);
+          } else {
+            result += '=';
+          }
         }
         
         return result;
@@ -204,8 +215,6 @@ export async function onRequestPost({ request, env }: {
       
       const tokenString = JSON.stringify(tokenData);
       token = base64Encode(tokenString);
-      console.log('Token data:', tokenData);
-      console.log('Token string length:', tokenString.length);
     } catch (tokenError: any) {
       console.error('Token generation error:', tokenError);
       console.error('Token error details:', {
