@@ -50,6 +50,10 @@ const SellerDashboard = () => {
   const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [partnershipDialogOpen, setPartnershipDialogOpen] = useState(false);
+  const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
+  const [partnershipType, setPartnershipType] = useState('');
+  const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
     // 로그인 체크
