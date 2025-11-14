@@ -324,13 +324,6 @@ const ContentDetail = () => {
               {getUserName()}님 환영합니다
             </Typography>
           )}
-          <Button
-            startIcon={<CodeIcon />}
-            onClick={() => navigate('/buyer/api-guide')}
-            sx={{ color: 'white' }}
-          >
-            API 가이드
-          </Button>
         </Toolbar>
       </AppBar>
 
