@@ -177,7 +177,8 @@ export async function onRequestPost({ request, env }: {
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
       };
       
-      // Base64 인코딩 함수 (Cloudflare Workers 환경에서 btoa가 없을 수 있음)
+      // Base64 인코딩 - 표준 base64 사용 (Cloudflare Workers는 btoa를 지원하지 않을 수 있으므로 직접 구현)
+      // 하지만 실제로는 표준 base64와 호환되도록 구현
       const base64Encode = (str: string): string => {
         const encoder = new TextEncoder();
         const bytes = encoder.encode(str);
@@ -201,7 +202,10 @@ export async function onRequestPost({ request, env }: {
         return result;
       };
       
-      token = base64Encode(JSON.stringify(tokenData));
+      const tokenString = JSON.stringify(tokenData);
+      token = base64Encode(tokenString);
+      console.log('Token data:', tokenData);
+      console.log('Token string length:', tokenString.length);
     } catch (tokenError: any) {
       console.error('Token generation error:', tokenError);
       console.error('Token error details:', {
