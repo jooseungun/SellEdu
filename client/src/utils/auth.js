@@ -22,13 +22,18 @@ export const getAuthHeaders = () => {
 export const getUserFromToken = () => {
   try {
     const token = getToken();
-    if (!token) return null;
+    if (!token) {
+      console.log('No token found');
+      return null;
+    }
     
     // Base64 디코딩
     const decoded = JSON.parse(atob(token));
+    console.log('Decoded token:', decoded);
     return decoded;
   } catch (error) {
     console.error('Token decode error:', error);
+    console.error('Token value:', getToken());
     return null;
   }
 };
@@ -36,6 +41,7 @@ export const getUserFromToken = () => {
 // 관리자 권한 확인
 export const isAdmin = () => {
   const user = getUserFromToken();
+  console.log('isAdmin check - user:', user, 'role:', user?.role);
   return user?.role === 'admin';
 };
 

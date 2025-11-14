@@ -38,7 +38,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import StoreIcon from '@mui/icons-material/Store';
 import api from '../utils/api';
-import { getToken, removeToken, isAdmin, getUserName } from '../utils/auth';
+import { getToken, removeToken, isAdmin, getUserName, getUserFromToken } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -73,13 +73,19 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     // 로그인 체크
-    if (!getToken()) {
+    const token = getToken();
+    console.log('AdminDashboard - Token check:', !!token);
+    if (!token) {
       navigate('/login?from=/admin');
       return;
     }
     // 관리자 권한 체크
-    if (!isAdmin()) {
-      alert('관리자만 접근할 수 있습니다.');
+    const adminCheck = isAdmin();
+    console.log('AdminDashboard - Admin check:', adminCheck);
+    if (!adminCheck) {
+      const user = getUserFromToken();
+      console.log('AdminDashboard - User info:', user);
+      alert(`관리자만 접근할 수 있습니다. 현재 역할: ${user?.role || 'unknown'}`);
       navigate('/');
       return;
     }
