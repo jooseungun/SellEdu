@@ -72,10 +72,7 @@ const SellerDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const [contentsRes, settlementsRes] = await Promise.all([
-        api.get('/contents/seller/list'),
-        api.get('/seller/settlement')
-      ]);
+      const contentsRes = await api.get('/contents/seller/list');
       
       // 배열인지 확인하고 안전하게 설정
       let contentsData = contentsRes.data;
@@ -85,10 +82,8 @@ const SellerDashboard = () => {
       
       setContents(contentsArray);
       
-      // 정산 내역도 안전하게 처리
-      const settlementsData = settlementsRes.data?.histories || settlementsRes.data || [];
-      const settlementsArray = Array.isArray(settlementsData) ? settlementsData : [];
-      setSettlements(settlementsArray);
+      // 정산 내역은 현재 미구현
+      setSettlements([]);
     } catch (error) {
       console.error('데이터 조회 실패:', error);
       // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
@@ -384,12 +379,14 @@ const SellerDashboard = () => {
                   const today = new Date();
                   const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
                   const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-                  navigate('/seller/settlement-request', {
-                    state: {
-                      period_start: lastMonth.toISOString().split('T')[0],
-                      period_end: lastDay.toISOString().split('T')[0]
-                    }
-                  });
+                  // 정산 요청 기능은 현재 미구현
+                  alert('정산 요청 기능은 준비 중입니다.');
+                  // navigate('/seller/settlement-request', {
+                  //   state: {
+                  //     period_start: lastMonth.toISOString().split('T')[0],
+                  //     period_end: lastDay.toISOString().split('T')[0]
+                  //   }
+                  // });
                 }}
               >
                 정산 신청
