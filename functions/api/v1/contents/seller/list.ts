@@ -21,6 +21,8 @@ export async function onRequestGet({ request, env }: {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
         const token = authHeader.substring(7);
+        console.log('Seller list - Token received, length:', token.length);
+        
         // Base64 디코딩 (Cloudflare Workers에서 atob가 없을 수 있으므로 직접 구현)
         const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
         const base64Map: { [key: string]: number } = {};
@@ -30,8 +32,12 @@ export async function onRequestGet({ request, env }: {
         base64Map['='] = 0;
         
         // 토큰 정리 (불필요한 문자 제거)
-        const cleanedToken = token.replace(/[^A-Za-z0-9+/=]/g, '');
+        let cleanedToken = token.replace(/[^A-Za-z0-9+/=]/g, '');
+        // 패딩 복원 (base64는 4의 배수여야 함)
+        const padding = (4 - (cleanedToken.length % 4)) % 4;
+        cleanedToken = cleanedToken + '='.repeat(padding);
         
+        // Base64 디코딩
         let binaryString = '';
         for (let i = 0; i < cleanedToken.length; i += 4) {
           const enc1 = base64Map[cleanedToken[i]] || 0;
@@ -52,20 +58,41 @@ export async function onRequestGet({ request, env }: {
           }
         }
         
-        const tokenData = JSON.parse(binaryString);
+        // UTF-8 디코딩을 위해 Uint8Array로 변환
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // TextDecoder를 사용하여 UTF-8 디코딩
+        const decoder = new TextDecoder('utf-8');
+        const decodedString = decoder.decode(bytes);
+        
+        const tokenData = JSON.parse(decodedString);
         sellerId = tokenData.userId || null;
-        console.log('Decoded token - userId:', sellerId, 'username:', tokenData.username);
-      } catch (e) {
-        console.error('Token parsing error:', e);
-        console.error('Token value:', authHeader.substring(7));
+        console.log('Seller list - Decoded token - userId:', sellerId, 'username:', tokenData.username, 'role:', tokenData.role);
+        
+        // sellerId가 없으면 에러 반환
+        if (!sellerId) {
+          console.error('Seller list - userId not found in token:', tokenData);
+          return new Response(
+            JSON.stringify({ error: '사용자 ID를 찾을 수 없습니다. 다시 로그인해주세요.' }),
+            { status: 401, headers: corsHeaders }
+          );
+        }
+      } catch (e: any) {
+        console.error('Seller list - Token parsing error:', e);
+        console.error('Seller list - Token value:', authHeader.substring(7).substring(0, 50) + '...');
+        return new Response(
+          JSON.stringify({ error: '토큰 파싱에 실패했습니다. 다시 로그인해주세요.', details: e.message }),
+          { status: 401, headers: corsHeaders }
+        );
       }
-    }
-    
-    // 토큰이 없거나 sellerId가 없으면 빈 배열 반환 (자신의 콘텐츠만 조회)
-    if (!sellerId) {
+    } else {
+      console.log('Seller list - No authorization header found');
       return new Response(
-        JSON.stringify([]),
-        { status: 200, headers: corsHeaders }
+        JSON.stringify({ error: '인증이 필요합니다.' }),
+        { status: 401, headers: corsHeaders }
       );
     }
     
