@@ -359,7 +359,7 @@ const BuyerHome = () => {
                             <CardMedia
                               component="img"
                               height="240"
-                              image={content.thumbnail_url || '/default-thumbnail.svg'}
+                              image="/default-thumbnail.svg"
                               alt={content.title}
                               sx={{ objectFit: 'cover' }}
                               onError={(e) => {
