@@ -113,11 +113,17 @@ const SellerDashboard = () => {
     } catch (error) {
       console.error('데이터 조회 실패:', error);
       console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      console.error('Error response headers:', error.response?.headers);
       
       // 401 에러인 경우 토큰이 유효하지 않거나 만료됨
       if (error.response?.status === 401) {
         const errorMessage = error.response?.data?.error || '인증이 필요합니다. 다시 로그인해주세요.';
-        setError(errorMessage);
+        const errorDetails = error.response?.data?.details || '';
+        console.error('401 Error - Message:', errorMessage);
+        console.error('401 Error - Details:', errorDetails);
+        setError(errorMessage + (errorDetails ? ` (${errorDetails})` : ''));
         // 토큰 제거하고 로그인 페이지로 리다이렉트
         setTimeout(() => {
           removeToken();

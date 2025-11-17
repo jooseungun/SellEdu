@@ -15,9 +15,17 @@ export async function onRequestGet({ request, env }: {
 
   try {
     // Authorization 헤더에서 토큰 읽기
-    const authHeader = request.headers.get('Authorization');
-    console.log('Seller list - Authorization header:', authHeader ? 'exists' : 'missing');
-    console.log('Seller list - All headers:', JSON.stringify(Object.fromEntries(request.headers.entries())));
+    // Cloudflare Workers에서는 헤더 이름이 대소문자를 구분하지 않지만, 명시적으로 확인
+    const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+    console.log('Seller list - Authorization header:', authHeader ? `exists (length: ${authHeader.length})` : 'missing');
+    console.log('Seller list - Authorization header value:', authHeader ? authHeader.substring(0, 50) + '...' : 'null');
+    
+    // 모든 헤더 확인 (디버깅용)
+    const allHeaders: { [key: string]: string } = {};
+    request.headers.forEach((value, key) => {
+      allHeaders[key] = value;
+    });
+    console.log('Seller list - All headers keys:', Object.keys(allHeaders));
     
     let sellerId: number | null = null;
     
