@@ -38,27 +38,32 @@ export function decodeToken(token: string): TokenData | null {
     
     let binaryString = '';
     for (let i = 0; i < cleanedToken.length; i += 4) {
-      const char1 = cleanedToken[i] || '=';
-      const char2 = cleanedToken[i + 1] || '=';
-      const char3 = cleanedToken[i + 2] || '=';
-      const char4 = cleanedToken[i + 3] || '=';
+      const char1 = cleanedToken[i];
+      const char2 = cleanedToken[i + 1];
+      const char3 = cleanedToken[i + 2];
+      const char4 = cleanedToken[i + 3];
       
-      const enc1 = base64Map[char1] || 0;
-      const enc2 = base64Map[char2] || 0;
-      const enc3 = base64Map[char3] || 0;
-      const enc4 = base64Map[char4] || 0;
+      if (!char1 || !char2) break; // 최소 2바이트는 필요
+      
+      const enc1 = base64Map[char1] ?? 0;
+      const enc2 = base64Map[char2] ?? 0;
+      const enc3 = char3 && char3 !== '=' ? base64Map[char3] ?? 0 : 0;
+      const enc4 = char4 && char4 !== '=' ? base64Map[char4] ?? 0 : 0;
       
       const bitmap = (enc1 << 18) | (enc2 << 12) | (enc3 << 6) | enc4;
       
       // 패딩 처리 - 로그인 API의 인코딩과 역순으로 처리
-      if (char3 !== '=') {
-        binaryString += String.fromCharCode((bitmap >> 16) & 255);
+      // 첫 번째 바이트는 항상 추가
+      binaryString += String.fromCharCode((bitmap >> 16) & 255);
+      
+      // 두 번째 바이트는 char3가 '='이 아니면 추가
+      if (char3 && char3 !== '=') {
+        binaryString += String.fromCharCode((bitmap >> 8) & 255);
       }
-      if (char4 !== '=') {
-        binaryString += String.fromCharCode((bitmap >> 8) & 255);
+      
+      // 세 번째 바이트는 char4가 '='이 아니면 추가
+      if (char4 && char4 !== '=') {
         binaryString += String.fromCharCode(bitmap & 255);
-      } else if (char3 !== '=') {
-        binaryString += String.fromCharCode((bitmap >> 8) & 255);
       }
     }
     
