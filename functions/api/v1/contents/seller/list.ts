@@ -1,5 +1,5 @@
 import { D1Database } from '@cloudflare/workers-types';
-import { getTokenFromRequest } from '../utils/token';
+import { getTokenFromRequest } from '../../utils/token';
 
 export async function onRequestGet({ request, env }: {
   request: Request;
