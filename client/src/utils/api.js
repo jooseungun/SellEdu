@@ -66,9 +66,11 @@ api.interceptors.response.use(
     
     // 401 에러: 인증 실패
     if (error.response.status === 401) {
+      console.log('API - 401 error, removing token');
       sessionStorage.removeItem('token');
       // 로그인 페이지가 아닌 경우에만 리다이렉트
-      if (window.location.pathname !== '/login') {
+      // 판매자 페이지에서는 자체적으로 처리하므로 여기서는 리다이렉트하지 않음
+      if (window.location.pathname !== '/login' && !window.location.pathname.startsWith('/seller')) {
         window.location.href = '/login';
       }
     }

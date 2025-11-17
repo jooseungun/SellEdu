@@ -43,14 +43,29 @@ const Login = () => {
       });
 
       if (response.data && response.data.token) {
-        console.log('Login - Token received, setting token');
+        console.log('Login - Token received, length:', response.data.token.length);
         setToken(response.data.token);
-        console.log('Login - Token set, checking token:', getToken() ? 'Token exists' : 'Token missing');
+        
+        // 토큰 저장 확인
+        const savedToken = getToken();
+        console.log('Login - Token saved, verification:', savedToken ? 'SUCCESS' : 'FAILED');
+        console.log('Login - Saved token length:', savedToken?.length || 0);
+        console.log('Login - sessionStorage check:', sessionStorage.getItem('token') ? 'exists' : 'missing');
+        
+        if (!savedToken) {
+          console.error('Login - Token was not saved properly!');
+          alert('토큰 저장에 실패했습니다. 다시 시도해주세요.');
+          return;
+        }
         
         // 로그인 성공 후 이전 페이지로 이동하거나 메인 페이지로 이동
         const from = new URLSearchParams(window.location.search).get('from') || '/';
         console.log('Login - Redirecting to:', from);
-        navigate(from, { replace: true });
+        
+        // 약간의 지연을 두고 리다이렉트 (토큰 저장 확인)
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 50);
       } else {
         console.error('Login - Invalid response:', response.data);
         alert('로그인 응답이 올바르지 않습니다.');

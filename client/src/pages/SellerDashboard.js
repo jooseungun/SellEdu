@@ -57,40 +57,43 @@ const SellerDashboard = () => {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    // 로그인 체크
-    const checkAuth = async () => {
-      const token = getToken();
-      console.log('SellerDashboard - Token check:', !!token);
-      console.log('SellerDashboard - Token value:', token ? token.substring(0, 50) + '...' : 'null');
-      
-      if (!token) {
-        console.log('SellerDashboard - No token, redirecting to login');
-        navigate('/login?from=/seller', { replace: true });
-        return;
-      }
-      
-      // 사용자 정보 확인
-      try {
-        const name = getUserName();
-        console.log('SellerDashboard - User name:', name);
-        setUserName(name || '');
-        
-        // 사용자 정보가 없으면 토큰이 유효하지 않을 수 있음
-        if (!name) {
-          console.warn('SellerDashboard - User name is empty, token might be invalid');
-        }
-      } catch (error) {
-        console.error('SellerDashboard - Error getting user name:', error);
-        // 토큰이 있지만 디코딩 실패 시에도 페이지는 표시
-        setUserName('');
-      }
-      
-      // 토큰이 있으면 데이터 로드 시도
-      fetchData();
-    };
+    // 로그인 체크 - 한 번만 실행
+    const token = getToken();
+    console.log('SellerDashboard - Mounted, Token check:', !!token);
+    console.log('SellerDashboard - Token value:', token ? token.substring(0, 50) + '...' : 'null');
+    console.log('SellerDashboard - sessionStorage token:', sessionStorage.getItem('token') ? 'exists' : 'missing');
     
-    checkAuth();
-  }, [navigate]);
+    if (!token) {
+      console.log('SellerDashboard - No token found, redirecting to login');
+      // 약간의 지연을 두고 리다이렉트 (무한 루프 방지)
+      setTimeout(() => {
+        if (!getToken()) {
+          navigate('/login?from=/seller', { replace: true });
+        }
+      }, 100);
+      return;
+    }
+    
+    // 사용자 정보 확인
+    try {
+      const name = getUserName();
+      console.log('SellerDashboard - User name:', name);
+      setUserName(name || '');
+      
+      // 사용자 정보가 없으면 토큰이 유효하지 않을 수 있음
+      if (!name) {
+        console.warn('SellerDashboard - User name is empty, token might be invalid');
+      }
+    } catch (error) {
+      console.error('SellerDashboard - Error getting user name:', error);
+      // 토큰이 있지만 디코딩 실패 시에도 페이지는 표시
+      setUserName('');
+    }
+    
+    // 토큰이 있으면 데이터 로드 시도
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열로 한 번만 실행
 
   const fetchData = async () => {
     setLoading(true);
