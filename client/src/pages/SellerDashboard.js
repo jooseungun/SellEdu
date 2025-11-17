@@ -92,8 +92,7 @@ const SellerDashboard = () => {
     
     // 토큰이 있으면 데이터 로드 시도
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 빈 배열로 한 번만 실행
+  }, []); // 빈 배열로 한 번만 실행 - 의도적으로 navigate와 fetchData를 dependency에서 제외
 
   const fetchData = async () => {
     setLoading(true);
