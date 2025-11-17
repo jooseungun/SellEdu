@@ -24,7 +24,7 @@ export function decodeToken(token: string): TokenData | null {
     const padding = (4 - (cleanedToken.length % 4)) % 4;
     cleanedToken = cleanedToken + '='.repeat(padding);
     
-    // Base64 디코딩 - contents/apply.ts와 동일한 방식 사용 (UTF-8 디코딩 포함)
+    // Base64 디코딩 - 로그인 API의 인코딩 방식과 정확히 일치하도록 구현
     const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     const base64Map: { [key: string]: number } = {};
     for (let i = 0; i < base64Chars.length; i++) {
@@ -41,7 +41,7 @@ export function decodeToken(token: string): TokenData | null {
       
       const bitmap = (enc1 << 18) | (enc2 << 12) | (enc3 << 6) | enc4;
       
-      // 패딩 처리 - contents/apply.ts와 동일
+      // 패딩 처리 - 로그인 API의 인코딩과 역순으로 처리
       if (cleanedToken[i + 2] !== '=' && cleanedToken[i + 2] !== undefined) {
         binaryString += String.fromCharCode((bitmap >> 16) & 255);
       }
@@ -51,7 +51,8 @@ export function decodeToken(token: string): TokenData | null {
       }
     }
     
-    // UTF-8 디코딩 - 로그인 API에서 TextEncoder로 인코딩했으므로 TextDecoder로 디코딩 필요
+    // 로그인 API는 TextEncoder로 UTF-8 인코딩 후 base64 인코딩하므로
+    // 디코딩도 UTF-8 디코딩이 필요함
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
