@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { setToken } from '../utils/auth';
+import { setToken, getToken } from '../utils/auth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -43,11 +43,16 @@ const Login = () => {
       });
 
       if (response.data && response.data.token) {
+        console.log('Login - Token received, setting token');
         setToken(response.data.token);
+        console.log('Login - Token set, checking token:', getToken() ? 'Token exists' : 'Token missing');
+        
         // 로그인 성공 후 이전 페이지로 이동하거나 메인 페이지로 이동
         const from = new URLSearchParams(window.location.search).get('from') || '/';
-        navigate(from);
+        console.log('Login - Redirecting to:', from);
+        navigate(from, { replace: true });
       } else {
+        console.error('Login - Invalid response:', response.data);
         alert('로그인 응답이 올바르지 않습니다.');
       }
     } catch (error) {
