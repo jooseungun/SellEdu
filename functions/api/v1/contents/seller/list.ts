@@ -34,12 +34,35 @@ export async function onRequestGet({ request, env }: {
 
     // 공통 토큰 디코딩 함수 사용
     console.log('Seller list - Attempting token decode...');
+    
+    // Authorization 헤더 확인
+    const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+    console.log('Seller list - Authorization header present:', !!authHeader);
+    if (authHeader) {
+      console.log('Seller list - Authorization header length:', authHeader.length);
+      console.log('Seller list - Authorization header starts with Bearer:', authHeader.startsWith('Bearer '));
+      if (authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        console.log('Seller list - Token length:', token.length);
+        console.log('Seller list - Token first 50 chars:', token.substring(0, 50));
+      }
+    }
+    
     const tokenData = getTokenFromRequest(request);
     
     if (!tokenData) {
       console.log('Seller list - Token decode failed or missing');
+      // 더 자세한 에러 정보 반환 (디버깅용)
       return new Response(
-        JSON.stringify({ error: '인증이 필요합니다. 다시 로그인해주세요.' }),
+        JSON.stringify({ 
+          error: '인증이 필요합니다. 다시 로그인해주세요.',
+          details: authHeader ? '토큰 디코딩 실패' : 'Authorization 헤더 없음',
+          debug: {
+            hasAuthHeader: !!authHeader,
+            authHeaderLength: authHeader?.length || 0,
+            startsWithBearer: authHeader?.startsWith('Bearer ') || false
+          }
+        }),
         { status: 401, headers: corsHeaders }
       );
     }
