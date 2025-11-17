@@ -58,13 +58,25 @@ const SellerDashboard = () => {
 
   useEffect(() => {
     // 로그인 체크
-    if (!getToken()) {
+    const token = getToken();
+    console.log('SellerDashboard - Token check:', !!token);
+    if (!token) {
+      console.log('SellerDashboard - No token, redirecting to login');
       navigate('/login?from=/seller');
       return;
     }
-    // 사용자 이름 설정
-    const name = getUserName();
-    setUserName(name || '');
+    
+    // 사용자 정보 확인
+    try {
+      const name = getUserName();
+      console.log('SellerDashboard - User name:', name);
+      setUserName(name || '');
+    } catch (error) {
+      console.error('SellerDashboard - Error getting user name:', error);
+      // 토큰이 있지만 디코딩 실패 시에도 페이지는 표시
+      setUserName('');
+    }
+    
     fetchData();
   }, [navigate]);
 
@@ -86,15 +98,37 @@ const SellerDashboard = () => {
       setSettlements([]);
     } catch (error) {
       console.error('데이터 조회 실패:', error);
-      // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
-      setContents([]);
-      setSettlements([]);
-      // API 에러는 콘솔에만 기록하고 빈 데이터로 표시
-      console.error('API 호출 실패:', error);
+      console.error('Error response:', error.response);
       
+      // 401 에러인 경우 토큰이 유효하지 않거나 만료됨
+      if (error.response?.status === 401) {
+        const errorMessage = error.response?.data?.error || '인증이 필요합니다. 다시 로그인해주세요.';
+        setError(errorMessage);
+        // 토큰 제거하고 로그인 페이지로 리다이렉트
+        setTimeout(() => {
+          removeToken();
+          navigate('/login?from=/seller');
+        }, 2000);
+        setContents([]);
+        setSettlements([]);
+      } 
       // 403 에러인 경우 판매자 권한이 없다는 메시지
-      if (error.response?.status === 403) {
+      else if (error.response?.status === 403) {
         setError('판매자 권한이 필요합니다. 관리자에게 문의하세요.');
+        setContents([]);
+        setSettlements([]);
+      }
+      // 기타 에러
+      else {
+        // 프로토타입: API 실패 시 빈 배열로 설정하여 화면은 표시
+        setContents([]);
+        setSettlements([]);
+        // API 에러는 콘솔에만 기록하고 빈 데이터로 표시
+        console.error('API 호출 실패:', error);
+        const errorMessage = error.response?.data?.error || '데이터를 불러오는데 실패했습니다.';
+        if (errorMessage && !errorMessage.includes('인증')) {
+          setError(errorMessage);
+        }
       }
     } finally {
       setLoading(false);
