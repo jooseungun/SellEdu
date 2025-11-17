@@ -11,22 +11,20 @@ export interface TokenData {
 
 /**
  * Base64 문자열을 디코딩하여 토큰 데이터를 반환
+ * Cloudflare Workers 환경에서 안정적으로 작동하도록 최적화
  */
 export function decodeToken(token: string): TokenData | null {
   try {
     console.log('decodeToken - Input token length:', token.length);
-    console.log('decodeToken - Input token first 50 chars:', token.substring(0, 50));
     
     // 토큰 정리 (불필요한 문자 제거)
     let cleanedToken = token.replace(/[^A-Za-z0-9+/=]/g, '');
-    console.log('decodeToken - Cleaned token length:', cleanedToken.length);
     
     // 패딩 복원 (base64는 4의 배수여야 함)
     const padding = (4 - (cleanedToken.length % 4)) % 4;
     cleanedToken = cleanedToken + '='.repeat(padding);
-    console.log('decodeToken - Padded token length:', cleanedToken.length);
     
-    // Base64 디코딩
+    // Base64 디코딩 - contents/apply.ts와 동일한 방식 사용
     const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     const base64Map: { [key: string]: number } = {};
     for (let i = 0; i < base64Chars.length; i++) {
@@ -43,20 +41,19 @@ export function decodeToken(token: string): TokenData | null {
       
       const bitmap = (enc1 << 18) | (enc2 << 12) | (enc3 << 6) | enc4;
       
-      if (cleanedToken[i + 2] && cleanedToken[i + 2] !== '=') {
+      // 패딩 처리 개선
+      if (cleanedToken[i + 2] !== '=' && cleanedToken[i + 2] !== undefined) {
         binaryString += String.fromCharCode((bitmap >> 16) & 255);
       }
-      if (cleanedToken[i + 3] && cleanedToken[i + 3] !== '=') {
+      if (cleanedToken[i + 3] !== '=' && cleanedToken[i + 3] !== undefined) {
         binaryString += String.fromCharCode((bitmap >> 8) & 255);
         binaryString += String.fromCharCode(bitmap & 255);
-      } else if (cleanedToken[i + 2] && cleanedToken[i + 2] !== '=') {
+      } else if (cleanedToken[i + 2] !== '=' && cleanedToken[i + 2] !== undefined) {
         binaryString += String.fromCharCode((bitmap >> 8) & 255);
       }
     }
     
-    console.log('decodeToken - Binary string length:', binaryString.length);
-    
-    // UTF-8 디코딩
+    // UTF-8 디코딩 - TextDecoder 사용
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
@@ -64,24 +61,21 @@ export function decodeToken(token: string): TokenData | null {
     
     const decoder = new TextDecoder('utf-8');
     const decodedString = decoder.decode(bytes);
-    console.log('decodeToken - Decoded string length:', decodedString.length);
-    console.log('decodeToken - Decoded string first 100 chars:', decodedString.substring(0, 100));
     
     // JSON 파싱
     const tokenData = JSON.parse(decodedString) as TokenData;
-    console.log('decodeToken - Parsed token data:', { userId: tokenData.userId, username: tokenData.username, role: tokenData.role });
+    console.log('decodeToken - Success:', { userId: tokenData.userId, username: tokenData.username, role: tokenData.role });
     
     // 토큰 만료 확인
     if (tokenData.exp && tokenData.exp < Date.now()) {
-      console.log('decodeToken - Token expired:', tokenData.exp, 'Current:', Date.now());
+      console.log('decodeToken - Token expired');
       return null;
     }
     
     return tokenData;
   } catch (error: any) {
-    console.error('decodeToken - Error:', error);
-    console.error('decodeToken - Error message:', error.message);
-    console.error('decodeToken - Error stack:', error.stack);
+    console.error('decodeToken - Error:', error.message);
+    console.error('decodeToken - Stack:', error.stack);
     return null;
   }
 }
