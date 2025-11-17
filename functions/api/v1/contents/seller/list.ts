@@ -7,6 +7,10 @@ export async function onRequestGet({ request, env }: {
     DB: D1Database;
   };
 }): Promise<Response> {
+  console.log('=== SELLER LIST API CALLED ===');
+  console.log('Seller list - Request method:', request.method);
+  console.log('Seller list - Request URL:', request.url);
+  
   const corsHeaders = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
@@ -15,7 +19,21 @@ export async function onRequestGet({ request, env }: {
   };
 
   try {
+    // 데이터베이스 연결 확인
+    if (!env || !env.DB) {
+      console.error('Seller list - D1 Database binding is not available');
+      return new Response(
+        JSON.stringify({ 
+          error: '데이터베이스 연결에 실패했습니다.',
+          details: 'D1 바인딩이 설정되지 않았습니다.'
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+    console.log('Seller list - Database connection OK');
+
     // 공통 토큰 디코딩 함수 사용
+    console.log('Seller list - Attempting token decode...');
     const tokenData = getTokenFromRequest(request);
     
     if (!tokenData) {
@@ -37,6 +55,8 @@ export async function onRequestGet({ request, env }: {
       );
     }
     
+    // 데이터베이스 쿼리 실행
+    console.log('Seller list - Querying database for sellerId:', sellerId);
     const result = await env.DB.prepare(
       `SELECT
         c.id,
@@ -67,14 +87,27 @@ export async function onRequestGet({ request, env }: {
       .bind(sellerId)
       .all();
 
+    console.log('Seller list - Query executed successfully');
+    console.log('Seller list - Results count:', result.results?.length || 0);
+
     return new Response(
       JSON.stringify(result.results || []),
       { status: 200, headers: corsHeaders }
     );
   } catch (error: any) {
-    console.error('Get seller contents error:', error);
+    console.error('Seller list - ERROR:', error);
+    console.error('Seller list - Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      cause: error.cause
+    });
     return new Response(
-      JSON.stringify({ error: '판매자 콘텐츠 조회에 실패했습니다.', details: error.message }),
+      JSON.stringify({ 
+        error: '판매자 콘텐츠 조회에 실패했습니다.', 
+        details: error.message || 'Unknown error',
+        type: error.name || 'Error'
+      }),
       { status: 500, headers: corsHeaders }
     );
   }
