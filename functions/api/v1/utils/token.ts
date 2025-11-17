@@ -14,12 +14,17 @@ export interface TokenData {
  */
 export function decodeToken(token: string): TokenData | null {
   try {
+    console.log('decodeToken - Input token length:', token.length);
+    console.log('decodeToken - Input token first 50 chars:', token.substring(0, 50));
+    
     // 토큰 정리 (불필요한 문자 제거)
     let cleanedToken = token.replace(/[^A-Za-z0-9+/=]/g, '');
+    console.log('decodeToken - Cleaned token length:', cleanedToken.length);
     
     // 패딩 복원 (base64는 4의 배수여야 함)
     const padding = (4 - (cleanedToken.length % 4)) % 4;
     cleanedToken = cleanedToken + '='.repeat(padding);
+    console.log('decodeToken - Padded token length:', cleanedToken.length);
     
     // Base64 디코딩
     const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -49,6 +54,8 @@ export function decodeToken(token: string): TokenData | null {
       }
     }
     
+    console.log('decodeToken - Binary string length:', binaryString.length);
+    
     // UTF-8 디코딩
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
@@ -57,19 +64,24 @@ export function decodeToken(token: string): TokenData | null {
     
     const decoder = new TextDecoder('utf-8');
     const decodedString = decoder.decode(bytes);
+    console.log('decodeToken - Decoded string length:', decodedString.length);
+    console.log('decodeToken - Decoded string first 100 chars:', decodedString.substring(0, 100));
     
     // JSON 파싱
     const tokenData = JSON.parse(decodedString) as TokenData;
+    console.log('decodeToken - Parsed token data:', { userId: tokenData.userId, username: tokenData.username, role: tokenData.role });
     
     // 토큰 만료 확인
     if (tokenData.exp && tokenData.exp < Date.now()) {
-      console.log('Token expired:', tokenData.exp, 'Current:', Date.now());
+      console.log('decodeToken - Token expired:', tokenData.exp, 'Current:', Date.now());
       return null;
     }
     
     return tokenData;
   } catch (error: any) {
-    console.error('Token decode error:', error);
+    console.error('decodeToken - Error:', error);
+    console.error('decodeToken - Error message:', error.message);
+    console.error('decodeToken - Error stack:', error.stack);
     return null;
   }
 }
@@ -78,13 +90,28 @@ export function decodeToken(token: string): TokenData | null {
  * Authorization 헤더에서 토큰을 추출하고 디코딩
  */
 export function getTokenFromRequest(request: Request): TokenData | null {
-  const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+  console.log('getTokenFromRequest - Checking headers');
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
+  console.log('getTokenFromRequest - Authorization header:', authHeader ? `exists (length: ${authHeader.length})` : 'missing');
+  
+  if (!authHeader) {
+    console.log('getTokenFromRequest - No authorization header');
+    return null;
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    console.log('getTokenFromRequest - Invalid header format:', authHeader.substring(0, 20));
     return null;
   }
   
   const token = authHeader.substring(7);
-  return decodeToken(token);
+  console.log('getTokenFromRequest - Extracted token length:', token.length);
+  console.log('getTokenFromRequest - Extracted token first 50 chars:', token.substring(0, 50));
+  
+  const decoded = decodeToken(token);
+  console.log('getTokenFromRequest - Decode result:', decoded ? 'SUCCESS' : 'FAILED');
+  
+  return decoded;
 }
 
