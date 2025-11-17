@@ -186,14 +186,27 @@ const ContentDetail = () => {
     setLoading(true);
     try {
       const response = await api.get(`/contents/${id}`);
+      console.log('ContentDetail - API response:', response.data);
+      
       if (response.data && response.data.id) {
-        setContent(response.data);
+        // API 응답 데이터를 그대로 사용하되, 필요한 필드가 없으면 기본값 설정
+        const contentData = {
+          ...response.data,
+          detailed_description: response.data.detailed_description || response.data.description || '',
+          lessons: response.data.lessons || [],
+          tags: response.data.tags || (response.data.category ? [response.data.category, '온라인', '실무'] : ['온라인', '실무']),
+          instructor: response.data.instructor || response.data.seller_name || response.data.seller_username || '강사명',
+          education_period: response.data.education_period || 999,
+          thumbnail_url: response.data.thumbnail_url || null
+        };
+        setContent(contentData);
       } else {
         throw new Error('Invalid response data');
       }
     } catch (error) {
       console.error('콘텐츠 조회 실패:', error);
-      // 프로토타입: API 실패 시 가비지 데이터 표시
+      console.error('Error details:', error.response?.data);
+      // API 실패 시 가비지 데이터 표시 (프로토타입용)
       const mockContent = generateMockContent(id);
       setContent(mockContent);
     } finally {
