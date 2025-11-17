@@ -34,6 +34,10 @@ api.interceptors.request.use(
     const headers = getAuthHeaders();
     if (headers.Authorization) {
       config.headers.Authorization = headers.Authorization;
+      console.log('API Request - Authorization header added, length:', headers.Authorization.length);
+      console.log('API Request - URL:', config.url);
+    } else {
+      console.log('API Request - No Authorization header, URL:', config.url);
     }
     // FormData를 사용하는 경우 Content-Type을 제거하여 브라우저가 자동으로 설정하도록 함
     if (config.data instanceof FormData) {
