@@ -15,13 +15,19 @@ export async function onRequestPost({ request, env }: {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
 
+  console.log('=== LOGIN API CALLED ===');
+  console.log('Request method:', request.method);
+  console.log('Request URL:', request.url);
+  console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+  
   try {
     // Request body 파싱
     let body;
     try {
       body = await request.json();
+      console.log('Login - Request body received:', { username: body?.username, hasPassword: !!body?.password });
     } catch (parseError: any) {
-      console.error('JSON parse error:', parseError);
+      console.error('Login - JSON parse error:', parseError);
       return new Response(
         JSON.stringify({ error: '요청 데이터 형식이 올바르지 않습니다.' }),
         { status: 400, headers: corsHeaders }
@@ -29,8 +35,10 @@ export async function onRequestPost({ request, env }: {
     }
 
     const { username, password } = body || {};
+    console.log('Login - Extracted credentials:', { username, hasPassword: !!password });
 
     if (!username || !password) {
+      console.log('Login - Missing credentials');
       return new Response(
         JSON.stringify({ error: '아이디와 비밀번호를 입력해주세요.' }),
         { status: 400, headers: corsHeaders }
@@ -105,6 +113,7 @@ export async function onRequestPost({ request, env }: {
     // Get user from database
     let user;
     try {
+      console.log('Login - Querying database for user:', username);
       const result = await env.DB.prepare(
         'SELECT id, username, email, password_hash, name, role FROM users WHERE username = ?'
       )
@@ -112,6 +121,7 @@ export async function onRequestPost({ request, env }: {
         .first();
 
       if (!result) {
+        console.log('Login - User not found:', username);
         return new Response(
           JSON.stringify({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }),
           { status: 401, headers: corsHeaders }
@@ -126,9 +136,10 @@ export async function onRequestPost({ request, env }: {
         name: string;
         role: string;
       };
+      console.log('Login - User found:', { id: user.id, username: user.username, role: user.role });
     } catch (dbError: any) {
-      console.error('Database query error:', dbError);
-      console.error('Error details:', {
+      console.error('Login - Database query error:', dbError);
+      console.error('Login - Error details:', {
         message: dbError.message,
         stack: dbError.stack,
         name: dbError.name
@@ -146,25 +157,30 @@ export async function onRequestPost({ request, env }: {
     // Hash password and compare
     let passwordHash: string;
     try {
+      console.log('Login - Hashing password...');
       const encoder = new TextEncoder();
       const data = encoder.encode(password);
       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      console.log('Login - Password hash generated, length:', passwordHash.length);
     } catch (hashError: any) {
-      console.error('Password hashing error:', hashError);
+      console.error('Login - Password hashing error:', hashError);
       return new Response(
         JSON.stringify({ error: '비밀번호 처리 중 오류가 발생했습니다.' }),
         { status: 500, headers: corsHeaders }
       );
     }
 
+    console.log('Login - Comparing password hashes...');
     if (passwordHash !== user.password_hash) {
+      console.log('Login - Password mismatch');
       return new Response(
         JSON.stringify({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' }),
         { status: 401, headers: corsHeaders }
       );
     }
+    console.log('Login - Password verified');
 
     // Generate simple token (base64 encoded user info)
     let token: string;
@@ -214,10 +230,13 @@ export async function onRequestPost({ request, env }: {
       };
       
       const tokenString = JSON.stringify(tokenData);
+      console.log('Login - Token data string length:', tokenString.length);
       token = base64Encode(tokenString);
+      console.log('Login - Token generated, length:', token.length);
+      console.log('Login - Token first 50 chars:', token.substring(0, 50));
     } catch (tokenError: any) {
-      console.error('Token generation error:', tokenError);
-      console.error('Token error details:', {
+      console.error('Login - Token generation error:', tokenError);
+      console.error('Login - Token error details:', {
         message: tokenError.message,
         stack: tokenError.stack,
         name: tokenError.name
@@ -231,6 +250,7 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    console.log('Login - SUCCESS for user:', username);
     return new Response(
       JSON.stringify({
         message: '로그인 성공',
@@ -246,8 +266,8 @@ export async function onRequestPost({ request, env }: {
       { status: 200, headers: corsHeaders }
     );
   } catch (error: any) {
-    console.error('Login error:', error);
-    console.error('Error details:', {
+    console.error('Login - UNEXPECTED ERROR:', error);
+    console.error('Login - Error details:', {
       message: error.message,
       stack: error.stack,
       name: error.name,
