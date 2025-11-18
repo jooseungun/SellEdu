@@ -71,55 +71,70 @@ export async function onRequestPost({ request, env }: {
 
     // 파일을 base64로 변환
     console.log('Thumbnail upload - Starting file conversion, size:', file.size);
-    let arrayBuffer: ArrayBuffer;
-    try {
-      arrayBuffer = await file.arrayBuffer();
-      console.log('Thumbnail upload - ArrayBuffer created, length:', arrayBuffer.byteLength);
-    } catch (error: any) {
-      console.error('Thumbnail upload - ArrayBuffer error:', error);
-      return new Response(
-        JSON.stringify({ error: '파일 읽기에 실패했습니다.', details: error.message }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-    
-    const uint8Array = new Uint8Array(arrayBuffer);
-    console.log('Thumbnail upload - Uint8Array created, length:', uint8Array.length);
-    
-    // Base64 인코딩 (Cloudflare Workers 호환 방식)
-    const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    let base64 = '';
-    let i = 0;
-    const totalLength = uint8Array.length;
+    let base64: string;
     
     try {
-      while (i < totalLength) {
-        const byte1 = uint8Array[i++];
-        const byte2 = i < totalLength ? uint8Array[i++] : undefined;
-        const byte3 = i < totalLength ? uint8Array[i++] : undefined;
+      // Cloudflare Workers에서 File 객체를 안전하게 처리
+      // file.arrayBuffer() 대신 stream을 사용하여 처리
+      const reader = file.stream().getReader();
+      const chunks: Uint8Array[] = [];
+      let totalLength = 0;
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          totalLength += value.length;
+        }
+      }
+      
+      console.log('Thumbnail upload - File chunks read, total length:', totalLength);
+      
+      // 모든 청크를 하나의 Uint8Array로 합치기
+      const combinedArray = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        combinedArray.set(chunk, offset);
+        offset += chunk.length;
+      }
+      
+      console.log('Thumbnail upload - Combined array created, length:', combinedArray.length);
+      
+      // Base64 인코딩 (효율적인 방식)
+      const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+      const base64Parts: string[] = [];
+      let i = 0;
+      const arrayLength = combinedArray.length;
+      
+      // 청크 단위로 Base64 인코딩하여 메모리 효율성 향상
+      while (i < arrayLength) {
+        const byte1 = combinedArray[i++];
+        const byte2 = i < arrayLength ? combinedArray[i++] : undefined;
+        const byte3 = i < arrayLength ? combinedArray[i++] : undefined;
         
         const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
         
-        base64 += base64Chars.charAt((bitmap >> 18) & 63);
-        base64 += base64Chars.charAt((bitmap >> 12) & 63);
-        
-        if (byte2 !== undefined) {
-          base64 += base64Chars.charAt((bitmap >> 6) & 63);
-        } else {
-          base64 += '=';
-        }
-        
-        if (byte3 !== undefined) {
-          base64 += base64Chars.charAt(bitmap & 63);
-        } else {
-          base64 += '=';
-        }
+        base64Parts.push(
+          base64Chars.charAt((bitmap >> 18) & 63) +
+          base64Chars.charAt((bitmap >> 12) & 63) +
+          (byte2 !== undefined ? base64Chars.charAt((bitmap >> 6) & 63) : '=') +
+          (byte3 !== undefined ? base64Chars.charAt(bitmap & 63) : '=')
+        );
       }
+      
+      base64 = base64Parts.join('');
       console.log('Thumbnail upload - Base64 encoding completed, length:', base64.length);
+      
     } catch (error: any) {
-      console.error('Thumbnail upload - Base64 encoding error:', error);
+      console.error('Thumbnail upload - File conversion error:', error);
+      console.error('Thumbnail upload - Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       return new Response(
-        JSON.stringify({ error: '파일 인코딩에 실패했습니다.', details: error.message }),
+        JSON.stringify({ error: '파일 변환에 실패했습니다.', details: error.message }),
         { status: 500, headers: corsHeaders }
       );
     }
