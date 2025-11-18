@@ -10,8 +10,19 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // 개발 환경에서는 로컬 서버 사용
+  // 개발 환경에서는 로컬 Cloudflare Pages Functions 사용 (wrangler pages dev)
+  // wrangler pages dev는 기본적으로 8788 포트에서 실행됨
   if (process.env.NODE_ENV === 'development') {
+    // 로컬에서 wrangler pages dev를 사용하는 경우
+    if (window.location.port === '8788' || window.location.hostname === 'localhost') {
+      // 같은 포트에서 실행 중이면 상대 경로 사용
+      if (window.location.port === '8788') {
+        return '/api/v1';
+      }
+      // React 개발 서버(3000)에서 실행 중이면 wrangler 포트로 연결
+      return 'http://localhost:8788/api/v1';
+    }
+    // 기본값: 로컬 Express 서버 (기존 방식)
     return 'http://localhost:3000/api/v1';
   }
   

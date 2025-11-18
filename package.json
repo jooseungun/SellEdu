@@ -5,6 +5,9 @@
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "dev:pages": "npm run client:build && wrangler pages dev client/build --port 8788",
+    "dev:full": "concurrently \"npm run client:dev\" \"npm run functions:dev\"",
+    "functions:dev": "wrangler pages dev client/build --port 8788",
     "server:dev": "nodemon server/index.js",
     "server:start": "node server/index.js",
     "client:dev": "cd client && npm start",
