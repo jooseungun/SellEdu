@@ -425,7 +425,7 @@ const ContentDetail = () => {
                 <Tab label="과정소개" />
                 <Tab label="강의목차" />
                 <Tab label="교재&상품 정보" />
-                <Tab label="수강후기" />
+                <Tab label="상품 후기" />
               </Tabs>
 
               {/* 탭 내용 */}
@@ -527,7 +527,7 @@ const ContentDetail = () => {
               {tabValue === 3 && (
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
-                    수강후기 ({reviews.length})
+                    상품 후기 ({reviews.length})
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   {reviews.length === 0 ? (
@@ -583,15 +583,6 @@ const ContentDetail = () => {
                   </Typography>
                 )}
               </Box>
-
-              <Divider sx={{ my: 3 }} />
-
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                옵션선택
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                교재 또는 상품을 선택해주세요.
-              </Typography>
 
               <Divider sx={{ my: 3 }} />
 

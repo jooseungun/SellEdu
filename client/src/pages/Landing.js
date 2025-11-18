@@ -180,7 +180,7 @@ const Landing = () => {
               >
                 최고의 교육 콘텐츠를 만나보세요
                 <br />
-                학습자와 강사가 함께 성장하는 플랫폼
+                강사와 학습자 구분 없이 함께 성장하는 플랫폼
               </Typography>
             </Box>
           </Fade>
@@ -382,7 +382,7 @@ const Landing = () => {
                     성장하는 플랫폼
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    학습자와 강사가 함께 성장
+                    강사와 학습자 구분 없이 함께 성장
                   </Typography>
                 </Box>
               </Grid>
