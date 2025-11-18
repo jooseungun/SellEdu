@@ -203,7 +203,14 @@ const SellerDashboard = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{ 
+          background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)'
+        }}
+      >
         <Toolbar>
           <Typography
             variant="h6"
@@ -213,45 +220,50 @@ const SellerDashboard = () => {
               flexGrow: 0,
               mr: 3,
               cursor: 'pointer',
-              fontWeight: 'bold',
+              fontWeight: 700,
               userSelect: 'none',
+              color: 'white',
               '&:hover': {
-                opacity: 0.8
+                opacity: 0.9
               }
             }}
           >
-            SellEdu
+            🎓 SellEdu
           </Typography>
-                 <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                   판매자 대시보드
-                 </Typography>
-                 {userName && (
-                   <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
-                     {userName}님 환영합니다
-                   </Typography>
-                 )}
-                 <Button
-                   startIcon={<LocalOfferIcon />}
-                   onClick={() => setPartnershipDialogOpen(true)}
-                   sx={{ color: 'white', mr: 1 }}
-                   disabled={hasPartnershipRequest}
-                 >
-                   제휴할인
-                 </Button>
-                 <Button
-                   startIcon={<CodeIcon />}
-                   onClick={() => navigate('/seller/api-guide')}
-                   sx={{ color: 'white', mr: 1 }}
-                 >
-                   API 가이드
-                 </Button>
+          <Typography variant="h6" sx={{ flexGrow: 1, color: 'white', fontWeight: 600 }}>
+            판매자 대시보드
+          </Typography>
+          {userName && (
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mr: 2, fontWeight: 500 }}>
+              {userName}님 환영합니다
+            </Typography>
+          )}
+          <Button
+            startIcon={<LocalOfferIcon />}
+            onClick={() => setPartnershipDialogOpen(true)}
+            sx={{ 
+              color: 'white', 
+              mr: 1,
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)'
+              }
+            }}
+            disabled={hasPartnershipRequest}
+          >
+            제휴할인
+          </Button>
           <Button
             startIcon={<LogoutIcon />}
             onClick={() => {
               removeToken();
               navigate('/');
             }}
-            sx={{ color: 'white' }}
+            sx={{ 
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)'
+              }
+            }}
           >
             로그아웃
           </Button>
@@ -274,7 +286,12 @@ const SellerDashboard = () => {
             variant="contained"
             onClick={() => navigate('/seller/apply')}
             sx={{
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+              background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #db2777 0%, #ec4899 100%)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 10px 20px rgba(236, 72, 153, 0.3)'
+              }
             }}
           >
             심사 신청

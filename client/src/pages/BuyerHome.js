@@ -199,7 +199,14 @@ const BuyerHome = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <AppBar 
+        position="static" 
+        elevation={0}
+        sx={{ 
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)'
+        }}
+      >
         <Toolbar>
           <Typography
             variant="h6"
@@ -209,63 +216,76 @@ const BuyerHome = () => {
               flexGrow: 0,
               mr: 3,
               cursor: 'pointer',
-              fontWeight: 'bold',
+              fontWeight: 700,
               userSelect: 'none',
+              color: 'white',
               '&:hover': {
-                opacity: 0.8
+                opacity: 0.9
               }
             }}
           >
-            SellEdu
+            🎓 SellEdu
           </Typography>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            구매자 페이지
+          <Typography variant="h6" sx={{ flexGrow: 1, color: 'white', fontWeight: 600 }}>
+            콘텐츠 둘러보기
           </Typography>
           {isLoggedIn && userName && (
-            <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mr: 2, fontWeight: 500 }}>
               {userName}님 환영합니다
             </Typography>
           )}
-          <Button
-            startIcon={<LocalOfferIcon />}
-            onClick={() => setPartnershipDialogOpen(true)}
-            sx={{ color: 'white', mr: 1 }}
-            disabled={hasPartnershipRequest}
-          >
-            제휴할인
-          </Button>
-          <Button
-            startIcon={<CodeIcon />}
-            onClick={() => navigate('/buyer/api-guide')}
-            sx={{ color: 'white', mr: 1 }}
-          >
-            API 가이드
-          </Button>
-          {isLoggedIn ? (
             <Button
-              startIcon={<LogoutIcon />}
-              onClick={() => {
-                removeToken();
-                setIsLoggedIn(false);
-                navigate('/');
+              startIcon={<LocalOfferIcon />}
+              onClick={() => setPartnershipDialogOpen(true)}
+              sx={{ 
+                color: 'white', 
+                mr: 1,
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.1)'
+                }
               }}
-              sx={{ color: 'white' }}
+              disabled={hasPartnershipRequest}
             >
-              로그아웃
+              제휴할인
             </Button>
-          ) : (
-            <Button
-              startIcon={<LoginIcon />}
-              onClick={() => navigate('/login')}
-              sx={{ color: 'white' }}
-            >
-              로그인
-            </Button>
-          )}
+            {isLoggedIn ? (
+              <Button
+                startIcon={<LogoutIcon />}
+                onClick={() => {
+                  removeToken();
+                  setIsLoggedIn(false);
+                  navigate('/');
+                }}
+                sx={{ 
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                로그아웃
+              </Button>
+            ) : (
+              <Button
+                startIcon={<LoginIcon />}
+                onClick={() => navigate('/login')}
+                variant="outlined"
+                sx={{ 
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  '&:hover': {
+                    borderColor: 'white',
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                로그인
+              </Button>
+            )}
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ bgcolor: '#1a1a1a', minHeight: '100vh', pb: 4 }}>
+      <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 4 }}>
 
           {/* 검색 및 카테고리 필터 */}
@@ -283,26 +303,26 @@ const BuyerHome = () => {
               }}
               InputProps={{
                 startAdornment: (
-                  <SearchIcon sx={{ color: 'rgba(255,255,255,0.5)', mr: 1 }} />
+                  <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
                 )
               }}
               sx={{
                 mb: 2,
                 '& .MuiOutlinedInput-root': {
-                  bgcolor: '#2a2a2a',
-                  color: 'white',
+                  bgcolor: 'white',
+                  color: 'text.primary',
                   '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.3)'
+                    borderColor: 'rgba(0,0,0,0.1)'
                   },
                   '&:hover fieldset': {
-                    borderColor: 'rgba(255,255,255,0.5)'
+                    borderColor: 'primary.main'
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#667eea'
+                    borderColor: 'primary.main'
                   }
                 },
                 '& .MuiInputBase-input::placeholder': {
-                  color: 'rgba(255,255,255,0.5)'
+                  color: 'text.secondary'
                 }
               }}
             />
@@ -313,12 +333,16 @@ const BuyerHome = () => {
                   label={category}
                   onClick={() => setSelectedCategory(category)}
                   sx={{
-                    bgcolor: selectedCategory === category ? '#667eea' : 'rgba(255,255,255,0.1)',
-                    color: 'white',
+                    bgcolor: selectedCategory === category ? 'primary.main' : 'white',
+                    color: selectedCategory === category ? 'white' : 'text.primary',
                     cursor: 'pointer',
+                    border: selectedCategory === category ? 'none' : '1px solid rgba(0,0,0,0.1)',
+                    fontWeight: selectedCategory === category ? 600 : 500,
                     '&:hover': {
-                      bgcolor: selectedCategory === category ? '#667eea' : 'rgba(255,255,255,0.2)'
-                    }
+                      bgcolor: selectedCategory === category ? 'primary.dark' : 'grey.100',
+                      transform: 'translateY(-2px)'
+                    },
+                    transition: 'all 0.2s'
                   }}
                 />
               ))}
@@ -327,14 +351,14 @@ const BuyerHome = () => {
 
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-              <CircularProgress sx={{ color: '#667eea' }} />
+              <CircularProgress sx={{ color: 'primary.main' }} />
             </Box>
           ) : (
             <>
               <Grid container spacing={2}>
                 {filteredContents.length === 0 ? (
                   <Box sx={{ width: '100%', textAlign: 'center', py: 8 }}>
-                    <Typography variant="h6" sx={{ color: 'white' }}>
+                    <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                       콘텐츠가 없습니다.
                     </Typography>
                   </Box>
@@ -343,13 +367,15 @@ const BuyerHome = () => {
                       <Grid item xs={6} sm={4} md={3} lg={2.4} key={content.id || index}>
                         <Card
                           sx={{
-                            bgcolor: '#2a2a2a',
-                            color: 'white',
+                            bgcolor: 'white',
+                            color: 'text.primary',
                             position: 'relative',
-                            transition: 'transform 0.2s',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             cursor: 'pointer',
+                            overflow: 'hidden',
                             '&:hover': {
-                              transform: 'scale(1.05)',
+                              transform: 'translateY(-8px)',
+                              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                               zIndex: 1
                             }
                           }}
@@ -374,13 +400,13 @@ const BuyerHome = () => {
                                 left: 0,
                                 right: 0,
                                 bottom: 0,
-                                bgcolor: 'rgba(0,0,0,0.6)',
+                                bgcolor: 'rgba(99, 102, 241, 0.9)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'space-between',
                                 p: 1.5,
                                 opacity: 0,
-                                transition: 'opacity 0.2s',
+                                transition: 'opacity 0.3s',
                                 '&:hover': {
                                   opacity: 1
                                 }
@@ -444,8 +470,8 @@ const BuyerHome = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontWeight: 'bold',
-                                color: 'white',
+                                fontWeight: 600,
+                                color: 'text.primary',
                                 mb: 0.5,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -457,7 +483,7 @@ const BuyerHome = () => {
                             <Typography
                               variant="caption"
                               sx={{
-                                color: 'rgba(255,255,255,0.7)',
+                                color: 'text.secondary',
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical',
@@ -470,7 +496,7 @@ const BuyerHome = () => {
                             </Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                               {content.price > 0 ? (
-                                <Typography variant="body2" sx={{ color: '#667eea', fontWeight: 'bold' }}>
+                                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '1rem' }}>
                                   {content.price.toLocaleString()}원
                                 </Typography>
                               ) : (
@@ -478,15 +504,15 @@ const BuyerHome = () => {
                                   label="무료"
                                   size="small"
                                   sx={{
-                                    bgcolor: '#4CAF50',
+                                    bgcolor: 'success.main',
                                     color: 'white',
-                                    fontWeight: 'bold'
+                                    fontWeight: 600
                                   }}
                                 />
                               )}
                               {content.avg_rating && (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                                     ⭐ {content.avg_rating}
                                   </Typography>
                                 </Box>
