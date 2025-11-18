@@ -63,23 +63,41 @@ const SellerContentApply = () => {
       return;
     }
 
+    // 파일 타입 확인
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
     // 파일 업로드
     setUploading(true);
     try {
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
 
+      console.log('Thumbnail upload - Starting upload:', { 
+        fileName: file.name, 
+        fileSize: file.size, 
+        fileType: file.type 
+      });
+
       const response = await api.post('/upload/thumbnail', uploadFormData);
+
+      console.log('Thumbnail upload - Response:', response.data);
 
       if (response.data?.thumbnail_url) {
         setFormData({ ...formData, thumbnail_url: response.data.thumbnail_url });
         alert('썸네일이 업로드되었습니다.');
       } else {
-        alert('썸네일 업로드에 실패했습니다.');
+        console.error('Thumbnail upload - No thumbnail_url in response:', response.data);
+        alert('썸네일 업로드에 실패했습니다. 응답에 썸네일 URL이 없습니다.');
       }
     } catch (error) {
       console.error('Thumbnail upload error:', error);
-      alert('썸네일 업로드에 실패했습니다.');
+      const errorMessage = error.response?.data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+      const errorDetails = error.response?.data?.details || '';
+      console.error('Thumbnail upload - Error details:', { errorMessage, errorDetails });
+      alert(`썸네일 업로드에 실패했습니다: ${errorMessage}${errorDetails ? `\n${errorDetails}` : ''}`);
     } finally {
       setUploading(false);
     }

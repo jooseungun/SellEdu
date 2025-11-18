@@ -27,8 +27,24 @@ export async function onRequestPost({ request, env }: {
       CREATE INDEX IF NOT EXISTS idx_thumbnails_created_at ON thumbnails(created_at);
     `);
 
-    const formData = await request.formData();
+    // Content-Type 확인
+    const contentType = request.headers.get('Content-Type') || '';
+    console.log('Thumbnail upload - Content-Type:', contentType);
+    
+    // FormData 파싱
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (error: any) {
+      console.error('FormData parsing error:', error);
+      return new Response(
+        JSON.stringify({ error: '파일 형식이 올바르지 않습니다.', details: error.message }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+    
     const file = formData.get('file') as File;
+    console.log('Thumbnail upload - File received:', file ? { name: file.name, size: file.size, type: file.type } : 'null');
 
     if (!file) {
       return new Response(
@@ -93,8 +109,12 @@ export async function onRequestPost({ request, env }: {
       'INSERT INTO thumbnails (id, file_name, file_type, file_data) VALUES (?, ?, ?, ?)'
     ).bind(thumbnailId, file.name, file.type, base64).run();
 
-    // 썸네일 조회 URL 반환
-    const thumbnailUrl = `/api/v1/upload/thumbnail/${thumbnailId}`;
+    // 썸네일 조회 URL 반환 (절대 경로로 변환)
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const thumbnailUrl = `${baseUrl}/api/v1/upload/thumbnail/${thumbnailId}`;
+
+    console.log('Thumbnail upload - Success:', { thumbnailId, thumbnailUrl });
 
     return new Response(
       JSON.stringify({
