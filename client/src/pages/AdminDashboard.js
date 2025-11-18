@@ -344,7 +344,7 @@ const AdminDashboard = () => {
         )}
         
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
-          <Tab label="콘텐츠 승인심사" />
+          <Tab label="콘텐츠 승인 검토" />
           <Tab label="상품관리" />
           <Tab label="후기 관리" />
           <Tab label="등급 정책" />
@@ -362,8 +362,8 @@ const AdminDashboard = () => {
         {tabValue === 0 && (
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              심사 대기 목록 {pendingContents.filter(c => c.is_reapply).length > 0 && 
-                `(재심사: ${pendingContents.filter(c => c.is_reapply).length}건)`}
+              등록 대기 목록 {pendingContents.filter(c => c.is_reapply).length > 0 && 
+                `(재등록: ${pendingContents.filter(c => c.is_reapply).length}건)`}
             </Typography>
             <TableContainer>
               <Table>
@@ -403,16 +403,16 @@ const AdminDashboard = () => {
                           {content.title}
                         </Typography>
                         {content.is_reapply && (
-                          <Chip label="재심사" color="warning" size="small" sx={{ ml: 1, mt: 0.5 }} />
+                          <Chip label="재등록" color="warning" size="small" sx={{ ml: 1, mt: 0.5 }} />
                         )}
                       </TableCell>
                       <TableCell>{content.seller_username}</TableCell>
                       <TableCell>{content.price?.toLocaleString()}원</TableCell>
                       <TableCell>
                         {content.status === 'reviewing' ? (
-                          <Chip label="심사중" color="info" size="small" />
+                          <Chip label="검토 중" color="info" size="small" />
                         ) : (
-                          <Chip label="심사대기" color="warning" size="small" />
+                          <Chip label="등록 대기" color="warning" size="small" />
                         )}
                       </TableCell>
                       <TableCell>
@@ -811,7 +811,7 @@ const AdminDashboard = () => {
                             label={
                               request.status === 'approved' ? '승인' :
                               request.status === 'rejected' ? '거부' :
-                              request.status === 'reviewing' ? '심사중' : '대기'
+                              request.status === 'reviewing' ? '검토 중' : '대기'
                             }
                             size="small"
                             color={
@@ -1035,17 +1035,17 @@ const AdminDashboard = () => {
           }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                콘텐츠 심사 상세 정보
+                콘텐츠 등록 검토 상세 정보
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 {contentDetail?.status === 'reviewing' && (
-                  <Chip label="심사중" color="info" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                  <Chip label="검토 중" color="info" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
                 )}
                 {contentDetail?.status === 'pending' && (
-                  <Chip label="심사 대기" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                  <Chip label="등록 대기" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
                 )}
                 {contentDetail?.is_reapply && (
-                  <Chip label="재심사" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                  <Chip label="재등록" color="warning" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
                 )}
               </Box>
             </Box>
@@ -1294,7 +1294,7 @@ const AdminDashboard = () => {
                   </Box>
                 )}
 
-                {/* 거부 사유 (재심사인 경우) */}
+                {/* 거부 사유 (재등록인 경우) */}
                 {contentDetail.rejection_reason && (
                   <Box sx={{ 
                     mt: 2, 

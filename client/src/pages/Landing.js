@@ -165,7 +165,7 @@ const Landing = () => {
                   lineHeight: 1.1
                 }}
               >
-                교육 콘텐츠 마켓플레이스
+                B2B 콘텐츠 마켓플레이스
               </Typography>
               <Typography
                 variant="h5"
@@ -178,9 +178,9 @@ const Landing = () => {
                   fontSize: { xs: '1.1rem', md: '1.5rem' }
                 }}
               >
-                최고의 교육 콘텐츠를 만나보세요
+                기업과 기업을 연결하는 콘텐츠 거래 플랫폼
                 <br />
-                강사와 학습자 구분 없이 함께 성장하는 플랫폼
+                기업 간 협업으로 함께 성장하는 B2B 마켓플레이스
               </Typography>
             </Box>
           </Fade>
@@ -227,12 +227,12 @@ const Landing = () => {
                       <ShoppingCartIcon sx={{ fontSize: 50, color: 'white' }} />
                     </Box>
                     <Typography variant="h4" component="h2" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-                      구매자
+                      구매 기업
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4, lineHeight: 1.8, fontSize: '1.1rem' }}>
-                      다양한 교육 콘텐츠를 탐색하고
+                      다양한 기업용 콘텐츠를 탐색하고
                       <br />
-                      원하는 강의를 구매하세요
+                      필요한 콘텐츠를 구매하세요
                     </Typography>
                     <Button
                       variant="contained"
@@ -252,7 +252,7 @@ const Landing = () => {
                         }
                       }}
                     >
-                      콘텐츠 둘러보기
+                      콘텐츠 구매하기
                     </Button>
                   </CardContent>
                 </Card>
@@ -298,12 +298,12 @@ const Landing = () => {
                       <StoreIcon sx={{ fontSize: 50, color: 'white' }} />
                     </Box>
                     <Typography variant="h4" component="h2" sx={{ mb: 2, fontWeight: 700, color: 'text.primary' }}>
-                      판매자
+                      판매 기업
                     </Typography>
                     <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4, lineHeight: 1.8, fontSize: '1.1rem' }}>
-                      나만의 교육 콘텐츠를 업로드하고
+                      기업의 콘텐츠를 등록하고
                       <br />
-                      수익을 창출하세요
+                      다른 기업에 판매하세요
                     </Typography>
                     <Button
                       variant="contained"
@@ -323,7 +323,7 @@ const Landing = () => {
                         }
                       }}
                     >
-                      콘텐츠 판매하기
+                      콘텐츠 등록하기
                     </Button>
                   </CardContent>
                 </Card>
@@ -371,7 +371,7 @@ const Landing = () => {
                     다양한 콘텐츠
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    수천 개의 고품질 교육 콘텐츠
+                    수천 개의 고품질 기업용 콘텐츠
                   </Typography>
                 </Box>
               </Grid>
@@ -382,7 +382,7 @@ const Landing = () => {
                     성장하는 플랫폼
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    강사와 학습자 구분 없이 함께 성장
+                    기업과 기업이 함께 성장
                   </Typography>
                 </Box>
               </Grid>
@@ -390,10 +390,10 @@ const Landing = () => {
                 <Box sx={{ textAlign: 'center', color: 'white' }}>
                   <StoreIcon sx={{ fontSize: 48, mb: 2, opacity: 0.9 }} />
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    쉬운 판매
+                    쉬운 거래
                   </Typography>
                   <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    간편한 콘텐츠 등록과 관리
+                    간편한 콘텐츠 등록과 거래 관리
                   </Typography>
                 </Box>
               </Grid>

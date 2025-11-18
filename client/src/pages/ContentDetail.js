@@ -131,13 +131,13 @@ const generateMockContent = (id) => {
   const index = (parseInt(id) - 1) % titles.length;
   const contentId = parseInt(id) || 1;
 
-  // 강의 목차 생성
+  // 콘텐츠 목차 생성
   const lessons = [];
-  const lessonCount = Math.floor(Math.random() * 5) + 4; // 4-8차시
+  const lessonCount = Math.floor(Math.random() * 5) + 4; // 4-8개
   for (let i = 0; i < lessonCount; i++) {
     lessons.push({
       id: i + 1,
-      title: `${i + 1}차시. ${titles[index]} - ${i + 1}부`,
+      title: `${i + 1}번. ${titles[index]} - ${i + 1}부`,
       duration: [30, 45, 60, 90, 120][Math.floor(Math.random() * 5)],
       display_order: i + 1,
       cdn_link: `https://example.com/video/${contentId}-${i + 1}`
@@ -195,7 +195,7 @@ const ContentDetail = () => {
           detailed_description: response.data.detailed_description || response.data.description || '',
           lessons: response.data.lessons || [],
           tags: response.data.tags || (response.data.category ? [response.data.category, '온라인', '실무'] : ['온라인', '실무']),
-          instructor: response.data.instructor || response.data.seller_name || response.data.seller_username || '강사명',
+          instructor: response.data.instructor || response.data.seller_name || response.data.seller_username || '기업명',
           education_period: response.data.education_period || 999,
           thumbnail_url: response.data.thumbnail_url || null
         };
@@ -227,15 +227,15 @@ const ContentDetail = () => {
   };
 
   const generateMockReviews = (contentId) => {
-    const names = ['김학생', '이수강', '박교육', '최학습', '정이수', '한교육', '윤학생'];
+    const names = ['A기업', 'B기업', 'C기업', 'D기업', 'E기업', 'F기업', 'G기업'];
     const comments = [
-      '정말 유익한 강의였습니다. 실무에 바로 적용할 수 있어서 좋았어요!',
-      '강사님이 설명을 잘 해주셔서 이해하기 쉬웠습니다.',
+      '정말 유익한 콘텐츠였습니다. 실무에 바로 적용할 수 있어서 좋았어요!',
+      '콘텐츠 구성이 체계적이고 이해하기 쉬웠습니다.',
       '내용이 체계적이고 실습 예제가 많아서 좋았습니다.',
-      '가격 대비 만족도가 높은 강의입니다.',
+      '가격 대비 만족도가 높은 콘텐츠입니다.',
       '초보자도 따라하기 쉽게 구성되어 있어서 추천합니다.',
-      '실무 경험이 풍부한 강사님의 강의라서 실용적이었습니다.',
-      '강의 자료가 잘 정리되어 있어서 복습하기 좋았습니다.'
+      '실무 경험이 풍부한 기업의 콘텐츠라서 실용적이었습니다.',
+      '콘텐츠 자료가 잘 정리되어 있어서 활용하기 좋았습니다.'
     ];
     
     const reviewCount = Math.floor(Math.random() * 5) + 3; // 3-7개
@@ -347,7 +347,7 @@ const ContentDetail = () => {
             홈
           </Link>
           <Link color="inherit" onClick={() => navigate('/buyer')} sx={{ cursor: 'pointer' }}>
-            구매자 페이지
+            콘텐츠 구매
           </Link>
           <Typography color="text.primary">{content.title}</Typography>
         </Breadcrumbs>
@@ -404,7 +404,7 @@ const ContentDetail = () => {
                 </IconButton>
               </Box>
 
-              {/* 맛보기 버튼 */}
+              {/* 샘플 보기 버튼 */}
               {content.lessons && content.lessons.length > 0 && (
                 <Button
                   variant="outlined"
@@ -412,7 +412,7 @@ const ContentDetail = () => {
                   onClick={() => setPreviewOpen(true)}
                   sx={{ mb: 2 }}
                 >
-                  맛보기
+                  샘플 보기
                 </Button>
               )}
 
@@ -422,9 +422,9 @@ const ContentDetail = () => {
                 onChange={(e, v) => setTabValue(v)}
                 sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
               >
-                <Tab label="과정소개" />
-                <Tab label="강의목차" />
-                <Tab label="교재&상품 정보" />
+                <Tab label="콘텐츠 소개" />
+                <Tab label="콘텐츠 목차" />
+                <Tab label="상품 정보" />
                 <Tab label="상품 후기" />
               </Tabs>
 
@@ -432,7 +432,7 @@ const ContentDetail = () => {
               {tabValue === 0 && (
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
-                    과정소개
+                    콘텐츠 소개
                   </Typography>
                   <Box 
                     sx={{ 
@@ -447,12 +447,12 @@ const ContentDetail = () => {
                   />
                   <Divider sx={{ my: 3 }} />
                   <Typography variant="h6" gutterBottom>
-                    과정정보
+                    콘텐츠 정보
                   </Typography>
                   <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
-                        교육기간
+                        이용기간
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
                         {content.education_period || 999}일
@@ -460,18 +460,18 @@ const ContentDetail = () => {
                     </Grid>
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
-                        강의구성
+                        콘텐츠 구성
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                        {content.lessons?.length || 0}차시
+                        {content.lessons?.length || 0}개
                       </Typography>
                     </Grid>
                     <Grid item xs={4}>
                       <Typography variant="body2" color="text.secondary">
-                        담당강사
+                        제공 기업
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                        {content.instructor || '강사명'}
+                        {content.instructor || content.seller_username || '기업명'}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -481,7 +481,7 @@ const ContentDetail = () => {
               {tabValue === 1 && (
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
-                    강의목차 (총 {content.lessons?.length || 0}강)
+                    콘텐츠 목차 (총 {content.lessons?.length || 0}개)
                   </Typography>
                   {content.lessons && content.lessons.length > 0 ? (
                     content.lessons.map((lesson, index) => (
@@ -496,8 +496,8 @@ const ContentDetail = () => {
                                 {lesson.duration}분
                               </Typography>
                             </Box>
-                            <Chip
-                              label={index === 0 ? '맛보기' : `${index + 1}차시`}
+                              <Chip
+                              label={index === 0 ? '샘플' : `${index + 1}번`}
                               size="small"
                               color={index === 0 ? 'primary' : 'default'}
                             />
@@ -507,7 +507,7 @@ const ContentDetail = () => {
                     ))
                   ) : (
                     <Typography variant="body2" color="text.secondary">
-                      강의 목차가 없습니다.
+                      콘텐츠 목차가 없습니다.
                     </Typography>
                   )}
                 </Box>
@@ -516,10 +516,10 @@ const ContentDetail = () => {
               {tabValue === 2 && (
                 <Box>
                   <Typography variant="h6" gutterBottom sx={{ mt: 2, mb: 2 }}>
-                    교재&상품 정보
+                    상품 정보
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    현재 등록된 교재나 상품이 없습니다.
+                    현재 등록된 추가 상품이 없습니다.
                   </Typography>
                 </Box>
               )}
@@ -566,7 +566,7 @@ const ContentDetail = () => {
             </Paper>
           </Grid>
 
-          {/* 오른쪽: 수강료 및 구매 정보 */}
+          {/* 오른쪽: 구매 가격 및 구매 정보 */}
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
               <Typography variant="h6" gutterBottom>
@@ -636,12 +636,12 @@ const ContentDetail = () => {
         fullWidth
       >
         <DialogTitle>
-          {content.lessons && content.lessons[0] ? content.lessons[0].title : '맛보기'}
+          {content.lessons && content.lessons[0] ? content.lessons[0].title : '샘플 보기'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              맛보기 영상 재생 기능은 현재 개발 중입니다.
+              샘플 콘텐츠 재생 기능은 현재 개발 중입니다.
             </Typography>
             {content.lessons && content.lessons[0] && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>

@@ -131,14 +131,14 @@ const SellerContentApply = () => {
     }
 
     if (lessons.length === 0) {
-      alert('최소 1개 이상의 차시를 추가해주세요.');
+      alert('최소 1개 이상의 콘텐츠를 추가해주세요.');
       return;
     }
 
-    // 차시 유효성 검사
+    // 콘텐츠 유효성 검사
     for (let i = 0; i < lessons.length; i++) {
       if (!lessons[i].title || !lessons[i].cdn_link) {
-        alert(`${i + 1}번째 차시의 제목과 CDN 링크를 모두 입력해주세요.`);
+        alert(`${i + 1}번째 콘텐츠의 제목과 CDN 링크를 모두 입력해주세요.`);
         return;
       }
     }
@@ -167,10 +167,10 @@ const SellerContentApply = () => {
           duration: parseInt(lesson.duration) || 0
         }))
       });
-      alert('콘텐츠 심사 신청이 완료되었습니다.');
+      alert('콘텐츠 등록 신청이 완료되었습니다.');
       navigate('/seller');
     } catch (error) {
-      alert(error.response?.data?.error || '심사 신청에 실패했습니다.');
+      alert(error.response?.data?.error || '등록 신청에 실패했습니다.');
     }
   };
 
@@ -186,14 +186,14 @@ const SellerContentApply = () => {
             뒤로가기
           </Button>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            콘텐츠 심사 신청
+            콘텐츠 등록 신청
           </Typography>
         </Toolbar>
       </AppBar>
       <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Paper sx={{ p: 4 }}>
           <Typography variant="h5" component="h1" gutterBottom>
-            콘텐츠 정보 입력
+            콘텐츠 등록 정보 입력
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
             <Grid container spacing={3}>
@@ -417,26 +417,26 @@ const SellerContentApply = () => {
                 </Box>
               </Grid>
 
-              {/* 차시 리스트 */}
+              {/* 콘텐츠 구성 */}
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant="h6">
-                    차시 구성
+                    콘텐츠 구성
                   </Typography>
                   <Button
                     variant="outlined"
                     startIcon={<AddIcon />}
                     onClick={handleAddLesson}
                   >
-                    차시 추가
+                    콘텐츠 추가
                   </Button>
                 </Box>
 
                 {lessons.length === 0 ? (
                   <Box sx={{ textAlign: 'center', py: 4, border: '1px dashed #ccc', borderRadius: 1 }}>
                     <Typography variant="body2" color="text.secondary">
-                      차시를 추가해주세요
+                      콘텐츠를 추가해주세요
                     </Typography>
                   </Box>
                 ) : (
@@ -446,7 +446,7 @@ const SellerContentApply = () => {
                         <CardContent>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Typography variant="subtitle1">
-                              {index + 1}차시
+                              {index + 1}번
                             </Typography>
                             <IconButton
                               color="error"
@@ -460,11 +460,11 @@ const SellerContentApply = () => {
                             <Grid item xs={12}>
                               <TextField
                                 fullWidth
-                                label="차시명"
+                                label="콘텐츠명"
                                 required
                                 value={lesson.title}
                                 onChange={(e) => handleLessonChange(index, 'title', e.target.value)}
-                                placeholder="예: 1차시. 강의 소개"
+                                placeholder="예: 1번. 콘텐츠 소개"
                               />
                             </Grid>
                             <Grid item xs={12} sm={8}>
@@ -509,7 +509,7 @@ const SellerContentApply = () => {
                 variant="contained"
                 sx={{ flex: 1 }}
               >
-                심사 신청
+                등록 신청
               </Button>
             </Box>
           </Box>

@@ -227,7 +227,7 @@ const BuyerHome = () => {
             🎓 SellEdu
           </Typography>
           <Typography variant="h6" sx={{ flexGrow: 1, color: 'white', fontWeight: 600 }}>
-            콘텐츠 둘러보기
+            콘텐츠 구매 (구매 기업)
           </Typography>
           {isLoggedIn && userName && (
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mr: 2, fontWeight: 500 }}>

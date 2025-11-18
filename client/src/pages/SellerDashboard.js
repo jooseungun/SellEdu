@@ -177,7 +177,7 @@ const SellerDashboard = () => {
         ...editForm,
         tags: editForm.tags.split(',').map(t => t.trim()).filter(t => t)
       });
-      alert('콘텐츠가 수정되었고 재심사 신청이 완료되었습니다.');
+      alert('콘텐츠가 수정되었고 재등록 신청이 완료되었습니다.');
       setEditDialogOpen(false);
       fetchData();
     } catch (error) {
@@ -188,14 +188,14 @@ const SellerDashboard = () => {
 
   const getStatusChip = (status, isReapply) => {
     if (status === 'pending' && isReapply) {
-      return <Chip label="재심사" color="warning" size="small" />;
+      return <Chip label="재등록 신청" color="warning" size="small" />;
     }
     const statusMap = {
-      'pending': { label: '심사대기', color: 'warning' },
-      'reviewing': { label: '심사중', color: 'info' },
-      'approved': { label: '판매중', color: 'success' },
+      'pending': { label: '등록 대기', color: 'warning' },
+      'reviewing': { label: '검토 중', color: 'info' },
+      'approved': { label: '판매 중', color: 'success' },
       'rejected': { label: '거부됨', color: 'error' },
-      'suspended': { label: '판매중지', color: 'default' }
+      'suspended': { label: '판매 중지', color: 'default' }
     };
     const statusInfo = statusMap[status] || { label: status, color: 'default' };
     return <Chip label={statusInfo.label} color={statusInfo.color} size="small" />;
@@ -231,7 +231,7 @@ const SellerDashboard = () => {
             🎓 SellEdu
           </Typography>
           <Typography variant="h6" sx={{ flexGrow: 1, color: 'white', fontWeight: 600 }}>
-            판매자 대시보드
+            판매 기업 대시보드
           </Typography>
           {userName && (
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mr: 2, fontWeight: 500 }}>
@@ -294,7 +294,7 @@ const SellerDashboard = () => {
               }
             }}
           >
-            심사 신청
+            콘텐츠 등록
           </Button>
         </Box>
 
@@ -319,7 +319,7 @@ const SellerDashboard = () => {
               </Typography>
               {contents.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                  아직 등록된 콘텐츠가 없습니다. "심사 신청" 버튼을 클릭하여 콘텐츠를 등록하세요.
+                  아직 등록된 콘텐츠가 없습니다. "콘텐츠 등록" 버튼을 클릭하여 콘텐츠를 등록하세요.
                 </Typography>
               )}
             </Box>
@@ -341,7 +341,7 @@ const SellerDashboard = () => {
                   onClick={() => navigate('/seller/apply')}
                   sx={{ mt: 2 }}
                 >
-                  콘텐츠 심사 신청하기
+                  콘텐츠 등록 신청하기
                 </Button>
               </Box>
             ) : (
@@ -394,7 +394,7 @@ const SellerDashboard = () => {
                             size="small"
                             onClick={() => handleEditClick(content)}
                           >
-                            수정/재심사
+                            수정/재등록
                           </Button>
                         )}
                       </TableCell>
@@ -469,7 +469,7 @@ const SellerDashboard = () => {
 
         {/* 콘텐츠 수정 다이얼로그 */}
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-          <DialogTitle>콘텐츠 수정 및 재심사 신청</DialogTitle>
+          <DialogTitle>콘텐츠 수정 및 재등록 신청</DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
@@ -519,7 +519,7 @@ const SellerDashboard = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditDialogOpen(false)}>취소</Button>
-            <Button onClick={handleEditSubmit} variant="contained">수정 및 재심사 신청</Button>
+            <Button onClick={handleEditSubmit} variant="contained">수정 및 재등록 신청</Button>
           </DialogActions>
         </Dialog>
 
