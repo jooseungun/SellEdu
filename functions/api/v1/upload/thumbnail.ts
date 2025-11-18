@@ -70,44 +70,83 @@ export async function onRequestPost({ request, env }: {
     }
 
     // 파일을 base64로 변환
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+    console.log('Thumbnail upload - Starting file conversion, size:', file.size);
+    let arrayBuffer: ArrayBuffer;
+    try {
+      arrayBuffer = await file.arrayBuffer();
+      console.log('Thumbnail upload - ArrayBuffer created, length:', arrayBuffer.byteLength);
+    } catch (error: any) {
+      console.error('Thumbnail upload - ArrayBuffer error:', error);
+      return new Response(
+        JSON.stringify({ error: '파일 읽기에 실패했습니다.', details: error.message }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
     
-    // Base64 인코딩
+    const uint8Array = new Uint8Array(arrayBuffer);
+    console.log('Thumbnail upload - Uint8Array created, length:', uint8Array.length);
+    
+    // Base64 인코딩 (Cloudflare Workers 호환 방식)
     const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     let base64 = '';
     let i = 0;
+    const totalLength = uint8Array.length;
     
-    while (i < uint8Array.length) {
-      const byte1 = uint8Array[i++];
-      const byte2 = i < uint8Array.length ? uint8Array[i++] : undefined;
-      const byte3 = i < uint8Array.length ? uint8Array[i++] : undefined;
-      
-      const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
-      
-      base64 += base64Chars.charAt((bitmap >> 18) & 63);
-      base64 += base64Chars.charAt((bitmap >> 12) & 63);
-      
-      if (byte2 !== undefined) {
-        base64 += base64Chars.charAt((bitmap >> 6) & 63);
-      } else {
-        base64 += '=';
+    try {
+      while (i < totalLength) {
+        const byte1 = uint8Array[i++];
+        const byte2 = i < totalLength ? uint8Array[i++] : undefined;
+        const byte3 = i < totalLength ? uint8Array[i++] : undefined;
+        
+        const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
+        
+        base64 += base64Chars.charAt((bitmap >> 18) & 63);
+        base64 += base64Chars.charAt((bitmap >> 12) & 63);
+        
+        if (byte2 !== undefined) {
+          base64 += base64Chars.charAt((bitmap >> 6) & 63);
+        } else {
+          base64 += '=';
+        }
+        
+        if (byte3 !== undefined) {
+          base64 += base64Chars.charAt(bitmap & 63);
+        } else {
+          base64 += '=';
+        }
       }
-      
-      if (byte3 !== undefined) {
-        base64 += base64Chars.charAt(bitmap & 63);
-      } else {
-        base64 += '=';
-      }
+      console.log('Thumbnail upload - Base64 encoding completed, length:', base64.length);
+    } catch (error: any) {
+      console.error('Thumbnail upload - Base64 encoding error:', error);
+      return new Response(
+        JSON.stringify({ error: '파일 인코딩에 실패했습니다.', details: error.message }),
+        { status: 500, headers: corsHeaders }
+      );
     }
 
     // 고유 ID 생성
     const thumbnailId = `thumb_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    console.log('Thumbnail upload - Thumbnail ID generated:', thumbnailId);
     
     // DB에 저장
-    await env.DB.prepare(
-      'INSERT INTO thumbnails (id, file_name, file_type, file_data) VALUES (?, ?, ?, ?)'
-    ).bind(thumbnailId, file.name, file.type, base64).run();
+    try {
+      console.log('Thumbnail upload - Starting DB insert');
+      const dbResult = await env.DB.prepare(
+        'INSERT INTO thumbnails (id, file_name, file_type, file_data) VALUES (?, ?, ?, ?)'
+      ).bind(thumbnailId, file.name, file.type, base64).run();
+      console.log('Thumbnail upload - DB insert successful:', dbResult);
+    } catch (error: any) {
+      console.error('Thumbnail upload - DB insert error:', error);
+      console.error('Thumbnail upload - DB insert error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      return new Response(
+        JSON.stringify({ error: '데이터베이스 저장에 실패했습니다.', details: error.message }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
 
     // 썸네일 조회 URL 반환 (절대 경로로 변환)
     const url = new URL(request.url);
@@ -129,8 +168,16 @@ export async function onRequestPost({ request, env }: {
     );
   } catch (error: any) {
     console.error('Thumbnail upload error:', error);
+    console.error('Thumbnail upload error stack:', error.stack);
+    console.error('Thumbnail upload error name:', error.name);
+    console.error('Thumbnail upload error message:', error.message);
     return new Response(
-      JSON.stringify({ error: '썸네일 업로드에 실패했습니다.', details: error.message }),
+      JSON.stringify({ 
+        error: '썸네일 업로드에 실패했습니다.', 
+        details: error.message || '알 수 없는 오류가 발생했습니다.',
+        errorType: error.name,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }),
       { status: 500, headers: corsHeaders }
     );
   }
