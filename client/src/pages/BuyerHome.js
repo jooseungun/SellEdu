@@ -32,6 +32,8 @@ import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import Badge from '@mui/material/Badge';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName } from '../utils/auth';
 
@@ -114,14 +116,31 @@ const BuyerHome = () => {
   const [partnershipType, setPartnershipType] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
 
   useEffect(() => {
     const token = getToken();
     setIsLoggedIn(!!token);
     if (token) {
       setUserName(getUserName());
+      fetchCartCount();
+      // 주기적으로 장바구니 개수 업데이트 (30초마다)
+      const interval = setInterval(fetchCartCount, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setCartItemCount(0);
     }
   }, []);
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await api.get('/cart/count');
+      setCartItemCount(response.data.count || 0);
+    } catch (error) {
+      // 에러가 발생해도 무시 (로그인하지 않은 경우 등)
+      setCartItemCount(0);
+    }
+  };
 
   useEffect(() => {
     fetchContents();
@@ -233,6 +252,22 @@ const BuyerHome = () => {
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mr: 2, fontWeight: 500 }}>
               {userName}님 환영합니다
             </Typography>
+          )}
+          {isLoggedIn && (
+            <IconButton
+              onClick={() => navigate('/cart')}
+              sx={{ 
+                color: 'white', 
+                mr: 1,
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.1)'
+                }
+              }}
+            >
+              <Badge badgeContent={cartItemCount} color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
           )}
             <Button
               startIcon={<LocalOfferIcon />}

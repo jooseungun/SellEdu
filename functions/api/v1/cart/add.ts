@@ -33,8 +33,8 @@ export async function onRequestPost({ request, env }: {
       ).first();
 
       if (!cartTableCheck) {
-        // cart 테이블 생성
-        await env.DB.exec(`
+        // cart 테이블 생성 (각 SQL 문을 개별적으로 실행)
+        await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS cart (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -45,10 +45,16 @@ export async function onRequestPost({ request, env }: {
             UNIQUE(user_id, content_id),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
-          );
-          CREATE INDEX IF NOT EXISTS idx_cart_user_id ON cart(user_id);
-          CREATE INDEX IF NOT EXISTS idx_cart_content_id ON cart(content_id);
-        `);
+          )
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_cart_user_id ON cart(user_id)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_cart_content_id ON cart(content_id)
+        `).run();
       }
     } catch (tableError: any) {
       console.error('Table creation error:', tableError);
@@ -123,13 +129,12 @@ export async function onRequestPost({ request, env }: {
     // 장바구니에 추가
     const result = await env.DB.prepare(
       `INSERT INTO cart (user_id, content_id, quantity, created_at, updated_at)
-       VALUES (?, ?, ?, datetime('now'), datetime('now'))
-       RETURNING id`
+       VALUES (?, ?, ?, datetime('now'), datetime('now'))`
     )
       .bind(tokenData.userId, content_id, quantity)
-      .first<{ id: number }>();
+      .run();
 
-    if (!result) {
+    if (!result.success) {
       return new Response(
         JSON.stringify({ error: '장바구니 추가에 실패했습니다.' }),
         { status: 500, headers: corsHeaders }
@@ -140,7 +145,7 @@ export async function onRequestPost({ request, env }: {
       JSON.stringify({
         success: true,
         message: '장바구니에 추가되었습니다.',
-        cartItemId: result.id
+        cartItemId: result.meta.last_row_id
       }),
       { status: 200, headers: corsHeaders }
     );
