@@ -136,14 +136,18 @@ const BuyerHome = () => {
 
   const fetchBuyerInfo = async () => {
     if (!getToken()) {
+      console.log('BuyerHome - No token, skipping buyer info fetch');
       return;
     }
     try {
+      console.log('BuyerHome - Fetching buyer info...');
       const response = await api.get('/buyer/info');
+      console.log('BuyerHome - Buyer info response:', response.data);
       setBuyerInfo(response.data);
     } catch (error) {
       console.error('구매자 정보 조회 실패:', error);
       // 에러가 발생해도 계속 진행 (할인율이 0으로 처리됨)
+      setBuyerInfo({ discount_rate: 0, grade: 'BRONZE' });
     }
   };
 
@@ -550,6 +554,19 @@ const BuyerHome = () => {
                                 const discountAmount = Math.floor(content.price * discountRate / 100);
                                 const finalPrice = content.price - discountAmount;
                                 const hasDiscount = discountRate > 0 && discountAmount > 0;
+
+                                // 디버깅 로그
+                                if (content.id === 1) {
+                                  console.log('BuyerHome - Price display:', {
+                                    contentId: content.id,
+                                    price: content.price,
+                                    buyerInfo,
+                                    discountRate,
+                                    discountAmount,
+                                    finalPrice,
+                                    hasDiscount
+                                  });
+                                }
 
                                 return (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
