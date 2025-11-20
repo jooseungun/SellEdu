@@ -5,7 +5,8 @@ export interface TokenData {
   userId: number;
   username: string;
   name: string;
-  role: string;
+  role: string; // 하위 호환성을 위해 유지
+  roles?: string[]; // 다중 권한 배열
   exp: number;
 }
 

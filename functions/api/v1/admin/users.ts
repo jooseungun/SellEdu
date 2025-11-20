@@ -26,8 +26,8 @@ export async function onRequestGet({ request, env }: {
       );
     }
 
-    // users 테이블과 buyers, sellers 테이블을 LEFT JOIN하여 모든 회원 정보 조회
-    const result = await env.DB.prepare(
+    // users 테이블과 buyers, sellers, user_roles 테이블을 LEFT JOIN하여 모든 회원 정보 조회
+    const usersResult = await env.DB.prepare(
       `SELECT
         u.id,
         u.username,
@@ -46,8 +46,47 @@ export async function onRequestGet({ request, env }: {
       ORDER BY u.created_at DESC`
     ).all();
 
+    // 각 사용자의 권한 정보 조회
+    const users = usersResult.results || [];
+    const usersWithRoles = await Promise.all(
+      users.map(async (user: any) => {
+        try {
+          const userRolesTableCheck = await env.DB.prepare(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='user_roles'"
+          ).first();
+
+          let roles: string[] = [];
+          if (userRolesTableCheck) {
+            const rolesResult = await env.DB.prepare(
+              'SELECT role FROM user_roles WHERE user_id = ?'
+            )
+              .bind(user.id)
+              .all<{ role: string }>();
+
+            roles = rolesResult.results?.map(r => r.role) || [];
+          }
+
+          // user_roles 테이블이 없거나 권한이 없으면 기존 role 필드 사용
+          if (roles.length === 0) {
+            roles = user.role ? [user.role] : ['buyer'];
+          }
+
+          return {
+            ...user,
+            roles
+          };
+        } catch (error) {
+          // 권한 조회 실패 시 기존 role 필드 사용
+          return {
+            ...user,
+            roles: user.role ? [user.role] : ['buyer']
+          };
+        }
+      })
+    );
+
     return new Response(
-      JSON.stringify(result.results || []),
+      JSON.stringify(usersWithRoles),
       { status: 200, headers: corsHeaders }
     );
   } catch (error: any) {

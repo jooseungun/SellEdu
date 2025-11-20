@@ -112,6 +112,7 @@ export async function onRequestPost({ request, env }: {
 
     // Get user from database
     let user;
+    let userRoles: string[] = [];
     try {
       console.log('Login - Querying database for user:', username);
       const result = await env.DB.prepare(
@@ -137,6 +138,32 @@ export async function onRequestPost({ request, env }: {
         role: string;
       };
       console.log('Login - User found:', { id: user.id, username: user.username, role: user.role });
+
+      // user_roles 테이블에서 사용자의 모든 권한 조회
+      try {
+        const userRolesTableCheck = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='user_roles'"
+        ).first();
+
+        if (userRolesTableCheck) {
+          const rolesResult = await env.DB.prepare(
+            'SELECT role FROM user_roles WHERE user_id = ?'
+          )
+            .bind(user.id)
+            .all<{ role: string }>();
+
+          userRoles = rolesResult.results?.map(r => r.role) || [];
+        }
+
+        // user_roles 테이블이 없거나 권한이 없으면 기존 role 필드 사용
+        if (userRoles.length === 0) {
+          userRoles = [user.role];
+        }
+      } catch (rolesError: any) {
+        console.error('Failed to fetch user roles:', rolesError);
+        // 권한 조회 실패 시 기존 role 필드 사용
+        userRoles = [user.role];
+      }
     } catch (dbError: any) {
       console.error('Login - Database query error:', dbError);
       console.error('Login - Error details:', {
@@ -189,7 +216,8 @@ export async function onRequestPost({ request, env }: {
         userId: user.id,
         username: user.username,
         name: user.name,
-        role: user.role,
+        role: user.role, // 하위 호환성을 위해 유지
+        roles: userRoles, // 다중 권한 배열
         exp: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
       };
       

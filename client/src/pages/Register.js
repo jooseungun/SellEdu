@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Paper, TextField, Button, Typography, Box, Alert } from '@mui/material';
+import { Container, Paper, TextField, Button, Typography, Box, Alert, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
@@ -12,6 +12,10 @@ const Register = () => {
     passwordConfirm: '',
     name: '',
     mobile: ''
+  });
+  const [roles, setRoles] = useState({
+    buyer: true,
+    seller: false
   });
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
@@ -80,6 +84,16 @@ const Register = () => {
       return;
     }
 
+    // 선택된 권한 배열 생성
+    const selectedRoles = [];
+    if (roles.buyer) selectedRoles.push('buyer');
+    if (roles.seller) selectedRoles.push('seller');
+
+    if (selectedRoles.length === 0) {
+      setSubmitError('최소 하나 이상의 권한을 선택해주세요.');
+      return;
+    }
+
     try {
       const response = await api.post('/auth/register', {
         username: formData.username,
@@ -87,7 +101,7 @@ const Register = () => {
         password: formData.password,
         name: formData.name,
         mobile: formData.mobile.replace(/[^\d]/g, ''), // 하이픈 제거하여 숫자만 전송
-        role: 'buyer' // 기본값
+        roles: selectedRoles
       });
 
       if (response.data.message) {
@@ -206,6 +220,34 @@ const Register = () => {
             inputProps={{ maxLength: 13 }}
             helperText="숫자만 입력하면 자동으로 하이픈이 추가됩니다."
           />
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+              권한 선택 (복수 선택 가능)
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={roles.buyer}
+                    onChange={(e) => setRoles({ ...roles, buyer: e.target.checked })}
+                  />
+                }
+                label="구매자"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={roles.seller}
+                    onChange={(e) => setRoles({ ...roles, seller: e.target.checked })}
+                  />
+                }
+                label="판매자"
+              />
+            </FormGroup>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              최소 하나 이상의 권한을 선택해야 합니다.
+            </Typography>
+          </Box>
           <Button type="submit" fullWidth variant="contained" sx={{ mt: 3 }}>
             회원가입
           </Button>

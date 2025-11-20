@@ -69,7 +69,11 @@ const AdminDashboard = () => {
   const [approveForm, setApproveForm] = useState({ display_order: 0, content_area: 'default' });
   const [rejectReason, setRejectReason] = useState('');
   const [orderForm, setOrderForm] = useState({});
-  const [newRole, setNewRole] = useState('buyer');
+  const [newRoles, setNewRoles] = useState({
+    buyer: false,
+    seller: false,
+    admin: false
+  });
   const [allContents, setAllContents] = useState([]);
 
   useEffect(() => {
@@ -690,19 +694,19 @@ const AdminDashboard = () => {
                         <TableCell>{user.id}</TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {user.role === 'admin' && (
+                            {(user.roles || (user.role ? [user.role] : ['buyer'])).includes('admin') && (
                               <AdminPanelSettingsIcon 
                                 sx={{ color: '#f5576c', fontSize: 20 }} 
                                 titleAccess="관리자"
                               />
                             )}
-                            {user.role === 'seller' && (
+                            {(user.roles || (user.role ? [user.role] : ['buyer'])).includes('seller') && (
                               <StoreIcon 
                                 sx={{ color: '#667eea', fontSize: 20 }} 
                                 titleAccess="판매자"
                               />
                             )}
-                            {user.role === 'buyer' && (
+                            {(user.roles || (user.role ? [user.role] : ['buyer'])).includes('buyer') && (
                               <PersonIcon 
                                 sx={{ color: '#4CAF50', fontSize: 20 }} 
                                 titleAccess="구매자"
@@ -715,17 +719,22 @@ const AdminDashboard = () => {
                         <TableCell>{user.email}</TableCell>
                         <TableCell>{user.mobile || '-'}</TableCell>
                         <TableCell>
-                          <Chip
-                            label={
-                              user.role === 'admin' ? '관리자' :
-                              user.role === 'seller' ? '판매자' : '구매자'
-                            }
-                            size="small"
-                            color={
-                              user.role === 'admin' ? 'error' :
-                              user.role === 'seller' ? 'primary' : 'success'
-                            }
-                          />
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                            {(user.roles || (user.role ? [user.role] : ['buyer'])).map((role) => (
+                              <Chip
+                                key={role}
+                                label={
+                                  role === 'admin' ? '관리자' :
+                                  role === 'seller' ? '판매자' : '구매자'
+                                }
+                                size="small"
+                                color={
+                                  role === 'admin' ? 'error' :
+                                  role === 'seller' ? 'primary' : 'success'
+                                }
+                              />
+                            ))}
+                          </Box>
                         </TableCell>
                         <TableCell>
                           {user.buyer_grade ? (
@@ -750,11 +759,17 @@ const AdminDashboard = () => {
                             startIcon={<EditIcon />}
                             onClick={() => {
                               setSelectedUser(user);
-                              setNewRole(user.role);
+                              // 사용자의 현재 권한으로 체크박스 초기화
+                              const userRoles = user.roles || (user.role ? [user.role] : ['buyer']);
+                              setNewRoles({
+                                buyer: userRoles.includes('buyer'),
+                                seller: userRoles.includes('seller'),
+                                admin: userRoles.includes('admin')
+                              });
                               setRoleDialogOpen(true);
                             }}
                           >
-                            역할 변경
+                            권한 변경
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -1014,50 +1029,89 @@ const AdminDashboard = () => {
           </DialogActions>
         </Dialog>
 
-        {/* 역할 변경 다이얼로그 */}
+        {/* 권한 변경 다이얼로그 */}
         <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)}>
-          <DialogTitle>사용자 역할 변경</DialogTitle>
+          <DialogTitle>사용자 권한 변경</DialogTitle>
           <DialogContent>
             {selectedUser && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   사용자: {selectedUser.username} ({selectedUser.name})
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  현재 역할: {
-                    selectedUser.role === 'admin' ? '관리자' :
-                    selectedUser.role === 'seller' ? '판매자' : '구매자'
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  현재 권한: {
+                    (selectedUser.roles || (selectedUser.role ? [selectedUser.role] : ['buyer']))
+                      .map(r => r === 'admin' ? '관리자' : r === 'seller' ? '판매자' : '구매자')
+                      .join(', ')
                   }
                 </Typography>
               </Box>
             )}
-            <FormControl fullWidth margin="normal">
-              <InputLabel>새로운 역할</InputLabel>
-              <Select
-                value={newRole}
-                label="새로운 역할"
-                onChange={(e) => setNewRole(e.target.value)}
-              >
-                <MenuItem value="buyer">구매자</MenuItem>
-                <MenuItem value="seller">판매자</MenuItem>
-                <MenuItem value="admin">관리자</MenuItem>
-              </Select>
-            </FormControl>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ mb: 2, fontWeight: 'medium' }}>
+                권한 선택 (복수 선택 가능)
+              </Typography>
+              <FormControl component="fieldset" fullWidth>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={newRoles.buyer}
+                        onChange={(e) => setNewRoles({ ...newRoles, buyer: e.target.checked })}
+                      />
+                    }
+                    label="구매자"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={newRoles.seller}
+                        onChange={(e) => setNewRoles({ ...newRoles, seller: e.target.checked })}
+                      />
+                    }
+                    label="판매자"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={newRoles.admin}
+                        onChange={(e) => setNewRoles({ ...newRoles, admin: e.target.checked })}
+                      />
+                    }
+                    label="관리자"
+                  />
+                </FormGroup>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                최소 하나 이상의 권한을 선택해야 합니다.
+              </Typography>
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setRoleDialogOpen(false)}>취소</Button>
             <Button 
               onClick={async () => {
+                // 선택된 권한 배열 생성
+                const selectedRoles = [];
+                if (newRoles.buyer) selectedRoles.push('buyer');
+                if (newRoles.seller) selectedRoles.push('seller');
+                if (newRoles.admin) selectedRoles.push('admin');
+
+                if (selectedRoles.length === 0) {
+                  alert('최소 하나 이상의 권한을 선택해주세요.');
+                  return;
+                }
+
                 try {
                   await api.put('/admin/users/update-role', {
                     userId: selectedUser.id,
-                    role: newRole
+                    roles: selectedRoles
                   });
-                  alert('역할이 변경되었습니다.');
+                  alert('권한이 변경되었습니다.');
                   setRoleDialogOpen(false);
                   fetchData();
                 } catch (error) {
-                  alert(error.response?.data?.error || '역할 변경에 실패했습니다.');
+                  alert(error.response?.data?.error || '권한 변경에 실패했습니다.');
                 }
               }} 
               variant="contained"

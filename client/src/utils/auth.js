@@ -80,8 +80,39 @@ export const getUserFromToken = () => {
 // 관리자 권한 확인
 export const isAdmin = () => {
   const user = getUserFromToken();
-  console.log('isAdmin check - user:', user, 'role:', user?.role);
+  console.log('isAdmin check - user:', user, 'roles:', user?.roles);
+  // 다중 권한 지원: roles 배열에 'admin'이 있거나, 기존 role 필드가 'admin'인 경우
+  if (user?.roles && Array.isArray(user.roles)) {
+    return user.roles.includes('admin');
+  }
   return user?.role === 'admin';
+};
+
+// 판매자 권한 확인
+export const isSeller = () => {
+  const user = getUserFromToken();
+  if (user?.roles && Array.isArray(user.roles)) {
+    return user.roles.includes('seller');
+  }
+  return user?.role === 'seller';
+};
+
+// 구매자 권한 확인
+export const isBuyer = () => {
+  const user = getUserFromToken();
+  if (user?.roles && Array.isArray(user.roles)) {
+    return user.roles.includes('buyer');
+  }
+  return user?.role === 'buyer' || !user?.role; // 기본값은 buyer
+};
+
+// 사용자의 모든 권한 가져오기
+export const getUserRoles = () => {
+  const user = getUserFromToken();
+  if (user?.roles && Array.isArray(user.roles)) {
+    return user.roles;
+  }
+  return user?.role ? [user.role] : ['buyer'];
 };
 
 // 사용자 이름 가져오기

@@ -24,7 +24,7 @@ export async function onRequestPost({ request, env }: {
 
     // 각 SQL 문을 개별적으로 실행
     const statements = [
-      // users 테이블 생성
+      // users 테이블 생성 (role 필드는 하위 호환성을 위해 유지하되, 실제 권한은 user_roles 테이블 사용)
       `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -40,6 +40,18 @@ export async function onRequestPost({ request, env }: {
       )`,
       `CREATE INDEX IF NOT EXISTS idx_username ON users(username)`,
       `CREATE INDEX IF NOT EXISTS idx_email ON users(email)`,
+      
+      // 사용자 권한 테이블 생성 (다중 권한 지원)
+      `CREATE TABLE IF NOT EXISTS user_roles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('buyer', 'seller', 'admin')),
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, role),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role)`,
       
       // buyers 테이블 생성
       `CREATE TABLE IF NOT EXISTS buyers (

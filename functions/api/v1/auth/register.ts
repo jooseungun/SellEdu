@@ -27,12 +27,37 @@ export async function onRequestPost({ request, env }: {
     }
 
     const body = await request.json();
-    const { username, email, password, name, mobile, role = 'buyer' } = body;
+    const { username, email, password, name, mobile, roles = ['buyer'] } = body;
 
     // 필수 필드 검증
     if (!username || !email || !password || !name) {
       return new Response(
         JSON.stringify({ error: '필수 필드가 누락되었습니다.' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // roles 유효성 검증
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return new Response(
+        JSON.stringify({ error: '최소 하나 이상의 권한을 선택해야 합니다.' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const validRoles = ['buyer', 'seller', 'admin'];
+    const invalidRoles = roles.filter(r => !validRoles.includes(r));
+    if (invalidRoles.length > 0) {
+      return new Response(
+        JSON.stringify({ error: `유효하지 않은 권한입니다: ${invalidRoles.join(', ')}` }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 일반 사용자는 admin 권한을 직접 선택할 수 없음
+    if (roles.includes('admin')) {
+      return new Response(
+        JSON.stringify({ error: '관리자 권한은 직접 선택할 수 없습니다.' }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -128,12 +153,13 @@ export async function onRequestPost({ request, env }: {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // 사용자 생성
+    // 사용자 생성 (role 필드는 첫 번째 권한으로 설정 - 하위 호환성)
+    const primaryRole = roles[0];
     const result = await env.DB.prepare(
       `INSERT INTO users (username, email, password_hash, name, mobile, role, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`
     )
-      .bind(username, email, passwordHash, name, mobile || null, role)
+      .bind(username, email, passwordHash, name, mobile || null, primaryRole)
       .run();
 
     if (!result.success) {
@@ -143,8 +169,45 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    const userId = result.meta.last_row_id;
+
+    // user_roles 테이블 확인 및 생성
+    try {
+      const userRolesTableCheck = await env.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='user_roles'"
+      ).first();
+
+      if (!userRolesTableCheck) {
+        await env.DB.exec(`
+          CREATE TABLE IF NOT EXISTS user_roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL CHECK(role IN ('buyer', 'seller', 'admin')),
+            created_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, role),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          );
+          CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
+          CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
+        `);
+      }
+
+      // 사용자 권한 추가
+      for (const role of roles) {
+        await env.DB.prepare(
+          `INSERT OR IGNORE INTO user_roles (user_id, role, created_at)
+           VALUES (?, ?, datetime('now'))`
+        )
+          .bind(userId, role)
+          .run();
+      }
+    } catch (userRolesError: any) {
+      console.error('Failed to create user roles:', userRolesError);
+      // 권한 생성 실패해도 회원가입은 성공으로 처리
+    }
+
     // 구매자/판매자 테이블 생성
-    if (role === 'buyer') {
+    if (roles.includes('buyer')) {
       try {
         // buyers 테이블 확인 및 생성
         const buyerTableCheck = await env.DB.prepare(
@@ -169,9 +232,8 @@ export async function onRequestPost({ request, env }: {
         }
 
         // 구매자 레코드 생성
-        const userId = result.meta.last_row_id;
         await env.DB.prepare(
-          `INSERT INTO buyers (user_id, grade, discount_rate, total_purchase_amount, recent_purchase_amount)
+          `INSERT OR IGNORE INTO buyers (user_id, grade, discount_rate, total_purchase_amount, recent_purchase_amount)
            VALUES (?, 'BRONZE', 0.00, 0.00, 0.00)`
         )
           .bind(userId)
@@ -180,7 +242,9 @@ export async function onRequestPost({ request, env }: {
         console.error('Failed to create buyer record:', buyerError);
         // 구매자 레코드 생성 실패해도 회원가입은 성공으로 처리
       }
-    } else if (role === 'seller') {
+    }
+    
+    if (roles.includes('seller')) {
       try {
         // sellers 테이블 확인 및 생성
         const sellerTableCheck = await env.DB.prepare(
@@ -208,9 +272,8 @@ export async function onRequestPost({ request, env }: {
         }
 
         // 판매자 레코드 생성
-        const userId = result.meta.last_row_id;
         await env.DB.prepare(
-          `INSERT INTO sellers (user_id, grade, commission_rate, total_sales_amount, recent_sales_amount)
+          `INSERT OR IGNORE INTO sellers (user_id, grade, commission_rate, total_sales_amount, recent_sales_amount)
            VALUES (?, 'BRONZE', 10.00, 0.00, 0.00)`
         )
           .bind(userId)
