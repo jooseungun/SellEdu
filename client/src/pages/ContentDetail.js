@@ -181,11 +181,26 @@ const ContentDetail = () => {
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
+  const [buyerInfo, setBuyerInfo] = useState(null);
 
   useEffect(() => {
     fetchContent();
     fetchReviews();
+    fetchBuyerInfo();
   }, [id]);
+
+  const fetchBuyerInfo = async () => {
+    if (!getToken()) {
+      return;
+    }
+    try {
+      const response = await api.get('/buyer/info');
+      setBuyerInfo(response.data);
+    } catch (error) {
+      console.error('구매자 정보 조회 실패:', error);
+      // 에러가 발생해도 계속 진행 (할인율이 0으로 처리됨)
+    }
+  };
 
   const fetchContent = async () => {
     setLoading(true);
@@ -653,11 +668,49 @@ const ContentDetail = () => {
                 구매 가격
               </Typography>
               <Box sx={{ mb: 3 }}>
-                {content.price > 0 ? (
-                  <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
-                    {content.price.toLocaleString()}원
-                  </Typography>
-                ) : (
+                {content.price > 0 ? (() => {
+                  const discountRate = buyerInfo?.discount_rate || 0;
+                  const discountAmount = Math.floor(content.price * discountRate / 100);
+                  const finalPrice = content.price - discountAmount;
+                  const hasDiscount = discountRate > 0 && discountAmount > 0;
+
+                  return (
+                    <Box>
+                      {hasDiscount ? (
+                        <>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Typography 
+                              variant="h5" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                textDecoration: 'line-through',
+                                color: 'text.secondary'
+                              }}
+                            >
+                              {content.price.toLocaleString()}원
+                            </Typography>
+                            <Chip 
+                              label={`${discountRate}% 할인`} 
+                              color="error" 
+                              size="small"
+                              sx={{ fontWeight: 'bold' }}
+                            />
+                          </Box>
+                          <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
+                            {finalPrice.toLocaleString()}원
+                          </Typography>
+                          <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                            제휴할인 적용: {discountAmount.toLocaleString()}원 할인
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
+                          {content.price.toLocaleString()}원
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                })() : (
                   <Typography variant="h4" color="primary" sx={{ fontWeight: 'bold' }}>
                     무료
                   </Typography>
@@ -670,9 +723,42 @@ const ContentDetail = () => {
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                   총 결제금액
                 </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  {content.price > 0 ? `${content.price.toLocaleString()}원` : '무료'}
-                </Typography>
+                {content.price > 0 ? (() => {
+                  const discountRate = buyerInfo?.discount_rate || 0;
+                  const discountAmount = Math.floor(content.price * discountRate / 100);
+                  const finalPrice = content.price - discountAmount;
+                  const hasDiscount = discountRate > 0 && discountAmount > 0;
+
+                  return (
+                    <Box>
+                      {hasDiscount ? (
+                        <>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              textDecoration: 'line-through',
+                              color: 'text.secondary',
+                              mb: 0.5
+                            }}
+                          >
+                            {content.price.toLocaleString()}원
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'error.main' }}>
+                            {finalPrice.toLocaleString()}원
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                          {content.price.toLocaleString()}원
+                        </Typography>
+                      )}
+                    </Box>
+                  );
+                })() : (
+                  <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                    무료
+                  </Typography>
+                )}
               </Box>
 
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>

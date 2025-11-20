@@ -117,6 +117,7 @@ const BuyerHome = () => {
   const [companyName, setCompanyName] = useState('');
   const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [buyerInfo, setBuyerInfo] = useState(null);
 
   useEffect(() => {
     const token = getToken();
@@ -124,6 +125,7 @@ const BuyerHome = () => {
     if (token) {
       setUserName(getUserName());
       fetchCartCount();
+      fetchBuyerInfo();
       // 주기적으로 장바구니 개수 업데이트 (30초마다)
       const interval = setInterval(fetchCartCount, 30000);
       return () => clearInterval(interval);
@@ -131,6 +133,19 @@ const BuyerHome = () => {
       setCartItemCount(0);
     }
   }, []);
+
+  const fetchBuyerInfo = async () => {
+    if (!getToken()) {
+      return;
+    }
+    try {
+      const response = await api.get('/buyer/info');
+      setBuyerInfo(response.data);
+    } catch (error) {
+      console.error('구매자 정보 조회 실패:', error);
+      // 에러가 발생해도 계속 진행 (할인율이 0으로 처리됨)
+    }
+  };
 
   const fetchCartCount = async () => {
     try {
@@ -530,11 +545,50 @@ const BuyerHome = () => {
                               {content.description}
                             </Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                              {content.price > 0 ? (
-                                <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '1rem' }}>
-                                  {content.price.toLocaleString()}원
-                                </Typography>
-                              ) : (
+                              {content.price > 0 ? (() => {
+                                const discountRate = buyerInfo?.discount_rate || 0;
+                                const discountAmount = Math.floor(content.price * discountRate / 100);
+                                const finalPrice = content.price - discountAmount;
+                                const hasDiscount = discountRate > 0 && discountAmount > 0;
+
+                                return (
+                                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                    {hasDiscount ? (
+                                      <>
+                                        <Typography 
+                                          variant="caption" 
+                                          sx={{ 
+                                            textDecoration: 'line-through',
+                                            color: 'text.secondary',
+                                            fontSize: '0.75rem'
+                                          }}
+                                        >
+                                          {content.price.toLocaleString()}원
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 700, fontSize: '1rem' }}>
+                                          {finalPrice.toLocaleString()}원
+                                        </Typography>
+                                        <Chip 
+                                          label={`${discountRate}% 할인`} 
+                                          size="small"
+                                          sx={{
+                                            bgcolor: 'error.main',
+                                            color: 'white',
+                                            fontWeight: 600,
+                                            fontSize: '0.65rem',
+                                            height: '18px',
+                                            mt: 0.25
+                                          }}
+                                        />
+                                      </>
+                                    ) : (
+                                      <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '1rem' }}>
+                                        {content.price.toLocaleString()}원
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                );
+                              })() : (
                                 <Chip
                                   label="무료"
                                   size="small"
