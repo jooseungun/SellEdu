@@ -155,9 +155,25 @@ export async function onRequestPost({ request, env }: {
           userRoles = rolesResult.results?.map(r => r.role) || [];
         }
 
-        // user_roles 테이블이 없거나 권한이 없으면 기존 role 필드 사용
+        // user_roles 테이블이 없거나 권한이 없으면 기존 role 필드를 user_roles 테이블에 추가
         if (userRoles.length === 0) {
           userRoles = [user.role];
+          
+          // user_roles 테이블이 있으면 기존 role을 user_roles 테이블에 추가
+          if (userRolesTableCheck) {
+            try {
+              await env.DB.prepare(
+                `INSERT OR IGNORE INTO user_roles (user_id, role, created_at)
+                 VALUES (?, ?, datetime('now'))`
+              )
+                .bind(user.id, user.role)
+                .run();
+              console.log('Login - Migrated role to user_roles table:', user.role);
+            } catch (migrateError: any) {
+              console.error('Failed to migrate role to user_roles:', migrateError);
+              // 마이그레이션 실패해도 계속 진행
+            }
+          }
         }
       } catch (rolesError: any) {
         console.error('Failed to fetch user roles:', rolesError);
