@@ -23,16 +23,26 @@ const TossPayment = ({ orderId, orderNumber, amount, orderName, customerName, cu
         // 토스페이먼츠 SDK 초기화
         const tossPayments = await loadTossPayments(clientKey);
         
-        // 결제 위젯 생성
+        // SDK 객체 확인
+        if (!tossPayments) {
+          throw new Error('토스페이먼츠 SDK 초기화에 실패했습니다.');
+        }
+        
         // customerKey는 고객 식별자 (이메일 또는 고유 ID)
         const customerKey = customerEmail || `customer_${orderId}`;
         
-        // widgets 메서드 확인
-        if (!tossPayments || typeof tossPayments.widgets !== 'function') {
-          throw new Error('토스페이먼츠 SDK가 올바르게 로드되지 않았습니다. widgets 메서드를 찾을 수 없습니다.');
+        // 결제 위젯 생성 - SDK 버전에 따라 다를 수 있음
+        let paymentWidget;
+        if (typeof tossPayments.widgets === 'function') {
+          // 최신 SDK 방식
+          paymentWidget = tossPayments.widgets(customerKey);
+        } else if (typeof tossPayments === 'function') {
+          // 대체 방식
+          paymentWidget = tossPayments(clientKey);
+        } else {
+          console.error('TossPayments object:', tossPayments);
+          throw new Error(`토스페이먼츠 SDK가 올바르게 로드되지 않았습니다. 사용 가능한 메서드: ${Object.keys(tossPayments || {}).join(', ')}`);
         }
-        
-        const paymentWidget = tossPayments.widgets(customerKey);
         
         paymentWidgetRef.current = paymentWidget;
         
