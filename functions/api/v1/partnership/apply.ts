@@ -45,6 +45,36 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 제휴할인 신청 테이블이 없으면 생성 (기존 신청 확인 전에 실행)
+    try {
+      const tableCheck = await env.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='partnership_requests'"
+      ).first();
+
+      if (!tableCheck) {
+        await env.DB.prepare(`
+          CREATE TABLE IF NOT EXISTS partnership_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            company_name TEXT NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'reviewing', 'approved', 'rejected')),
+            rejection_reason TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+          )
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_partnership_user_id ON partnership_requests(user_id)
+        `).run();
+      }
+    } catch (tableError: any) {
+      console.error('Table creation error:', tableError);
+      // 테이블 생성 실패해도 계속 진행 (이미 존재할 수 있음)
+    }
+
     // 기존 신청 확인
     const existingRequest = await env.DB.prepare(
       'SELECT id, status FROM partnership_requests WHERE user_id = ? AND status IN ("pending", "reviewing", "approved")'
@@ -57,29 +87,6 @@ export async function onRequestPost({ request, env }: {
         JSON.stringify({ error: '이미 제휴할인 신청이 진행 중입니다.' }),
         { status: 400, headers: corsHeaders }
       );
-    }
-
-    // 제휴할인 신청 테이블이 없으면 생성
-    try {
-      await env.DB.prepare(`
-        CREATE TABLE IF NOT EXISTS partnership_requests (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id INTEGER NOT NULL,
-          type TEXT NOT NULL,
-          company_name TEXT NOT NULL,
-          status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'reviewing', 'approved', 'rejected')),
-          rejection_reason TEXT,
-          created_at TEXT DEFAULT (datetime('now')),
-          updated_at TEXT DEFAULT (datetime('now')),
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-      `).run();
-
-      await env.DB.prepare(`
-        CREATE INDEX IF NOT EXISTS idx_partnership_user_id ON partnership_requests(user_id)
-      `).run();
-    } catch (e) {
-      // 테이블이 이미 존재하면 무시
     }
 
     // 신청 저장
