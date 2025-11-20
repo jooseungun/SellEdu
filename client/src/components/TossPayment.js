@@ -23,10 +23,9 @@ const TossPayment = ({ orderId, orderNumber, amount, orderName, customerName, cu
         // 토스페이먼츠 SDK 초기화
         const tossPayments = await loadTossPayments(clientKey);
         
-        // 결제 위젯 생성
-        const paymentWidget = tossPayments.widgets({
-          customerKey: customerEmail || `customer_${orderId}`,
-        });
+        // 결제 위젯 생성 (최신 SDK 방식)
+        const customerKey = customerEmail || `customer_${orderId}`;
+        const paymentWidget = tossPayments.widgets(customerKey);
         
         paymentWidgetRef.current = paymentWidget;
         
