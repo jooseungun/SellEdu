@@ -27,7 +27,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ReactQuill from 'react-quill';
 import api from '../utils/api';
-import { getToken } from '../utils/auth';
+import { getToken, getUserFromToken, isSeller, removeToken } from '../utils/auth';
+import { useEffect } from 'react';
 
 const SellerContentApply = () => {
   const navigate = useNavigate();
@@ -44,6 +45,28 @@ const SellerContentApply = () => {
     is_always_on_sale: false
   });
   const [lessons, setLessons] = useState([]);
+
+  // 판매자 권한 체크
+  useEffect(() => {
+    const token = getToken();
+    
+    if (!token) {
+      console.log('SellerContentApply - No token, redirecting to login');
+      navigate('/login?from=/seller/apply', { replace: true });
+      return;
+    }
+    
+    // 판매자 권한 체크
+    const sellerCheck = isSeller();
+    console.log('SellerContentApply - Seller check:', sellerCheck);
+    if (!sellerCheck) {
+      const user = getUserFromToken();
+      console.log('SellerContentApply - User info:', user);
+      alert(`판매자 권한이 필요합니다. 현재 권한: ${(user?.roles || (user?.role ? [user?.role] : ['buyer'])).join(', ')}`);
+      navigate('/');
+      return;
+    }
+  }, [navigate]);
 
   const categories = [
     '인문교양', '전문직무', '공통직무', '자격증', 'IT', 

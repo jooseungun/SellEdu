@@ -36,7 +36,7 @@ import CodeIcon from '@mui/icons-material/Code';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import api from '../utils/api';
-import { getToken, removeToken, getUserName, getUserFromToken } from '../utils/auth';
+import { getToken, removeToken, getUserName, getUserFromToken, isSeller } from '../utils/auth';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -83,6 +83,17 @@ const SellerDashboard = () => {
         console.error('SellerDashboard - Error getting user info:', error);
         removeToken();
         navigate('/login?from=/seller', { replace: true });
+        return;
+      }
+      
+      // 판매자 권한 체크
+      const sellerCheck = isSeller();
+      console.log('SellerDashboard - Seller check:', sellerCheck);
+      if (!sellerCheck) {
+        const user = getUserFromToken();
+        console.log('SellerDashboard - User info:', user);
+        alert(`판매자 권한이 필요합니다. 현재 권한: ${(user?.roles || (user?.role ? [user?.role] : ['buyer'])).join(', ')}`);
+        navigate('/');
         return;
       }
       
