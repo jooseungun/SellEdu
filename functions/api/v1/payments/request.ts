@@ -35,8 +35,8 @@ export async function onRequestPost({ request, env }: {
       ).first();
 
       if (!ordersTableCheck) {
-        // orders 테이블 생성
-        await env.DB.exec(`
+        // orders 테이블 생성 (각 SQL 문을 개별적으로 실행)
+        await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -53,15 +53,27 @@ export async function onRequestPost({ request, env }: {
             paid_at TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
-          );
-          CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
-          CREATE INDEX IF NOT EXISTS idx_orders_content_id ON orders(content_id);
-          CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
-          CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-        `);
+          )
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_orders_content_id ON orders(content_id)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)
+        `).run();
 
         // payments 테이블 생성
-        await env.DB.exec(`
+        await env.DB.prepare(`
           CREATE TABLE IF NOT EXISTS payments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id INTEGER NOT NULL,
@@ -77,11 +89,20 @@ export async function onRequestPost({ request, env }: {
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
-          );
-          CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
-          CREATE INDEX IF NOT EXISTS idx_payments_payment_key ON payments(payment_key);
-          CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
-        `);
+          )
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_payments_payment_key ON payments(payment_key)
+        `).run();
+
+        await env.DB.prepare(`
+          CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)
+        `).run();
       }
     } catch (tableError: any) {
       console.error('Table creation error:', tableError);
@@ -144,20 +165,19 @@ export async function onRequestPost({ request, env }: {
     // 주문 생성
     const orderResult = await env.DB.prepare(
       `INSERT INTO orders (user_id, content_id, order_number, total_amount, discount_amount, final_amount, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending')
-       RETURNING id`
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`
     )
       .bind(tokenData.userId, content_id, orderNumber, amount, discountAmount, finalAmount)
-      .first<{ id: number }>();
+      .run();
 
-    if (!orderResult) {
+    if (!orderResult.success) {
       return new Response(
         JSON.stringify({ error: '주문 생성에 실패했습니다.' }),
         { status: 500, headers: corsHeaders }
       );
     }
 
-    const orderId = orderResult.id;
+    const orderId = orderResult.meta.last_row_id;
 
     // 결제 정보 반환 (토스페이먼츠 결제 위젯에서 사용)
     return new Response(
