@@ -26,6 +26,35 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 데이터베이스 테이블 확인 및 생성
+    try {
+      const cartTableCheck = await env.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='cart'"
+      ).first();
+
+      if (!cartTableCheck) {
+        // cart 테이블 생성
+        await env.DB.exec(`
+          CREATE TABLE IF NOT EXISTS cart (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            content_id INTEGER NOT NULL,
+            quantity INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(user_id, content_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+          );
+          CREATE INDEX IF NOT EXISTS idx_cart_user_id ON cart(user_id);
+          CREATE INDEX IF NOT EXISTS idx_cart_content_id ON cart(content_id);
+        `);
+      }
+    } catch (tableError: any) {
+      console.error('Table creation error:', tableError);
+      // 테이블 생성 실패해도 계속 진행 (이미 존재할 수 있음)
+    }
+
     const body = await request.json();
     const { content_id, quantity = 1 } = body;
 

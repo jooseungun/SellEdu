@@ -27,6 +27,66 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 데이터베이스 테이블 확인 및 생성
+    try {
+      const ordersTableCheck = await env.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='orders'"
+      ).first();
+
+      if (!ordersTableCheck) {
+        // orders 테이블 생성
+        await env.DB.exec(`
+          CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            content_id INTEGER NOT NULL,
+            order_number TEXT UNIQUE NOT NULL,
+            total_amount REAL NOT NULL,
+            discount_amount REAL DEFAULT 0.00,
+            final_amount REAL NOT NULL,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'cancelled', 'refunded', 'failed')),
+            payment_method TEXT,
+            payment_key TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            paid_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+          );
+          CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+          CREATE INDEX IF NOT EXISTS idx_orders_content_id ON orders(content_id);
+          CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
+          CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+        `);
+
+        // payments 테이블 생성
+        await env.DB.exec(`
+          CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            payment_key TEXT UNIQUE,
+            toss_payment_id TEXT,
+            amount REAL NOT NULL,
+            method TEXT,
+            status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'ready', 'paid', 'cancelled', 'partial_cancelled', 'failed')),
+            requested_at TEXT,
+            approved_at TEXT,
+            cancelled_at TEXT,
+            fail_reason TEXT,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+          );
+          CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+          CREATE INDEX IF NOT EXISTS idx_payments_payment_key ON payments(payment_key);
+          CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+        `);
+      }
+    } catch (tableError: any) {
+      console.error('Table creation error:', tableError);
+      // 테이블 생성 실패해도 계속 진행 (이미 존재할 수 있음)
+    }
+
     const body = await request.json();
     const { items, total_amount } = body;
 
