@@ -78,7 +78,8 @@ export async function onRequestPut({ request, env }: {
     ).first();
 
     if (!userRolesTableCheck) {
-      await env.DB.exec(`
+      // 각 SQL 문을 개별적으로 실행
+      await env.DB.prepare(`
         CREATE TABLE IF NOT EXISTS user_roles (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           user_id INTEGER NOT NULL,
@@ -86,10 +87,16 @@ export async function onRequestPut({ request, env }: {
           created_at TEXT DEFAULT (datetime('now')),
           UNIQUE(user_id, role),
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id);
-        CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
-      `);
+        )
+      `).run();
+      
+      await env.DB.prepare(`
+        CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON user_roles(user_id)
+      `).run();
+      
+      await env.DB.prepare(`
+        CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role)
+      `).run();
     }
 
     // 기존 권한 삭제
