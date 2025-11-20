@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, 
   Paper, 
@@ -28,7 +28,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ReactQuill from 'react-quill';
 import api from '../utils/api';
 import { getToken, getUserFromToken, isSeller, removeToken } from '../utils/auth';
-import { useEffect } from 'react';
 
 const SellerContentApply = () => {
   const navigate = useNavigate();
