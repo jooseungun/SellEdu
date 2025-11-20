@@ -87,12 +87,17 @@ const SellerDashboard = () => {
       }
       
       // 판매자 권한 체크
+      const user = getUserFromToken();
+      console.log('SellerDashboard - User info:', user);
+      console.log('SellerDashboard - User roles:', user?.roles);
+      console.log('SellerDashboard - User role:', user?.role);
+      
       const sellerCheck = isSeller();
       console.log('SellerDashboard - Seller check:', sellerCheck);
       if (!sellerCheck) {
-        const user = getUserFromToken();
-        console.log('SellerDashboard - User info:', user);
-        alert(`판매자 권한이 필요합니다. 현재 권한: ${(user?.roles || (user?.role ? [user?.role] : ['buyer'])).join(', ')}`);
+        const currentRoles = user?.roles || (user?.role ? [user?.role] : ['buyer']);
+        console.log('SellerDashboard - Current roles:', currentRoles);
+        alert(`판매자 권한이 필요합니다.\n현재 권한: ${currentRoles.join(', ')}\n\n권한이 변경되었다면 다시 로그인해주세요.`);
         navigate('/');
         return;
       }

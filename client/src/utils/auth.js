@@ -91,10 +91,15 @@ export const isAdmin = () => {
 // 판매자 권한 확인
 export const isSeller = () => {
   const user = getUserFromToken();
+  console.log('isSeller check - user:', user, 'roles:', user?.roles);
   if (user?.roles && Array.isArray(user.roles)) {
-    return user.roles.includes('seller');
+    const hasSeller = user.roles.includes('seller');
+    console.log('isSeller check - roles array includes seller:', hasSeller);
+    return hasSeller;
   }
-  return user?.role === 'seller';
+  const hasSeller = user?.role === 'seller';
+  console.log('isSeller check - role field is seller:', hasSeller);
+  return hasSeller;
 };
 
 // 구매자 권한 확인
