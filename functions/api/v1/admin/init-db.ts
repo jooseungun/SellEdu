@@ -165,6 +165,65 @@ export async function onRequestPost({ request, env }: {
       `CREATE INDEX IF NOT EXISTS idx_reviews_content_id ON reviews(content_id)`,
       `CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON reviews(user_id)`,
       
+      // 장바구니 테이블 생성
+      `CREATE TABLE IF NOT EXISTS cart (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        content_id INTEGER NOT NULL,
+        quantity INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(user_id, content_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_cart_user_id ON cart(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_cart_content_id ON cart(content_id)`,
+      
+      // 주문 테이블 생성
+      `CREATE TABLE IF NOT EXISTS orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        content_id INTEGER NOT NULL,
+        order_number TEXT UNIQUE NOT NULL,
+        total_amount REAL NOT NULL,
+        discount_amount REAL DEFAULT 0.00,
+        final_amount REAL NOT NULL,
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'cancelled', 'refunded', 'failed')),
+        payment_method TEXT,
+        payment_key TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        paid_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (content_id) REFERENCES contents(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_orders_content_id ON orders(content_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number)`,
+      `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`,
+      
+      // 결제 테이블 생성
+      `CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        order_id INTEGER NOT NULL,
+        payment_key TEXT UNIQUE,
+        toss_payment_id TEXT,
+        amount REAL NOT NULL,
+        method TEXT,
+        status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'ready', 'paid', 'cancelled', 'partial_cancelled', 'failed')),
+        requested_at TEXT,
+        approved_at TEXT,
+        cancelled_at TEXT,
+        fail_reason TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_payment_key ON payments(payment_key)`,
+      `CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)`,
+      
       // 정산 내역 테이블 생성
       `CREATE TABLE IF NOT EXISTS settlements (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

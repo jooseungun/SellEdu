@@ -10,6 +10,9 @@ import Register from './pages/Register';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerContentApply from './pages/SellerContentApply';
 import AdminDashboard from './pages/AdminDashboard';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFail from './pages/PaymentFail';
+import Cart from './pages/Cart';
 
 const theme = createTheme({
   palette: {
@@ -180,6 +183,9 @@ function App() {
           <Route path="/seller" element={<SellerDashboard />} />
           <Route path="/seller/apply" element={<SellerContentApply />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/fail" element={<PaymentFail />} />
         </Routes>
       </Router>
     </ThemeProvider>

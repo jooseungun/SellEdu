@@ -34,6 +34,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import api from '../utils/api';
 import { getToken, getUserName } from '../utils/auth';
+import TossPayment from '../components/TossPayment';
 
 // 가비지 데이터 생성 함수 (BuyerHome과 동일)
 const generateMockContent = (id) => {
@@ -176,6 +177,10 @@ const ContentDetail = () => {
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [tabValue, setTabValue] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
 
   useEffect(() => {
     fetchContent();
@@ -253,7 +258,82 @@ const ContentDetail = () => {
       navigate('/login');
       return;
     }
-    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 구매 처리가 되지 않습니다.');
+
+    if (!content || content.price <= 0) {
+      alert('무료 콘텐츠는 구매할 수 없습니다.');
+      return;
+    }
+
+    setPaymentLoading(true);
+    try {
+      // 결제 요청 API 호출
+      const response = await api.post('/payments/request', {
+        content_id: content.id,
+        amount: content.price
+      });
+
+      setPaymentInfo(response.data);
+      setPaymentDialogOpen(true);
+    } catch (error) {
+      console.error('결제 요청 실패:', error);
+      alert(error.response?.data?.error || '결제 요청에 실패했습니다.');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentKey) => {
+    try {
+      // 결제 승인 API 호출
+      const response = await api.post('/payments/approve', {
+        orderId: paymentInfo.orderId,
+        paymentKey: paymentKey,
+        amount: paymentInfo.amount
+      });
+
+      alert('결제가 완료되었습니다!');
+      setPaymentDialogOpen(false);
+      setPaymentInfo(null);
+      
+      // 콘텐츠 정보 새로고침
+      fetchContent();
+    } catch (error) {
+      console.error('결제 승인 실패:', error);
+      alert(error.response?.data?.error || '결제 승인에 실패했습니다.');
+    }
+  };
+
+  const handlePaymentFail = (error) => {
+    console.error('결제 실패:', error);
+    alert('결제에 실패했습니다. 다시 시도해주세요.');
+    setPaymentDialogOpen(false);
+    setPaymentInfo(null);
+  };
+
+  const handleAddToCart = async () => {
+    if (!getToken()) {
+      navigate('/login');
+      return;
+    }
+
+    if (!content || content.price <= 0) {
+      alert('무료 콘텐츠는 장바구니에 추가할 수 없습니다.');
+      return;
+    }
+
+    setCartLoading(true);
+    try {
+      await api.post('/cart/add', {
+        content_id: content.id,
+        quantity: 1
+      });
+      alert('장바구니에 추가되었습니다!');
+    } catch (error) {
+      console.error('장바구니 추가 실패:', error);
+      alert(error.response?.data?.error || '장바구니에 추가하는데 실패했습니다.');
+    } finally {
+      setCartLoading(false);
+    }
   };
 
 
@@ -600,27 +680,27 @@ const ContentDetail = () => {
                   variant="contained"
                   size="large"
                   startIcon={<ShoppingCartIcon />}
-                  onClick={() => {
-                    alert('현재 개발중입니다.');
-                  }}
+                  onClick={handleAddToCart}
+                  disabled={cartLoading || content.price <= 0}
                   sx={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     py: 1.5,
                     mb: 1
                   }}
                 >
-                  장바구니
+                  {cartLoading ? '처리 중...' : '장바구니'}
                 </Button>
                 <Button
                   variant="contained"
                   size="large"
                   onClick={handlePurchase}
+                  disabled={paymentLoading || content.price <= 0}
                   sx={{
                     background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)',
                     py: 1.5
                   }}
                 >
-                  구매
+                  {paymentLoading ? '처리 중...' : content.price > 0 ? '구매' : '무료'}
                 </Button>
               </Box>
             </Paper>
@@ -679,6 +759,52 @@ const ContentDetail = () => {
         <DialogActions>
           <Button onClick={() => setReviewDialogOpen(false)}>취소</Button>
           <Button onClick={handleReviewSubmit} variant="contained">작성</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 결제 다이얼로그 */}
+      <Dialog 
+        open={paymentDialogOpen} 
+        onClose={() => {
+          setPaymentDialogOpen(false);
+          setPaymentInfo(null);
+        }} 
+        maxWidth="sm" 
+        fullWidth
+      >
+        <DialogTitle>결제하기</DialogTitle>
+        <DialogContent>
+          {paymentInfo && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                {content?.title}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                결제 금액: {paymentInfo.amount.toLocaleString()}원
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              <TossPayment
+                orderId={paymentInfo.orderId}
+                orderNumber={paymentInfo.orderNumber}
+                amount={paymentInfo.amount}
+                orderName={paymentInfo.orderName}
+                customerName={paymentInfo.customerName}
+                customerEmail={paymentInfo.customerEmail}
+                successUrl={paymentInfo.successUrl}
+                failUrl={paymentInfo.failUrl}
+                onSuccess={handlePaymentSuccess}
+                onFail={handlePaymentFail}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setPaymentDialogOpen(false);
+            setPaymentInfo(null);
+          }}>
+            취소
+          </Button>
         </DialogActions>
       </Dialog>
     </>

@@ -37,6 +37,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import StoreIcon from '@mui/icons-material/Store';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import api from '../utils/api';
 import { getToken, removeToken, isAdmin, getUserName, getUserFromToken } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
@@ -768,11 +769,19 @@ const AdminDashboard = () => {
         {/* 제휴할인 신청 관리 */}
         {tabValue === 5 && (
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              제휴할인 신청 관리
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                제휴할인 신청 관리
+              </Typography>
+              <Chip
+                label={`총 ${partnershipRequests.length}건`}
+                color="primary"
+                size="small"
+              />
+            </Box>
             {partnershipRequests.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
+                <LocalOfferIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
                 <Typography variant="body1" color="text.secondary">
                   제휴할인 신청이 없습니다.
                 </Typography>
@@ -781,30 +790,56 @@ const AdminDashboard = () => {
               <TableContainer>
                 <Table>
                   <TableHead>
-                    <TableRow>
-                      <TableCell>신청자</TableCell>
-                      <TableCell>고객사 명</TableCell>
-                      <TableCell>제휴사</TableCell>
-                      <TableCell>상태</TableCell>
-                      <TableCell>신청일</TableCell>
-                      <TableCell>작업</TableCell>
+                    <TableRow sx={{ bgcolor: 'grey.100' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>신청자</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>이메일</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>고객사 명</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>제휴사</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>상태</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>신청일</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>작업</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {partnershipRequests.map((request) => (
-                      <TableRow key={request.id}>
+                      <TableRow 
+                        key={request.id}
+                        sx={{
+                          '&:hover': {
+                            bgcolor: 'action.hover'
+                          }
+                        }}
+                      >
                         <TableCell>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <LocalOfferIcon
                               sx={{ color: '#f5576c', fontSize: 20 }}
                               titleAccess="제휴할인 신청"
                             />
-                            <Typography variant="body2">{request.name || request.username}</Typography>
+                            <Box>
+                              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                                {request.name || request.username}
+                              </Typography>
+                            </Box>
                           </Box>
                         </TableCell>
-                        <TableCell>{request.company_name}</TableCell>
                         <TableCell>
-                          {request.type === 'malgn' ? '맑은소프트 (-30%)' : '훌라로 (+150%)'}
+                          <Typography variant="body2" color="text.secondary">
+                            {request.email || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                            {request.company_name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={request.type === 'malgn' ? '맑은소프트 (-30%)' : '훌라로 (+150%)'}
+                            size="small"
+                            color={request.type === 'malgn' ? 'primary' : 'secondary'}
+                            sx={{ fontWeight: 'bold' }}
+                          />
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -819,24 +854,33 @@ const AdminDashboard = () => {
                               request.status === 'rejected' ? 'error' :
                               request.status === 'reviewing' ? 'info' : 'warning'
                             }
+                            sx={{ fontWeight: 'bold' }}
                           />
                         </TableCell>
                         <TableCell>
-                          {request.created_at ? new Date(request.created_at).toLocaleDateString('ko-KR') : '-'}
+                          <Typography variant="body2">
+                            {request.created_at ? new Date(request.created_at).toLocaleDateString('ko-KR') : '-'}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           {request.status === 'pending' || request.status === 'reviewing' ? (
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <Button
                                 size="small"
+                                variant="contained"
                                 color="success"
+                                startIcon={<CheckCircleIcon />}
                                 onClick={async () => {
+                                  if (!window.confirm('제휴할인 신청을 승인하시겠습니까?')) {
+                                    return;
+                                  }
                                   try {
                                     await api.post(`/admin/partnership/${request.id}/approve`);
                                     alert('제휴할인 신청이 승인되었습니다.');
                                     fetchData();
                                   } catch (error) {
-                                    alert('승인 처리에 실패했습니다.');
+                                    console.error('승인 실패:', error);
+                                    alert(error.response?.data?.error || '승인 처리에 실패했습니다.');
                                   }
                                 }}
                               >
@@ -844,7 +888,9 @@ const AdminDashboard = () => {
                               </Button>
                               <Button
                                 size="small"
+                                variant="contained"
                                 color="error"
+                                startIcon={<CancelIcon />}
                                 onClick={() => {
                                   setSelectedPartnershipRequest(request);
                                   setPartnershipRejectReason('');
@@ -855,9 +901,21 @@ const AdminDashboard = () => {
                               </Button>
                             </Box>
                           ) : request.status === 'rejected' && request.rejection_reason ? (
-                            <Typography variant="caption" color="error">
-                              거부 사유: {request.rejection_reason}
-                            </Typography>
+                            <Box>
+                              <Typography variant="caption" color="error" sx={{ display: 'block', mb: 0.5 }}>
+                                거부됨
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                {request.rejection_reason}
+                              </Typography>
+                            </Box>
+                          ) : request.status === 'approved' ? (
+                            <Chip
+                              label="승인 완료"
+                              size="small"
+                              color="success"
+                              sx={{ fontWeight: 'bold' }}
+                            />
                           ) : null}
                         </TableCell>
                       </TableRow>

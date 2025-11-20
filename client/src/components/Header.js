@@ -1,14 +1,39 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { AppBar, Toolbar, Typography, Button, Box, Badge, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { getToken, removeToken } from '../utils/auth';
+import api from '../utils/api';
 
 const Header = () => {
   const navigate = useNavigate();
   const token = getToken();
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    if (token) {
+      fetchCartCount();
+      // 주기적으로 장바구니 개수 업데이트 (30초마다)
+      const interval = setInterval(fetchCartCount, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setCartCount(0);
+    }
+  }, [token]);
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await api.get('/cart/count');
+      setCartCount(response.data.count || 0);
+    } catch (error) {
+      // 에러가 발생해도 무시 (로그인하지 않은 경우 등)
+      setCartCount(0);
+    }
+  };
 
   const handleLogout = () => {
     removeToken();
+    setCartCount(0);
     navigate('/');
   };
 
@@ -18,9 +43,22 @@ const Header = () => {
         <Typography variant="h6" component={Link} to="/" sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
           SellEdu
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {token ? (
             <>
+              <Button color="inherit" component={Link} to="/buyer">
+                콘텐츠 구매
+              </Button>
+              <IconButton
+                color="inherit"
+                component={Link}
+                to="/cart"
+                sx={{ position: 'relative' }}
+              >
+                <Badge badgeContent={cartCount} color="error">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
               <Button color="inherit" component={Link} to="/seller">
                 판매자
               </Button>
