@@ -16,17 +16,14 @@ export async function onRequestPost({ request, env }: {
   };
 
   try {
-    // thumbnails 테이블이 없으면 생성
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS thumbnails (
-        id TEXT PRIMARY KEY,
-        file_name TEXT NOT NULL,
-        file_type TEXT NOT NULL,
-        file_data TEXT NOT NULL,
-        created_at TEXT DEFAULT (datetime('now'))
+    // R2 버킷 확인 (우선 확인)
+    if (!env.IMAGES) {
+      console.error('Thumbnail upload - R2 bucket not available');
+      return new Response(
+        JSON.stringify({ error: 'R2 버킷이 설정되지 않았습니다. 관리자에게 문의하세요.' }),
+        { status: 500, headers: corsHeaders }
       );
-      CREATE INDEX IF NOT EXISTS idx_thumbnails_created_at ON thumbnails(created_at);
-    `);
+    }
 
     // Content-Type 확인
     const contentType = request.headers.get('Content-Type') || '';
@@ -158,15 +155,23 @@ export async function onRequestPost({ request, env }: {
 
   } catch (error: any) {
     console.error('Thumbnail upload error:', error);
-    console.error('Thumbnail upload error stack:', error.stack);
-    console.error('Thumbnail upload error name:', error.name);
-    console.error('Thumbnail upload error message:', error.message);
+    console.error('Thumbnail upload error stack:', error?.stack);
+    console.error('Thumbnail upload error name:', error?.name);
+    console.error('Thumbnail upload error message:', error?.message);
+    console.error('Thumbnail upload error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
+    // 에러 메시지 안전하게 추출
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+    if (error?.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: '썸네일 업로드에 실패했습니다.', 
-        details: error.message || '알 수 없는 오류가 발생했습니다.',
-        errorType: error.name,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        details: errorMessage
       }),
       { status: 500, headers: corsHeaders }
     );
