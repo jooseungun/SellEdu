@@ -22,7 +22,8 @@ import {
   FormControlLabel,
   Radio,
   FormControl,
-  FormLabel
+  FormLabel,
+  Rating
 } from '@mui/material'; // Fixed duplicate TextField import
 import { useNavigate } from 'react-router-dom';
 import CodeIcon from '@mui/icons-material/Code';
@@ -128,6 +129,12 @@ const BuyerHome = () => {
   const [tabValue, setTabValue] = useState(0);
   const [purchases, setPurchases] = useState([]);
   const [purchasesLoading, setPurchasesLoading] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [userReviews, setUserReviews] = useState([]);
 
   useEffect(() => {
     const token = getToken();
@@ -187,9 +194,68 @@ const BuyerHome = () => {
     }
   };
 
+  const fetchUserReviews = async () => {
+    if (!getToken()) {
+      return;
+    }
+
+    try {
+      const response = await api.get('/reviews');
+      setUserReviews(response.data.reviews || []);
+    } catch (error) {
+      console.error('후기 조회 실패:', error);
+    }
+  };
+
+  const handleReviewClick = (purchase) => {
+    // 이미 작성한 후기가 있는지 확인
+    const existingReview = userReviews.find(r => r.content_id === purchase.content_id);
+    if (existingReview) {
+      alert('이미 이 콘텐츠에 대한 후기를 작성하셨습니다.');
+      return;
+    }
+    setSelectedPurchase(purchase);
+    setReviewRating(0);
+    setReviewComment('');
+    setReviewDialogOpen(true);
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!reviewRating) {
+      alert('평점을 선택해주세요.');
+      return;
+    }
+
+    if (!selectedPurchase) {
+      return;
+    }
+
+    setReviewSubmitting(true);
+    try {
+      await api.post('/reviews/create', {
+        content_id: selectedPurchase.content_id,
+        rating: reviewRating,
+        comment: reviewComment
+      });
+      alert('후기가 작성되었습니다.');
+      setReviewDialogOpen(false);
+      fetchUserReviews();
+      fetchPurchases(); // 구매 내역 새로고침
+    } catch (error) {
+      console.error('후기 작성 실패:', error);
+      alert(error.response?.data?.error || '후기 작성에 실패했습니다.');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     fetchContents();
-  }, [search, selectedCategory]);
+    if (isLoggedIn) {
+      fetchPurchases();
+      fetchUserReviews();
+    }
+  }, [search, selectedCategory, isLoggedIn]);
 
   const fetchContents = async () => {
     setLoading(true);
@@ -752,7 +818,7 @@ const BuyerHome = () => {
                               만료일: {new Date(purchase.expiry_date).toLocaleDateString('ko-KR')}
                             </Typography>
                           </Box>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                             <Chip
                               label={purchase.category}
                               size="small"
@@ -761,6 +827,27 @@ const BuyerHome = () => {
                             <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 700 }}>
                               {purchase.final_amount.toLocaleString()}원
                             </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                            {userReviews.find(r => r.content_id === purchase.content_id) ? (
+                              <Chip
+                                label="후기 작성 완료"
+                                size="small"
+                                sx={{ bgcolor: 'success.main', color: 'white' }}
+                              />
+                            ) : (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleReviewClick(purchase);
+                                }}
+                                sx={{ textTransform: 'none' }}
+                              >
+                                후기 작성
+                              </Button>
+                            )}
                           </Box>
                         </CardContent>
                       </Card>
@@ -851,6 +938,54 @@ const BuyerHome = () => {
         open={profileDialogOpen}
         onClose={() => setProfileDialogOpen(false)}
       />
+
+      {/* 후기 작성 다이얼로그 */}
+      <Dialog
+        open={reviewDialogOpen}
+        onClose={() => setReviewDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>후기 작성</DialogTitle>
+        <DialogContent>
+          {selectedPurchase && (
+            <>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                {selectedPurchase.title}
+              </Typography>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  평점
+                </Typography>
+                <Rating
+                  value={reviewRating}
+                  onChange={(e, newValue) => setReviewRating(newValue || 0)}
+                  size="large"
+                />
+              </Box>
+              <TextField
+                fullWidth
+                label="후기 내용 (선택사항)"
+                multiline
+                rows={4}
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                placeholder="콘텐츠에 대한 후기를 작성해주세요."
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReviewDialogOpen(false)}>취소</Button>
+          <Button
+            onClick={handleReviewSubmit}
+            variant="contained"
+            disabled={reviewSubmitting || !reviewRating}
+          >
+            {reviewSubmitting ? '작성 중...' : '작성하기'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

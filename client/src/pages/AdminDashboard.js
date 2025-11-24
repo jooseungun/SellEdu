@@ -307,7 +307,7 @@ const AdminDashboard = () => {
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm('후기를 삭제하시겠습니까?')) return;
     try {
-      await api.delete(`/admin/reviews/${reviewId}`);
+      await api.delete(`/admin/reviews?id=${reviewId}`);
       alert('후기가 삭제되었습니다.');
       fetchData();
     } catch (error) {
@@ -647,9 +647,29 @@ const AdminDashboard = () => {
         {/* 후기 관리 */}
         {tabValue === 2 && (
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              콘텐츠 후기 관리
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                콘텐츠 후기 관리
+              </Typography>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={async () => {
+                  if (!window.confirm('모든 후기와 평점을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                    return;
+                  }
+                  try {
+                    await api.post('/admin/reviews/clear');
+                    alert('모든 후기와 평점이 삭제되었습니다.');
+                    fetchData();
+                  } catch (error) {
+                    alert(error.response?.data?.error || '후기 삭제에 실패했습니다.');
+                  }
+                }}
+              >
+                모든 후기 삭제
+              </Button>
+            </Box>
             <TableContainer>
               <Table>
                 <TableHead>

@@ -63,6 +63,8 @@ const SellerDashboard = () => {
   const [sales, setSales] = useState([]);
   const [salesLoading, setSalesLoading] = useState(false);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     // 로그인 체크 및 초기화
@@ -188,6 +190,19 @@ const SellerDashboard = () => {
       setSales([]);
     } finally {
       setSalesLoading(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const response = await api.get('/seller/reviews');
+      setReviews(response.data.reviews || []);
+    } catch (error) {
+      console.error('후기 조회 실패:', error);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
     }
   };
 
@@ -381,12 +396,15 @@ const SellerDashboard = () => {
             setTabValue(v);
             if (v === 3) {
               fetchSales();
+            } else if (v === 4) {
+              fetchReviews();
             }
           }}>
             <Tab label="판매 현황" />
             <Tab label="내 콘텐츠 현황" />
             <Tab label="정산 내역" />
             <Tab label="판매 내역" />
+            <Tab label="후기 관리" />
           </Tabs>
           <Button
             variant="contained"
@@ -618,6 +636,52 @@ const SellerDashboard = () => {
                   총 판매 금액: {sales.reduce((sum, sale) => sum + sale.final_amount, 0).toLocaleString()}원
                 </Typography>
               </Box>
+            )}
+          </Paper>
+        )}
+
+        {tabValue === 4 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              후기 관리
+            </Typography>
+            {reviewsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : reviews.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  후기가 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>콘텐츠</TableCell>
+                      <TableCell>구매자</TableCell>
+                      <TableCell>평점</TableCell>
+                      <TableCell>내용</TableCell>
+                      <TableCell>작성일</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {reviews.map((review) => (
+                      <TableRow key={review.id}>
+                        <TableCell>{review.content_title}</TableCell>
+                        <TableCell>{review.buyer_name || review.buyer_username}</TableCell>
+                        <TableCell>
+                          <Chip label={`${review.rating}점`} color="primary" size="small" />
+                        </TableCell>
+                        <TableCell>{review.comment || '-'}</TableCell>
+                        <TableCell>{new Date(review.created_at).toLocaleDateString('ko-KR')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
           </Paper>
         )}
