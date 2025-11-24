@@ -28,7 +28,12 @@ import {
   Toolbar,
   CircularProgress,
   Alert,
-  Divider
+  Divider,
+  Grid,
+  Card,
+  CardContent,
+  IconButton,
+  Checkbox
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import EditIcon from '@mui/icons-material/Edit';
@@ -37,6 +42,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ReactQuill from 'react-quill';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName, getUserFromToken, isSeller } from '../utils/auth';
 import UserProfileDialog from '../components/UserProfileDialog';
@@ -65,6 +72,11 @@ const SellerDashboard = () => {
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const categories = [
+    '인문교양', '전문직무', '공통직무', '자격증', 'IT', 
+    '외국어', '어학', '경영직무', '법정교육', '직무', 
+    '산업기술지식', '경영일반'
+  ];
 
   useEffect(() => {
     // 로그인 체크 및 초기화
@@ -206,20 +218,49 @@ const SellerDashboard = () => {
     }
   };
 
-  const handleEditClick = (content) => {
+  const handleEditClick = async (content) => {
     setSelectedContent(content);
-    setEditForm({
-      title: content.title,
-      description: content.description,
-      thumbnail_url: content.thumbnail_url,
-      cdn_link: content.cdn_link,
-      price: content.price,
-      duration: content.duration,
-      tags: Array.isArray(content.tags) ? content.tags.join(', ') : '',
-      sale_start_date: content.sale_start_date || '',
-      sale_end_date: content.sale_end_date || '',
-      is_always_on_sale: content.is_always_on_sale || false
-    });
+    
+    // 콘텐츠 상세 정보 가져오기 (lessons 포함)
+    try {
+      const detailResponse = await api.get(`/admin/contents/${content.id}/detail`);
+      const contentDetail = detailResponse.data;
+      
+      setEditForm({
+        title: contentDetail.title || content.title,
+        description: contentDetail.description || content.description || '',
+        detailed_description: contentDetail.detailed_description || '',
+        thumbnail_url: contentDetail.thumbnail_url || content.thumbnail_url || '',
+        price: contentDetail.price || content.price || 0,
+        category: contentDetail.category || content.category || '인문교양',
+        education_period: contentDetail.education_period || content.education_period || '',
+        sale_start_date: contentDetail.sale_start_date ? contentDetail.sale_start_date.split('T')[0] : '',
+        sale_end_date: contentDetail.sale_end_date ? contentDetail.sale_end_date.split('T')[0] : '',
+        is_always_on_sale: contentDetail.is_always_on_sale || content.is_always_on_sale || false,
+        lessons: contentDetail.lessons ? contentDetail.lessons.map((lesson, index) => ({
+          title: lesson.title || '',
+          cdn_link: lesson.cdn_link || '',
+          duration: lesson.duration || 0
+        })) : []
+      });
+    } catch (error) {
+      console.error('콘텐츠 상세 정보 조회 실패:', error);
+      // 실패 시 기본 정보만 사용
+      setEditForm({
+        title: content.title,
+        description: content.description || '',
+        detailed_description: '',
+        thumbnail_url: content.thumbnail_url || '',
+        price: content.price || 0,
+        category: content.category || '인문교양',
+        education_period: content.education_period || '',
+        sale_start_date: content.sale_start_date ? content.sale_start_date.split('T')[0] : '',
+        sale_end_date: content.sale_end_date ? content.sale_end_date.split('T')[0] : '',
+        is_always_on_sale: content.is_always_on_sale || false,
+        lessons: []
+      });
+    }
+    
     setEditDialogOpen(true);
   };
 
@@ -273,18 +314,83 @@ const SellerDashboard = () => {
     }
   };
 
+  const handleAddLesson = () => {
+    setEditForm({
+      ...editForm,
+      lessons: [...(editForm.lessons || []), { title: '', cdn_link: '', duration: 0 }]
+    });
+  };
+
+  const handleRemoveLesson = (index) => {
+    setEditForm({
+      ...editForm,
+      lessons: editForm.lessons.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleLessonChange = (index, field, value) => {
+    const updatedLessons = [...(editForm.lessons || [])];
+    updatedLessons[index][field] = value;
+    setEditForm({ ...editForm, lessons: updatedLessons });
+  };
+
   const handleEditSubmit = async () => {
+    if (!editForm.title) {
+      alert('제목을 입력해주세요.');
+      return;
+    }
+
+    if (!editForm.category) {
+      alert('카테고리를 선택해주세요.');
+      return;
+    }
+
+    if (!editForm.lessons || editForm.lessons.length === 0) {
+      alert('최소 1개 이상의 콘텐츠를 추가해주세요.');
+      return;
+    }
+
+    // 콘텐츠 유효성 검사
+    for (let i = 0; i < editForm.lessons.length; i++) {
+      if (!editForm.lessons[i].title || !editForm.lessons[i].cdn_link) {
+        alert(`${i + 1}번째 콘텐츠의 제목과 CDN 링크를 모두 입력해주세요.`);
+        return;
+      }
+    }
+
     try {
-      await api.put(`/contents/${selectedContent.id}`, {
+      // 날짜를 ISO 형식으로 변환
+      const saleStartDate = editForm.sale_start_date 
+        ? new Date(editForm.sale_start_date + 'T00:00:00').toISOString()
+        : null;
+      const saleEndDate = editForm.is_always_on_sale 
+        ? null 
+        : (editForm.sale_end_date 
+          ? new Date(editForm.sale_end_date + 'T00:00:00').toISOString()
+          : null);
+
+      // 재등록 신청 (기존 콘텐츠 수정)
+      await api.post('/contents/apply', {
         ...editForm,
-        tags: editForm.tags.split(',').map(t => t.trim()).filter(t => t)
+        price: parseFloat(editForm.price) || 0,
+        education_period: parseInt(editForm.education_period) || null,
+        sale_start_date: saleStartDate,
+        sale_end_date: saleEndDate,
+        lessons: editForm.lessons.map((lesson, index) => ({
+          lesson_number: index + 1,
+          title: lesson.title,
+          cdn_link: lesson.cdn_link,
+          duration: parseInt(lesson.duration) || 0
+        })),
+        original_content_id: selectedContent.id // 재등록을 위한 원본 콘텐츠 ID
       });
-      alert('콘텐츠가 수정되었고 재등록 신청이 완료되었습니다.');
+      
+      alert('콘텐츠 수정 및 재등록 신청이 완료되었습니다.');
       setEditDialogOpen(false);
       fetchData();
     } catch (error) {
-      alert('프로토타입 버전: 실제 수정 처리는 되지 않습니다.');
-      setEditDialogOpen(false);
+      console.error('콘텐츠 수정 실패:', error);
+      alert(error.response?.data?.error || '콘텐츠 수정에 실패했습니다.');
     }
   };
 
@@ -692,95 +798,303 @@ const SellerDashboard = () => {
         <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>콘텐츠 수정 및 재등록 신청</DialogTitle>
           <DialogContent>
-            <TextField
-              fullWidth
-              label="제목"
-              margin="normal"
-              value={editForm.title}
-              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="설명"
-              margin="normal"
-              multiline
-              rows={4}
-              value={editForm.description}
-              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-            />
-            
-            {/* 썸네일 업로드 */}
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                썸네일
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<AddIcon />}
-                  disabled={uploadingThumbnail}
-                >
-                  {uploadingThumbnail ? '업로드 중...' : '썸네일 업로드'}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleThumbnailChange}
-                  />
-                </Button>
-                {editForm.thumbnail_url && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box
-                      component="img"
-                      src={getThumbnailUrl(editForm.thumbnail_url)}
-                      alt="썸네일 미리보기"
-                      onError={(e) => {
-                        e.target.src = getThumbnailUrl();
-                      }}
-                      sx={{ 
-                        maxWidth: 200, 
-                        maxHeight: 150, 
-                        objectFit: 'cover', 
-                        borderRadius: 1,
-                        border: '1px solid #ddd'
-                      }}
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              {/* 제목 */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="제목"
+                  required
+                  value={editForm.title || ''}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="콘텐츠 제목을 입력하세요"
+                />
+              </Grid>
+
+              {/* 설명 (에디터) */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  설명
+                </Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={editForm.description || ''}
+                  onChange={(value) => setEditForm({ ...editForm, description: value })}
+                  placeholder="콘텐츠 설명을 입력하세요"
+                  style={{ height: '200px', marginBottom: '50px' }}
+                />
+              </Grid>
+
+              {/* 상세 설명 (에디터) */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  상세 설명
+                </Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={editForm.detailed_description || ''}
+                  onChange={(value) => setEditForm({ ...editForm, detailed_description: value })}
+                  placeholder="콘텐츠 상세 설명을 입력하세요"
+                  style={{ height: '200px', marginBottom: '50px' }}
+                />
+              </Grid>
+
+              {/* 썸네일 업로드 */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  썸네일 (선택사항)
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<AddIcon />}
+                    disabled={uploadingThumbnail}
+                  >
+                    {uploadingThumbnail ? '업로드 중...' : '썸네일 업로드'}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleThumbnailChange}
                     />
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={() => setEditForm({ ...editForm, thumbnail_url: '' })}
-                    >
-                      제거
-                    </Button>
+                  </Button>
+                  {editForm.thumbnail_url && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        component="img"
+                        src={getThumbnailUrl(editForm.thumbnail_url)}
+                        alt="썸네일 미리보기"
+                        onError={(e) => {
+                          e.target.src = getThumbnailUrl();
+                        }}
+                        sx={{ 
+                          maxWidth: 200, 
+                          maxHeight: 150, 
+                          objectFit: 'cover', 
+                          borderRadius: 1,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={() => setEditForm({ ...editForm, thumbnail_url: '' })}
+                      >
+                        제거
+                      </Button>
+                    </Box>
+                  )}
+                  {!editForm.thumbnail_url && (
+                    <Box>
+                      <Typography variant="caption" sx={{ display: 'block', mb: 1 }}>
+                        기본 썸네일이 사용됩니다:
+                      </Typography>
+                      <Box
+                        component="img"
+                        src={getThumbnailUrl()}
+                        alt="기본 썸네일"
+                        sx={{ 
+                          maxWidth: 200, 
+                          maxHeight: 150, 
+                          objectFit: 'cover', 
+                          borderRadius: 1,
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </Grid>
+
+              {/* 판매희망가격 */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="판매희망가격 (원)"
+                  type="number"
+                  required
+                  value={editForm.price || ''}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+
+              {/* 이용가능 일수 */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="이용가능 일수"
+                  type="number"
+                  value={editForm.education_period || ''}
+                  onChange={(e) => setEditForm({ ...editForm, education_period: e.target.value })}
+                  inputProps={{ min: 1 }}
+                  placeholder="예: 30 (30일간 이용 가능)"
+                />
+              </Grid>
+
+              {/* 카테고리 (라디오박스) */}
+              <Grid item xs={12}>
+                <FormControl component="fieldset">
+                  <FormLabel component="legend">카테고리</FormLabel>
+                  <RadioGroup
+                    row
+                    value={editForm.category || '인문교양'}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    sx={{ mt: 1 }}
+                  >
+                    {categories.map((cat) => (
+                      <FormControlLabel
+                        key={cat}
+                        value={cat}
+                        control={<Radio />}
+                        label={cat}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+              </Grid>
+
+              {/* 판매 기간 */}
+              <Grid item xs={12}>
+                <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#fafafa' }}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ mb: 2 }}>
+                    판매 기간 설정
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={5}>
+                      <TextField
+                        fullWidth
+                        label="판매 시작일"
+                        type="date"
+                        value={editForm.sale_start_date || ''}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          setEditForm({ ...editForm, sale_start_date: date ? `${date}T00:00:00` : '' });
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={5}>
+                      <TextField
+                        fullWidth
+                        label="판매 종료일"
+                        type="date"
+                        value={editForm.sale_end_date || ''}
+                        onChange={(e) => {
+                          const date = e.target.value;
+                          setEditForm({ ...editForm, sale_end_date: date ? `${date}T00:00:00` : '' });
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        disabled={editForm.is_always_on_sale}
+                        sx={{
+                          '& .MuiInputBase-input.Mui-disabled': {
+                            WebkitTextFillColor: '#9e9e9e',
+                            bgcolor: '#f5f5f5'
+                          }
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={2}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={editForm.is_always_on_sale || false}
+                            onChange={(e) => setEditForm({ ...editForm, is_always_on_sale: e.target.checked })}
+                          />
+                        }
+                        label="기간지정없음"
+                        sx={{ 
+                          mt: 1,
+                          '& .MuiFormControlLabel-label': {
+                            fontSize: '0.875rem'
+                          }
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Grid>
+
+              {/* 콘텐츠 구성 */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">
+                    콘텐츠 구성
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={handleAddLesson}
+                  >
+                    콘텐츠 추가
+                  </Button>
+                </Box>
+
+                {(!editForm.lessons || editForm.lessons.length === 0) ? (
+                  <Box sx={{ textAlign: 'center', py: 4, border: '1px dashed #ccc', borderRadius: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      콘텐츠를 추가해주세요
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {editForm.lessons.map((lesson, index) => (
+                      <Card key={index} variant="outlined">
+                        <CardContent>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="subtitle1">
+                              {index + 1}번
+                            </Typography>
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={() => handleRemoveLesson(index)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
+                          <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                              <TextField
+                                fullWidth
+                                label="콘텐츠명"
+                                required
+                                value={lesson.title || ''}
+                                onChange={(e) => handleLessonChange(index, 'title', e.target.value)}
+                                placeholder="예: 1번. 콘텐츠 소개"
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={8}>
+                              <TextField
+                                fullWidth
+                                label="콘텐츠 CDN 링크"
+                                required
+                                value={lesson.cdn_link || ''}
+                                onChange={(e) => handleLessonChange(index, 'cdn_link', e.target.value)}
+                                placeholder="https://..."
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                              <TextField
+                                fullWidth
+                                label="재생 시간 (분)"
+                                type="number"
+                                value={lesson.duration || 0}
+                                onChange={(e) => handleLessonChange(index, 'duration', e.target.value)}
+                                inputProps={{ min: 0 }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </Box>
                 )}
-              </Box>
-            </Box>
-
-            <TextField
-              fullWidth
-              label="CDN 링크"
-              margin="normal"
-              value={editForm.cdn_link}
-              onChange={(e) => setEditForm({ ...editForm, cdn_link: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="가격"
-              type="number"
-              margin="normal"
-              value={editForm.price}
-              onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="태그 (쉼표로 구분)"
-              margin="normal"
-              value={editForm.tags}
-              onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })}
-            />
+              </Grid>
+            </Grid>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditDialogOpen(false)}>취소</Button>
