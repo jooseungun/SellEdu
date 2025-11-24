@@ -58,6 +58,8 @@ const SellerDashboard = () => {
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [sales, setSales] = useState([]);
+  const [salesLoading, setSalesLoading] = useState(false);
 
   useEffect(() => {
     // 로그인 체크 및 초기화
@@ -170,6 +172,19 @@ const SellerDashboard = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSales = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await api.get('/seller/sales');
+      setSales(response.data.sales || []);
+    } catch (error) {
+      console.error('판매 내역 조회 실패:', error);
+      setSales([]);
+    } finally {
+      setSalesLoading(false);
     }
   };
 
@@ -309,10 +324,16 @@ const SellerDashboard = () => {
         )}
         
         <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
+          <Tabs value={tabValue} onChange={(e, v) => {
+            setTabValue(v);
+            if (v === 3) {
+              fetchSales();
+            }
+          }}>
             <Tab label="판매 현황" />
             <Tab label="내 콘텐츠 현황" />
             <Tab label="정산 내역" />
+            <Tab label="판매 내역" />
           </Tabs>
           <Button
             variant="contained"
@@ -494,6 +515,57 @@ const SellerDashboard = () => {
                 정산 신청
               </Button>
             </Box>
+          </Paper>
+        )}
+
+        {tabValue === 3 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              판매 내역
+            </Typography>
+            {salesLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : sales.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  판매 내역이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>주문번호</TableCell>
+                      <TableCell>콘텐츠</TableCell>
+                      <TableCell>구매자</TableCell>
+                      <TableCell>판매 금액</TableCell>
+                      <TableCell>판매일</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell>{sale.order_number}</TableCell>
+                        <TableCell>{sale.title}</TableCell>
+                        <TableCell>{sale.buyer_name} ({sale.buyer_email})</TableCell>
+                        <TableCell>{sale.final_amount.toLocaleString()}원</TableCell>
+                        <TableCell>{new Date(sale.paid_at).toLocaleDateString('ko-KR')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+            {sales.length > 0 && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                <Typography variant="h6">
+                  총 판매 금액: {sales.reduce((sum, sale) => sum + sale.final_amount, 0).toLocaleString()}원
+                </Typography>
+              </Box>
+            )}
           </Paper>
         )}
           </>

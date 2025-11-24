@@ -34,6 +34,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
 import Badge from '@mui/material/Badge';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName } from '../utils/auth';
@@ -121,6 +124,9 @@ const BuyerHome = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [buyerInfo, setBuyerInfo] = useState(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [purchases, setPurchases] = useState([]);
+  const [purchasesLoading, setPurchasesLoading] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -161,6 +167,22 @@ const BuyerHome = () => {
     } catch (error) {
       // 에러가 발생해도 무시 (로그인하지 않은 경우 등)
       setCartItemCount(0);
+    }
+  };
+
+  const fetchPurchases = async () => {
+    if (!getToken()) {
+      return;
+    }
+    setPurchasesLoading(true);
+    try {
+      const response = await api.get('/buyer/purchases');
+      setPurchases(response.data.purchases || []);
+    } catch (error) {
+      console.error('구매 내역 조회 실패:', error);
+      setPurchases([]);
+    } finally {
+      setPurchasesLoading(false);
     }
   };
 
@@ -359,9 +381,23 @@ const BuyerHome = () => {
 
       <Box sx={{ bgcolor: '#f8fafc', minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 4 }}>
+          {/* 탭 메뉴 */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs value={tabValue} onChange={(e, newValue) => {
+              setTabValue(newValue);
+              if (newValue === 1) {
+                fetchPurchases();
+              }
+            }}>
+              <Tab icon={<CodeIcon />} iconPosition="start" label="콘텐츠 목록" />
+              <Tab icon={<ShoppingBagIcon />} iconPosition="start" label="내 구매 내역" />
+            </Tabs>
+          </Box>
 
-          {/* 검색 및 카테고리 필터 */}
-          <Box sx={{ mb: 4 }}>
+          {tabValue === 0 && (
+            <>
+              {/* 검색 및 카테고리 필터 */}
+              <Box sx={{ mb: 4 }}>
             <TextField
               fullWidth
               placeholder="콘텐츠 검색"
@@ -651,6 +687,87 @@ const BuyerHome = () => {
               )}
 
             </>
+          )}
+
+          {tabValue === 1 && (
+            <Box>
+              {purchasesLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                  <CircularProgress sx={{ color: 'primary.main' }} />
+                </Box>
+              ) : purchases.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <ShoppingBagIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+                  <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                    구매한 콘텐츠가 없습니다.
+                  </Typography>
+                </Box>
+              ) : (
+                <Grid container spacing={3}>
+                  {purchases.map((purchase) => (
+                    <Grid item xs={12} sm={6} md={4} key={purchase.id}>
+                      <Card
+                        sx={{
+                          bgcolor: 'white',
+                          transition: 'all 0.3s',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: 4
+                          }
+                        }}
+                        onClick={() => navigate(`/content/${purchase.content_id}`)}
+                      >
+                        <Box sx={{ position: 'relative' }}>
+                          <CardMedia
+                            component="img"
+                            height="200"
+                            image={purchase.thumbnail_url || '/default-thumbnail.svg'}
+                            alt={purchase.title}
+                            sx={{ objectFit: 'cover' }}
+                          />
+                          <Chip
+                            label={purchase.is_expired ? '만료됨' : `${purchase.remaining_days}일 남음`}
+                            size="small"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              bgcolor: purchase.is_expired ? 'error.main' : 'success.main',
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
+                          />
+                        </Box>
+                        <CardContent>
+                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }} noWrap>
+                            {purchase.title}
+                          </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              구매일: {new Date(purchase.paid_date).toLocaleDateString('ko-KR')}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              만료일: {new Date(purchase.expiry_date).toLocaleDateString('ko-KR')}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Chip
+                              label={purchase.category}
+                              size="small"
+                              sx={{ bgcolor: 'primary.light', color: 'primary.main' }}
+                            />
+                            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 700 }}>
+                              {purchase.final_amount.toLocaleString()}원
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </Box>
           )}
         </Container>
       </Box>

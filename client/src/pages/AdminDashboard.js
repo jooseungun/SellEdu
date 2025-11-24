@@ -80,6 +80,8 @@ const AdminDashboard = () => {
     admin: false
   });
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [sales, setSales] = useState([]);
+  const [salesLoading, setSalesLoading] = useState(false);
   const [allContents, setAllContents] = useState([]);
 
   useEffect(() => {
@@ -133,6 +135,19 @@ const AdminDashboard = () => {
     
     initializeDatabase();
   }, [tabValue, navigate]);
+
+  const fetchSales = async () => {
+    setSalesLoading(true);
+    try {
+      const response = await api.get('/admin/sales');
+      setSales(response.data.sales || []);
+    } catch (error) {
+      console.error('판매 내역 조회 실패:', error);
+      setSales([]);
+    } finally {
+      setSalesLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -367,13 +382,19 @@ const AdminDashboard = () => {
           </Alert>
         )}
         
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 3 }}>
+        <Tabs value={tabValue} onChange={(e, v) => {
+          setTabValue(v);
+          if (v === 6) {
+            fetchSales();
+          }
+        }} sx={{ mb: 3 }}>
           <Tab label="콘텐츠 승인 검토" />
           <Tab label="상품관리" />
           <Tab label="후기 관리" />
           <Tab label="등급 정책" />
           <Tab label="회원 관리" />
           <Tab label="제휴할인 신청" />
+          <Tab label="판매 내역" />
         </Tabs>
 
         {loading ? (
@@ -800,6 +821,60 @@ const AdminDashboard = () => {
           </Paper>
         )}
 
+        {/* 판매 내역 관리 */}
+        {tabValue === 6 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              판매 내역
+            </Typography>
+            {salesLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : sales.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  판매 내역이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>주문번호</TableCell>
+                        <TableCell>콘텐츠</TableCell>
+                        <TableCell>판매자</TableCell>
+                        <TableCell>구매자</TableCell>
+                        <TableCell>판매 금액</TableCell>
+                        <TableCell>판매일</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sales.map((sale) => (
+                        <TableRow key={sale.id}>
+                          <TableCell>{sale.order_number}</TableCell>
+                          <TableCell>{sale.title}</TableCell>
+                          <TableCell>{sale.seller_name} ({sale.seller_email})</TableCell>
+                          <TableCell>{sale.buyer_name} ({sale.buyer_email})</TableCell>
+                          <TableCell>{sale.final_amount.toLocaleString()}원</TableCell>
+                          <TableCell>{new Date(sale.paid_at).toLocaleDateString('ko-KR')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                  <Typography variant="h6">
+                    총 판매 금액: {sales.reduce((sum, sale) => sum + sale.final_amount, 0).toLocaleString()}원
+                  </Typography>
+                </Box>
+              </>
+            )}
+          </Paper>
+        )}
+
         {/* 제휴할인 신청 관리 */}
         {tabValue === 5 && (
           <Paper sx={{ p: 3 }}>
@@ -957,6 +1032,60 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+            )}
+          </Paper>
+        )}
+
+        {/* 판매 내역 관리 */}
+        {tabValue === 6 && (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              판매 내역
+            </Typography>
+            {salesLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : sales.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  판매 내역이 없습니다.
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>주문번호</TableCell>
+                        <TableCell>콘텐츠</TableCell>
+                        <TableCell>판매자</TableCell>
+                        <TableCell>구매자</TableCell>
+                        <TableCell>판매 금액</TableCell>
+                        <TableCell>판매일</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {sales.map((sale) => (
+                        <TableRow key={sale.id}>
+                          <TableCell>{sale.order_number}</TableCell>
+                          <TableCell>{sale.title}</TableCell>
+                          <TableCell>{sale.seller_name} ({sale.seller_email})</TableCell>
+                          <TableCell>{sale.buyer_name} ({sale.buyer_email})</TableCell>
+                          <TableCell>{sale.final_amount.toLocaleString()}원</TableCell>
+                          <TableCell>{new Date(sale.paid_at).toLocaleDateString('ko-KR')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                  <Typography variant="h6">
+                    총 판매 금액: {sales.reduce((sum, sale) => sum + sale.final_amount, 0).toLocaleString()}원
+                  </Typography>
+                </Box>
+              </>
             )}
           </Paper>
         )}
