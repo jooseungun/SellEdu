@@ -36,9 +36,11 @@ import CodeIcon from '@mui/icons-material/Code';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import SettingsIcon from '@mui/icons-material/Settings';
+import AddIcon from '@mui/icons-material/Add';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName, getUserFromToken, isSeller } from '../utils/auth';
 import UserProfileDialog from '../components/UserProfileDialog';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -60,6 +62,7 @@ const SellerDashboard = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [sales, setSales] = useState([]);
   const [salesLoading, setSalesLoading] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 
   useEffect(() => {
     // 로그인 체크 및 초기화
@@ -203,6 +206,56 @@ const SellerDashboard = () => {
       is_always_on_sale: content.is_always_on_sale || false
     });
     setEditDialogOpen(true);
+  };
+
+  const handleThumbnailChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB를 초과할 수 없습니다.');
+      return;
+    }
+
+    // 파일 타입 확인
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    // 파일 업로드
+    setUploadingThumbnail(true);
+    try {
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      console.log('Thumbnail upload - Starting upload:', { 
+        fileName: file.name, 
+        fileSize: file.size, 
+        fileType: file.type 
+      });
+
+      const response = await api.post('/upload/thumbnail', uploadFormData);
+
+      console.log('Thumbnail upload - Response:', response.data);
+
+      if (response.data?.thumbnail_url) {
+        setEditForm({ ...editForm, thumbnail_url: response.data.thumbnail_url });
+        alert('썸네일이 업로드되었습니다.');
+      } else {
+        console.error('Thumbnail upload - No thumbnail_url in response:', response.data);
+        alert('썸네일 업로드에 실패했습니다. 응답에 썸네일 URL이 없습니다.');
+      }
+    } catch (error) {
+      console.error('Thumbnail upload error:', error);
+      const errorMessage = error.response?.data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+      const errorDetails = error.response?.data?.details || '';
+      console.error('Thumbnail upload - Error details:', { errorMessage, errorDetails });
+      alert(`썸네일 업로드에 실패했습니다: ${errorMessage}${errorDetails ? `\n${errorDetails}` : ''}`);
+    } finally {
+      setUploadingThumbnail(false);
+    }
   };
 
   const handleEditSubmit = async () => {
@@ -591,13 +644,57 @@ const SellerDashboard = () => {
               value={editForm.description}
               onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
             />
-            <TextField
-              fullWidth
-              label="썸네일 URL"
-              margin="normal"
-              value={editForm.thumbnail_url}
-              onChange={(e) => setEditForm({ ...editForm, thumbnail_url: e.target.value })}
-            />
+            
+            {/* 썸네일 업로드 */}
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                썸네일
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<AddIcon />}
+                  disabled={uploadingThumbnail}
+                >
+                  {uploadingThumbnail ? '업로드 중...' : '썸네일 업로드'}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                  />
+                </Button>
+                {editForm.thumbnail_url && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box
+                      component="img"
+                      src={getThumbnailUrl(editForm.thumbnail_url)}
+                      alt="썸네일 미리보기"
+                      onError={(e) => {
+                        e.target.src = getThumbnailUrl();
+                      }}
+                      sx={{ 
+                        maxWidth: 200, 
+                        maxHeight: 150, 
+                        objectFit: 'cover', 
+                        borderRadius: 1,
+                        border: '1px solid #ddd'
+                      }}
+                    />
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={() => setEditForm({ ...editForm, thumbnail_url: '' })}
+                    >
+                      제거
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+
             <TextField
               fullWidth
               label="CDN 링크"
