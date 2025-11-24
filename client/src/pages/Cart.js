@@ -87,57 +87,36 @@ const Cart = () => {
       return;
     }
 
-    setPaymentLoading(true);
-    try {
-      // 여러 상품을 하나의 주문으로 묶어서 결제 요청
-      const orderName = cartItems.length === 1 
-        ? cartItems[0].content.title 
-        : `${cartItems[0].content.title} 외 ${cartItems.length - 1}개`;
+    // 결제 요청 API 없이 바로 결제 다이얼로그 표시
+    const orderName = cartItems.length === 1 
+      ? cartItems[0].content.title 
+      : `${cartItems[0].content.title} 외 ${cartItems.length - 1}개`;
 
-      // 결제 요청 API 호출 (여러 상품 일괄 결제)
-      const response = await api.post('/payments/request-batch', {
-        items: cartItems.map(item => ({
-          content_id: item.contentId,
-          quantity: item.quantity
-        })),
-        total_amount: totalAmount
-      });
-
-      setPaymentInfo(response.data);
-      setPaymentDialogOpen(true);
-    } catch (error) {
-      console.error('결제 요청 실패:', error);
-      alert(error.response?.data?.error || '결제 요청에 실패했습니다.');
-    } finally {
-      setPaymentLoading(false);
-    }
+    setPaymentInfo({
+      amount: totalAmount,
+      orderName: orderName
+    });
+    setPaymentDialogOpen(true);
   };
 
   const handlePaymentSuccess = async (paymentKey) => {
+    // 실제 결제 승인 API 호출 없이 바로 완료 처리
+    alert('결제가 완료되었습니다!');
+    setPaymentDialogOpen(false);
+    setPaymentInfo(null);
+    
+    // 장바구니 비우기
     try {
-      // 결제 승인 API 호출
-      const response = await api.post('/payments/approve', {
-        orderId: paymentInfo.orderId,
-        paymentKey: paymentKey,
-        amount: paymentInfo.amount
-      });
-
-      alert('결제가 완료되었습니다!');
-      setPaymentDialogOpen(false);
-      setPaymentInfo(null);
-      
-      // 장바구니 비우기
       await Promise.all(cartItems.map(item => api.delete(`/cart/${item.id}`)));
-      
-      // 장바구니 새로고침
-      fetchCart();
-      
-      // 구매 내역 페이지로 이동하거나 홈으로 이동
-      navigate('/buyer');
     } catch (error) {
-      console.error('결제 승인 실패:', error);
-      alert(error.response?.data?.error || '결제 승인에 실패했습니다.');
+      console.error('장바구니 비우기 실패:', error);
     }
+    
+    // 장바구니 새로고침
+    fetchCart();
+    
+    // 구매 내역 페이지로 이동하거나 홈으로 이동
+    navigate('/buyer');
   };
 
   const handlePaymentFail = (error) => {
@@ -311,14 +290,7 @@ const Cart = () => {
                 </Typography>
                 <Divider sx={{ my: 2 }} />
                 <TossPayment
-                  orderId={paymentInfo.orderId}
-                  orderNumber={paymentInfo.orderNumber}
                   amount={paymentInfo.amount}
-                  orderName={paymentInfo.orderName}
-                  customerName={paymentInfo.customerName}
-                  customerEmail={paymentInfo.customerEmail}
-                  successUrl={paymentInfo.successUrl}
-                  failUrl={paymentInfo.failUrl}
                   onSuccess={handlePaymentSuccess}
                   onFail={handlePaymentFail}
                 />

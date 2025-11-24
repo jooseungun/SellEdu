@@ -279,43 +279,22 @@ const ContentDetail = () => {
       return;
     }
 
-    setPaymentLoading(true);
-    try {
-      // 결제 요청 API 호출
-      const response = await api.post('/payments/request', {
-        content_id: content.id,
-        amount: content.price
-      });
-
-      setPaymentInfo(response.data);
-      setPaymentDialogOpen(true);
-    } catch (error) {
-      console.error('결제 요청 실패:', error);
-      alert(error.response?.data?.error || '결제 요청에 실패했습니다.');
-    } finally {
-      setPaymentLoading(false);
-    }
+    // 결제 요청 API 없이 바로 결제 다이얼로그 표시
+    setPaymentInfo({
+      amount: content.price,
+      orderName: content.title
+    });
+    setPaymentDialogOpen(true);
   };
 
   const handlePaymentSuccess = async (paymentKey) => {
-    try {
-      // 결제 승인 API 호출
-      const response = await api.post('/payments/approve', {
-        orderId: paymentInfo.orderId,
-        paymentKey: paymentKey,
-        amount: paymentInfo.amount
-      });
-
-      alert('결제가 완료되었습니다!');
-      setPaymentDialogOpen(false);
-      setPaymentInfo(null);
-      
-      // 콘텐츠 정보 새로고침
-      fetchContent();
-    } catch (error) {
-      console.error('결제 승인 실패:', error);
-      alert(error.response?.data?.error || '결제 승인에 실패했습니다.');
-    }
+    // 실제 결제 승인 API 호출 없이 바로 완료 처리
+    alert('결제가 완료되었습니다!');
+    setPaymentDialogOpen(false);
+    setPaymentInfo(null);
+    
+    // 콘텐츠 정보 새로고침
+    fetchContent();
   };
 
   const handlePaymentFail = (error) => {
@@ -870,14 +849,7 @@ const ContentDetail = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <TossPayment
-                orderId={paymentInfo.orderId}
-                orderNumber={paymentInfo.orderNumber}
                 amount={paymentInfo.amount}
-                orderName={paymentInfo.orderName}
-                customerName={paymentInfo.customerName}
-                customerEmail={paymentInfo.customerEmail}
-                successUrl={paymentInfo.successUrl}
-                failUrl={paymentInfo.failUrl}
                 onSuccess={handlePaymentSuccess}
                 onFail={handlePaymentFail}
               />
