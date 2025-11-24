@@ -230,29 +230,39 @@ const UserGuide = () => {
         </IconButton>
       </Box>
 
-      {/* 가이드 드로어 - 오버레이 없이 고정 */}
+      {/* 가이드 드로어 - 오버레이 없이 고정, 메인 화면과 함께 표시 */}
       <Drawer
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        variant="persistent"
+        variant="temporary"
         PaperProps={{
           sx: {
-            width: { xs: '90vw', sm: 400, md: 450 },
-            maxWidth: 450,
+            width: { xs: '90vw', sm: 380, md: 420 },
+            maxWidth: 420,
             position: 'fixed',
             height: '100vh',
             top: 0,
             right: 0,
             zIndex: 1200,
-            boxShadow: '-4px 0 20px rgba(0,0,0,0.15)'
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
+            borderLeft: '1px solid rgba(0,0,0,0.12)'
           }
         }}
         ModalProps={{
           BackdropProps: {
             sx: {
-              backgroundColor: 'transparent' // 오버레이 제거
+              backgroundColor: 'rgba(0,0,0,0.1)', // 매우 투명한 오버레이
+              pointerEvents: 'none' // 클릭 이벤트 무시하여 메인 화면 클릭 가능
             }
+          }
+        }}
+        sx={{
+          '& .MuiDrawer-root': {
+            pointerEvents: 'none'
+          },
+          '& .MuiDrawer-paper': {
+            pointerEvents: 'auto'
           }
         }}
       >
