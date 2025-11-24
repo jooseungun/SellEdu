@@ -737,13 +737,11 @@ const BuyerHome = () => {
                                   }}
                                 />
                               )}
-                              {content.avg_rating && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                                    ⭐ {content.avg_rating}
-                                  </Typography>
-                                </Box>
-                              )}
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                                  ⭐ {content.avg_rating || '0'}
+                                </Typography>
+                              </Box>
                             </Box>
                           </CardContent>
                         </Card>

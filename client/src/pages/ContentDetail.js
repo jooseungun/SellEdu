@@ -515,12 +515,12 @@ const ContentDetail = () => {
                     {content.title}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Rating value={parseFloat(content.avg_rating)} readOnly precision={0.1} />
+                    <Rating value={parseFloat(content.avg_rating || 0)} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                      {content.avg_rating}점
+                      ⭐ {content.avg_rating || '0'}점
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      ({content.review_count}개 리뷰)
+                      ({content.review_count || 0}개 리뷰)
                     </Typography>
                   </Box>
                 </Box>
