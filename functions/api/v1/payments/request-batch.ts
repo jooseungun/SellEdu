@@ -165,7 +165,6 @@ export async function onRequestPost({ request, env }: {
 
     // 각 상품마다 개별 주문 생성
     const orderIds: number[] = [];
-    const now = new Date();
     
     for (let i = 0; i < contents.length; i++) {
       const content = contents[i];
