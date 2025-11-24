@@ -40,7 +40,6 @@ import UserProfileDialog from '../components/UserProfileDialog';
 import { getThumbnailUrl } from '../utils/thumbnail';
 
 // 더미 데이터 생성 함수 제거됨 - 실제 DB 데이터만 사용
-  const categories = [
     '인문교양', '전문직무', '공통직무', '자격증', 'IT', '외국어', 
     '어학', '경영직무', '법정교육', '직무', '산업기술지식', '경영일반'
   ];
