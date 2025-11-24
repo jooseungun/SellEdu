@@ -243,7 +243,7 @@ const UserGuide = () => {
         </IconButton>
       </Box>
 
-      {/* 가이드 드로어 - 오버레이 없이 고정, 메인 화면과 함께 표시 */}
+      {/* 가이드 드로어 - 오버레이 없이 고정, 하단 아이콘에 붙여서 표시 */}
       <Drawer
         anchor="right"
         open={open}
@@ -256,8 +256,9 @@ const UserGuide = () => {
             position: 'fixed',
             height: '70vh',
             maxHeight: '600px',
-            top: '15vh',
-            right: 0,
+            bottom: 24,
+            right: 24,
+            top: 'auto',
             zIndex: 1200,
             boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
             borderLeft: '1px solid rgba(0,0,0,0.12)',
