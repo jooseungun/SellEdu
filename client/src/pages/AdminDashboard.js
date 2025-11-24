@@ -571,6 +571,7 @@ const AdminDashboard = () => {
                       <TableCell>구매수</TableCell>
                       <TableCell>평점</TableCell>
                       <TableCell>상태</TableCell>
+                      <TableCell>작업</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -641,6 +642,28 @@ const AdminDashboard = () => {
                             size="small"
                             color={content.status === 'approved' ? 'success' : 'default'}
                           />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={async () => {
+                              if (!window.confirm(`"${content.title}" 콘텐츠를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                                return;
+                              }
+                              try {
+                                await api.delete(`/admin/contents/${content.id}`);
+                                alert('콘텐츠가 삭제되었습니다.');
+                                fetchData();
+                              } catch (error) {
+                                console.error('콘텐츠 삭제 실패:', error);
+                                alert(error.response?.data?.error || '콘텐츠 삭제에 실패했습니다.');
+                              }
+                            }}
+                          >
+                            삭제
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
