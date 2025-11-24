@@ -5,5 +5,5 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=()
-
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com https://js.stripe.com https://*.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.quilljs.com; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.cloudflare.com https://dash.cloudflare.com wss://*.cloudflare.dev; frame-src 'self' https://js.stripe.com;
 
