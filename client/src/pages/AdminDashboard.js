@@ -84,6 +84,7 @@ const AdminDashboard = () => {
   const [sales, setSales] = useState([]);
   const [salesLoading, setSalesLoading] = useState(false);
   const [allContents, setAllContents] = useState([]);
+  const [uploadingThumbnails, setUploadingThumbnails] = useState({});
 
   useEffect(() => {
     // 로그인 체크
