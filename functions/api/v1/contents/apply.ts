@@ -18,6 +18,7 @@ export async function onRequestPost({ request, env }: {
     // 인증 확인
     const tokenData = getTokenFromRequest(request);
     if (!tokenData) {
+      console.error('Content apply - No token data');
       return new Response(
         JSON.stringify({ error: '로그인이 필요합니다. 판매자 계정으로 로그인해주세요.' }),
         { status: 401, headers: corsHeaders }
@@ -25,8 +26,19 @@ export async function onRequestPost({ request, env }: {
     }
 
     const sellerId = tokenData.userId;
+    console.log('Content apply - Seller ID:', sellerId);
 
-    const body = await request.json();
+    // Request body 파싱
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (parseError: any) {
+      console.error('Content apply - JSON parse error:', parseError);
+      return new Response(
+        JSON.stringify({ error: '요청 데이터 형식이 올바르지 않습니다.', details: parseError?.message }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
     const {
       title,
       description,
@@ -76,24 +88,31 @@ export async function onRequestPost({ request, env }: {
 
     // 차시 삽입
     if (lessons && Array.isArray(lessons) && lessons.length > 0) {
+      console.log('Content apply - Inserting lessons:', lessons.length);
       for (let i = 0; i < lessons.length; i++) {
         const lesson = lessons[i];
         // lesson이 존재하고 필수 필드가 있는지 확인
         if (lesson && typeof lesson === 'object' && lesson.title && lesson.cdn_link) {
-          await env.DB.prepare(
-            `INSERT INTO content_lessons (
-              content_id, lesson_number, title, cdn_link, duration, display_order, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
-          )
-            .bind(
-              contentId,
-              i + 1,
-              lesson.title,
-              lesson.cdn_link,
-              (lesson.duration && typeof lesson.duration === 'number') ? lesson.duration : 0,
-              i
+          try {
+            await env.DB.prepare(
+              `INSERT INTO content_lessons (
+                content_id, lesson_number, title, cdn_link, duration, display_order, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
             )
-            .run();
+              .bind(
+                contentId,
+                i + 1,
+                lesson.title,
+                lesson.cdn_link,
+                (lesson.duration && typeof lesson.duration === 'number') ? lesson.duration : 0,
+                i
+              )
+              .run();
+            console.log('Content apply - Lesson inserted:', i + 1);
+          } catch (lessonError: any) {
+            console.error('Content apply - Lesson insert error:', lessonError);
+            // 차시 삽입 실패해도 계속 진행
+          }
         }
       }
     }
@@ -107,8 +126,25 @@ export async function onRequestPost({ request, env }: {
     );
   } catch (error: any) {
     console.error('Content apply error:', error);
+    console.error('Content apply error details:', {
+      message: error?.message,
+      name: error?.name,
+      stack: error?.stack
+    });
+    
+    // 에러 메시지 안전하게 추출
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+    if (error?.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
     return new Response(
-      JSON.stringify({ error: '콘텐츠 심사 신청에 실패했습니다.', details: error.message }),
+      JSON.stringify({ 
+        error: '콘텐츠 심사 신청에 실패했습니다.', 
+        details: errorMessage
+      }),
       { status: 500, headers: corsHeaders }
     );
   }
