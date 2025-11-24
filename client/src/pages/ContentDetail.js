@@ -240,13 +240,11 @@ const ContentDetail = () => {
 
   const fetchReviews = async () => {
     try {
-      const response = await api.get(`/reviews`, { params: { content_id: id } });
-      setReviews(response.data || []);
+      const response = await api.get(`/contents/${id}/reviews`);
+      setReviews(response.data?.reviews || []);
     } catch (error) {
       console.error('리뷰 조회 실패:', error);
-      // 프로토타입: 가비지 리뷰 데이터 생성
-      const mockReviews = generateMockReviews(parseInt(id) || 1);
-      setReviews(mockReviews);
+      setReviews([]);
     }
   };
 
@@ -369,8 +367,32 @@ const ContentDetail = () => {
 
 
   const handleReviewSubmit = async () => {
-    alert('이 기능은 현재 개발 중입니다.\n프로토타입 버전에서는 리뷰 작성이 되지 않습니다.');
-    setReviewDialogOpen(false);
+    if (!getToken()) {
+      alert('로그인이 필요합니다.');
+      setReviewDialogOpen(false);
+      return;
+    }
+
+    if (!reviewForm.rating) {
+      alert('평점을 선택해주세요.');
+      return;
+    }
+
+    try {
+      await api.post('/reviews/create', {
+        content_id: id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment
+      });
+      alert('후기가 작성되었습니다.');
+      setReviewDialogOpen(false);
+      setReviewForm({ rating: 5, comment: '' });
+      fetchReviews();
+      fetchContent(); // 평점 업데이트를 위해 콘텐츠 정보도 새로고침
+    } catch (error) {
+      console.error('후기 작성 실패:', error);
+      alert(error.response?.data?.error || '후기 작성에 실패했습니다.');
+    }
   };
 
   const handleShare = () => {
