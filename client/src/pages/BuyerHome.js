@@ -57,15 +57,6 @@ const stripHtmlTags = (html) => {
 };
 
 // 더미 데이터 생성 함수 제거됨 - 실제 DB 데이터만 사용
-    category: categories[index % categories.length],
-    grade: grades[index % grades.length],
-    age: ages[index % ages.length],
-    purchase_count: Math.floor(Math.random() * 100),
-    avg_rating: (Math.random() * 2 + 3).toFixed(1),
-    review_count: Math.floor(Math.random() * 50),
-    duration: [60, 90, 120, 150][index % 4]
-  }));
-};
 
 const BuyerHome = () => {
   const navigate = useNavigate();
