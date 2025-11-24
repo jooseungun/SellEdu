@@ -17,14 +17,20 @@ export async function onRequestGet({ params, env }: {
     const contentId = params.id;
 
     // 상세 페이지를 본 경우 상태를 'reviewing'으로 변경 (pending인 경우만)
-    await env.DB.prepare(
-      `UPDATE contents 
-       SET status = 'reviewing',
-           updated_at = datetime('now')
-       WHERE id = ? AND status = 'pending'`
-    )
-      .bind(contentId)
-      .run();
+    // CHECK 제약 조건 위반을 방지하기 위해 try-catch로 감싸기
+    try {
+      await env.DB.prepare(
+        `UPDATE contents 
+         SET status = 'reviewing',
+             updated_at = datetime('now')
+         WHERE id = ? AND status = 'pending'`
+      )
+        .bind(contentId)
+        .run();
+    } catch (updateError: any) {
+      // status 업데이트 실패해도 조회는 계속 진행
+      console.warn('Content detail - Status update failed (non-critical):', updateError?.message);
+    }
 
     // 콘텐츠 상세 정보 조회
     const contentResult = await env.DB.prepare(
@@ -92,8 +98,25 @@ export async function onRequestGet({ params, env }: {
     );
   } catch (error: any) {
     console.error('Get content detail error:', error);
+    console.error('Get content detail error details:', {
+      message: error?.message,
+      name: error?.name,
+      stack: error?.stack
+    });
+    
+    // 에러 메시지 안전하게 추출
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+    if (error?.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
     return new Response(
-      JSON.stringify({ error: '콘텐츠 상세 정보 조회에 실패했습니다.', details: error.message }),
+      JSON.stringify({ 
+        error: '콘텐츠 상세 정보 조회에 실패했습니다.', 
+        details: errorMessage
+      }),
       { status: 500, headers: corsHeaders }
     );
   }
