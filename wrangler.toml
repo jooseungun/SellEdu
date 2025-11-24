@@ -8,6 +8,12 @@ binding = "DB"
 database_name = "selledu-db"
 database_id = "acef10dc-3987-4483-83ff-235b537d49a0"
 
+# R2 Bucket binding for images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "selledu-images"
+preview_bucket_name = "selledu-images"
+
 [env.production]
 name = "selledu"
 
@@ -16,3 +22,9 @@ name = "selledu"
 binding = "DB"
 database_name = "selledu-db"
 database_id = "acef10dc-3987-4483-83ff-235b537d49a0"
+
+# R2 Bucket binding for production
+[[env.production.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "selledu-images"
+preview_bucket_name = "selledu-images"

@@ -1,10 +1,11 @@
-import { D1Database } from '@cloudflare/workers-types';
+import { D1Database, R2Bucket } from '@cloudflare/workers-types';
 
-// 썸네일 파일을 DB에 저장하고 URL 반환
+// 썸네일 파일을 R2에 저장하고 URL 반환
 export async function onRequestPost({ request, env }: {
   request: Request;
   env: {
     DB: D1Database;
+    IMAGES?: R2Bucket;
   };
 }): Promise<Response> {
   const corsHeaders = {
@@ -69,6 +70,60 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // R2가 있으면 R2에 저장, 없으면 기존 DB 방식 사용
+    if (env.IMAGES) {
+      // R2에 저장
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+      if (!allowedExtensions.includes(fileExtension)) {
+        return new Response(
+          JSON.stringify({ error: '지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif, webp만 가능)' }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+
+      const timestamp = Date.now();
+      const randomStr = Math.random().toString(36).substring(2, 15);
+      const fileName = `thumbnails/${timestamp}_${randomStr}.${fileExtension}`;
+
+      try {
+        const fileArrayBuffer = await file.arrayBuffer();
+        await env.IMAGES.put(fileName, fileArrayBuffer, {
+          httpMetadata: {
+            contentType: file.type,
+            cacheControl: 'public, max-age=31536000'
+          },
+          customMetadata: {
+            originalName: file.name,
+            uploadedAt: new Date().toISOString()
+          }
+        });
+
+        const url = new URL(request.url);
+        const baseUrl = `${url.protocol}//${url.host}`;
+        const thumbnailUrl = `${baseUrl}/api/v1/images/${fileName}`;
+
+        return new Response(
+          JSON.stringify({
+            message: '썸네일 업로드 완료',
+            thumbnail_url: thumbnailUrl,
+            file_name: fileName,
+            original_name: file.name,
+            file_size: file.size,
+            file_type: file.type
+          }),
+          { status: 200, headers: corsHeaders }
+        );
+      } catch (error: any) {
+        console.error('R2 upload error:', error);
+        return new Response(
+          JSON.stringify({ error: '파일 업로드에 실패했습니다.', details: error.message }),
+          { status: 500, headers: corsHeaders }
+        );
+      }
+    }
+
+    // 기존 DB 방식 (R2가 없는 경우 fallback)
     // 파일을 base64로 변환
     console.log('Thumbnail upload - Starting file conversion, size:', file.size);
     let base64: string;

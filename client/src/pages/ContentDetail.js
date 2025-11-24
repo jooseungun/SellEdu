@@ -451,7 +451,7 @@ const ContentDetail = () => {
               <CardMedia
                 component="img"
                 height="450"
-                image="/default-thumbnail.svg"
+                image={content.thumbnail_url || '/default-thumbnail.svg'}
                 alt={content.title}
                 sx={{ objectFit: 'cover' }}
                 onError={(e) => {
