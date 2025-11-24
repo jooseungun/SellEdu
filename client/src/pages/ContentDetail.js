@@ -39,7 +39,8 @@ import TossPayment from '../components/TossPayment';
 import UserProfileDialog from '../components/UserProfileDialog';
 import { getThumbnailUrl } from '../utils/thumbnail';
 
-// 가비지 데이터 생성 함수 (BuyerHome과 동일)
+// 더미 데이터 생성 함수 제거됨 - 실제 DB 데이터만 사용
+/* 더미 데이터 생성 함수 제거
 const generateMockContent = (id) => {
   const categories = [
     '인문교양', '전문직무', '공통직무', '자격증', 'IT', '외국어', 
@@ -212,6 +213,7 @@ const ContentDetail = () => {
       
       if (response.data && response.data.id) {
         // API 응답 데이터를 그대로 사용하되, 필요한 필드가 없으면 기본값 설정
+        // avg_rating과 review_count는 DB에서 실제 값 사용 (null이면 0으로 표시)
         const contentData = {
           ...response.data,
           detailed_description: response.data.detailed_description || response.data.description || '',
@@ -219,7 +221,9 @@ const ContentDetail = () => {
           tags: response.data.tags || (response.data.category ? [response.data.category, '온라인', '실무'] : ['온라인', '실무']),
           instructor: response.data.instructor || response.data.seller_name || response.data.seller_username || '기업명',
           education_period: response.data.education_period || 999,
-          thumbnail_url: response.data.thumbnail_url || null
+          thumbnail_url: response.data.thumbnail_url || null,
+          avg_rating: response.data.avg_rating || null,
+          review_count: response.data.review_count || 0
         };
         setContent(contentData);
       } else {
@@ -228,9 +232,8 @@ const ContentDetail = () => {
     } catch (error) {
       console.error('콘텐츠 조회 실패:', error);
       console.error('Error details:', error.response?.data);
-      // API 실패 시 가비지 데이터 표시 (프로토타입용)
-      const mockContent = generateMockContent(id);
-      setContent(mockContent);
+      // API 실패 시 콘텐츠를 null로 설정하여 에러 메시지 표시
+      setContent(null);
     } finally {
       setLoading(false);
     }
