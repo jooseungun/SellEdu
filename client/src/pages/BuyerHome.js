@@ -44,6 +44,18 @@ import { getToken, removeToken, getUserName } from '../utils/auth';
 import UserProfileDialog from '../components/UserProfileDialog';
 import { getThumbnailUrl } from '../utils/thumbnail';
 
+// HTML 태그 제거 함수
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  if (typeof document === 'undefined') {
+    // 서버 사이드에서는 정규식으로 처리
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  }
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
   const categories = [
@@ -667,7 +679,7 @@ const BuyerHome = () => {
                                 minHeight: '32px'
                               }}
                             >
-                              {content.description}
+                              {stripHtmlTags(content.description)}
                             </Typography>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                               {content.price > 0 ? (() => {

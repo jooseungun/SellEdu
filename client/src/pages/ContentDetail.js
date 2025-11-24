@@ -170,6 +170,19 @@ const generateMockContent = (id) => {
     created_at: new Date().toISOString()
   };
 };
+*/
+
+// HTML 태그 제거 함수
+const stripHtmlTags = (html) => {
+  if (!html) return '';
+  if (typeof document === 'undefined') {
+    // 서버 사이드에서는 정규식으로 처리
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  }
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
 
 const ContentDetail = () => {
   const { id } = useParams();
