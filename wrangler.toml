@@ -8,12 +8,11 @@ binding = "DB"
 database_name = "selledu-db"
 database_id = "acef10dc-3987-4483-83ff-235b537d49a0"
 
-# R2 Bucket binding for images (선택사항 - 버킷이 없어도 배포 가능)
-# R2 버킷을 생성한 후 주석을 해제하세요
-# [[r2_buckets]]
-# binding = "IMAGES"
-# bucket_name = "selledu-images"
-# preview_bucket_name = "selledu-images"
+# R2 Bucket binding for images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "selledu-images"
+preview_bucket_name = "selledu-images"
 
 [env.production]
 name = "selledu"
@@ -24,9 +23,8 @@ binding = "DB"
 database_name = "selledu-db"
 database_id = "acef10dc-3987-4483-83ff-235b537d49a0"
 
-# R2 Bucket binding for production (선택사항 - 버킷이 없어도 배포 가능)
-# R2 버킷을 생성한 후 주석을 해제하세요
-# [[env.production.r2_buckets]]
-# binding = "IMAGES"
-# bucket_name = "selledu-images"
-# preview_bucket_name = "selledu-images"
+# R2 Bucket binding for production
+[[env.production.r2_buckets]]
+binding = "IMAGES"
+bucket_name = "selledu-images"
+preview_bucket_name = "selledu-images"
