@@ -117,15 +117,12 @@ export async function onRequestPost({ request, env }: {
     // 실제 배포 환경에서는 R2 버킷을 public으로 설정하거나, 
     // Cloudflare Workers를 통해 이미지를 제공해야 합니다.
     
-    // 임시로 Workers를 통한 URL 생성 (실제로는 R2 public URL 또는 CDN URL 사용)
+    // Workers를 통한 제공 (권장)
     const url = new URL(request.url);
     const baseUrl = `${url.protocol}//${url.host}`;
-    
-    // R2에서 직접 제공하는 경우 (public bucket)
-    // const thumbnailUrl = `https://pub-${env.IMAGES.accountId}.r2.dev/${fileName}`;
-    
-    // Workers를 통한 제공 (권장)
-    const thumbnailUrl = `${baseUrl}/api/v1/images/${fileName}`;
+    // 경로의 /를 인코딩하여 단일 파라미터로 전달
+    const encodedPath = encodeURIComponent(fileName);
+    const thumbnailUrl = `${baseUrl}/api/v1/images/${encodedPath}`;
 
     console.log('R2 Thumbnail upload - Success:', { fileName, thumbnailUrl });
 

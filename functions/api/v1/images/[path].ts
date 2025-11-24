@@ -11,11 +11,14 @@ export async function onRequestGet({ params, env }: {
   };
 }): Promise<Response> {
   try {
-    const imagePath = params.path;
+    let imagePath = params.path;
     
     if (!imagePath) {
       return new Response('Image path is required', { status: 400 });
     }
+
+    // URL 디코딩 (경로에 /가 포함된 경우 인코딩되어 전달됨)
+    imagePath = decodeURIComponent(imagePath);
 
     console.log('R2 Image fetch - Requesting:', imagePath);
 
