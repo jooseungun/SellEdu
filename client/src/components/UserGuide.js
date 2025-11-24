@@ -230,15 +230,29 @@ const UserGuide = () => {
         </IconButton>
       </Box>
 
-      {/* 가이드 드로어 */}
+      {/* 가이드 드로어 - 오버레이 없이 고정 */}
       <Drawer
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
+        variant="persistent"
         PaperProps={{
           sx: {
-            width: { xs: '100%', sm: 500, md: 600 },
-            maxWidth: '90vw'
+            width: { xs: '90vw', sm: 400, md: 450 },
+            maxWidth: 450,
+            position: 'fixed',
+            height: '100vh',
+            top: 0,
+            right: 0,
+            zIndex: 1200,
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.15)'
+          }
+        }}
+        ModalProps={{
+          BackdropProps: {
+            sx: {
+              backgroundColor: 'transparent' // 오버레이 제거
+            }
           }
         }}
       >
