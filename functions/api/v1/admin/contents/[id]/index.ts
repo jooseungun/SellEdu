@@ -147,18 +147,33 @@ export async function onRequestDelete({ params, request, env }: {
       );
     }
 
-    // 관련 데이터 확인 (주문이 있는지 확인)
+    // 관련 데이터 확인 (주문이 있는지 확인 - 정보 제공용)
     const orderCheck = await env.DB.prepare(
       'SELECT COUNT(*) as count FROM orders WHERE content_id = ?'
     )
       .bind(contentId)
       .first<{ count: number }>();
 
-    if (orderCheck && orderCheck.count > 0) {
+    const orderCount = orderCheck?.count || 0;
+
+    // 요청 본문에서 force_delete 플래그 확인
+    let body: any = {};
+    try {
+      body = await request.json().catch(() => ({}));
+    } catch (e) {
+      // 본문이 없어도 계속 진행
+    }
+
+    const forceDelete = body.force_delete === true;
+
+    // 판매 내역이 있고 강제 삭제 플래그가 없으면 경고만 반환 (프론트엔드에서 재확인)
+    if (orderCount > 0 && !forceDelete) {
       return new Response(
         JSON.stringify({ 
-          error: '이 콘텐츠는 판매 내역이 있어 삭제할 수 없습니다.',
-          details: `판매된 주문이 ${orderCheck.count}건 있습니다.`
+          error: '이 콘텐츠는 판매 내역이 있습니다.',
+          details: `판매된 주문이 ${orderCount}건 있습니다. 강제 삭제를 원하시면 확인해주세요.`,
+          has_orders: true,
+          order_count: orderCount
         }),
         { status: 400, headers: corsHeaders }
       );

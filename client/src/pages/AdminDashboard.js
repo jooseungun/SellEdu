@@ -649,16 +649,43 @@ const AdminDashboard = () => {
                             variant="outlined"
                             color="error"
                             onClick={async () => {
+                              // 첫 번째 확인
                               if (!window.confirm(`"${content.title}" 콘텐츠를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
                                 return;
                               }
+                              
                               try {
+                                // 삭제 시도
                                 await api.delete(`/admin/contents/${content.id}`);
                                 alert('콘텐츠가 삭제되었습니다.');
                                 fetchData();
                               } catch (error) {
-                                console.error('콘텐츠 삭제 실패:', error);
-                                alert(error.response?.data?.error || '콘텐츠 삭제에 실패했습니다.');
+                                // 판매 내역이 있는 경우
+                                if (error.response?.data?.has_orders) {
+                                  const orderCount = error.response.data.order_count || 0;
+                                  // 두 번째 확인 (강제 삭제)
+                                  if (window.confirm(
+                                    `⚠️ 경고: 이 콘텐츠는 판매 내역이 있습니다.\n\n` +
+                                    `판매된 주문: ${orderCount}건\n\n` +
+                                    `강제로 삭제하시겠습니까?\n\n` +
+                                    `이 작업은 되돌릴 수 없으며, 관련된 모든 데이터가 삭제됩니다.`
+                                  )) {
+                                    try {
+                                      // 강제 삭제
+                                      await api.delete(`/admin/contents/${content.id}`, {
+                                        data: { force_delete: true }
+                                      });
+                                      alert('콘텐츠가 강제 삭제되었습니다.');
+                                      fetchData();
+                                    } catch (forceError) {
+                                      console.error('강제 삭제 실패:', forceError);
+                                      alert(forceError.response?.data?.error || '콘텐츠 강제 삭제에 실패했습니다.');
+                                    }
+                                  }
+                                } else {
+                                  console.error('콘텐츠 삭제 실패:', error);
+                                  alert(error.response?.data?.error || '콘텐츠 삭제에 실패했습니다.');
+                                }
                               }
                             }}
                           >
