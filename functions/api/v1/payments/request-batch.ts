@@ -156,8 +156,8 @@ export async function onRequestPost({ request, env }: {
       .first<{ discount_rate: number }>();
 
     const discountRate = buyer?.discount_rate || 0;
-    const discountAmount = Math.floor(total_amount * discountRate / 100);
-    const finalAmount = total_amount - discountAmount;
+    const discountAmount = Math.ceil(total_amount * discountRate / 100); // 소수점 올림 처리
+    const finalAmount = Math.ceil(total_amount - discountAmount); // 최종 금액도 원단위로 올림
 
     // 주문 번호 생성
     const now = new Date();
@@ -172,8 +172,8 @@ export async function onRequestPost({ request, env }: {
       const contentOrderNumber = `${orderNumber}-${String(i + 1).padStart(3, '0')}`;
       
       // 각 상품의 할인 금액 계산
-      const contentDiscountAmount = Math.floor(content.price * discountRate / 100);
-      const contentFinalAmount = content.price - contentDiscountAmount;
+      const contentDiscountAmount = Math.ceil(content.price * discountRate / 100); // 소수점 올림 처리
+      const contentFinalAmount = Math.ceil(content.price - contentDiscountAmount); // 최종 금액도 원단위로 올림
       
       const orderResult = await env.DB.prepare(
         `INSERT INTO orders (user_id, content_id, order_number, total_amount, discount_amount, final_amount, status)

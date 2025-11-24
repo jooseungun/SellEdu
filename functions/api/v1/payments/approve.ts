@@ -71,14 +71,15 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // 결제 금액 확인 (소수점 오차 허용)
-    const amountDiff = Math.abs(order.final_amount - amount);
-    if (amountDiff > 0.01) {
-      console.warn(`결제 금액 불일치: 주문 금액=${order.final_amount}, 요청 금액=${amount}, 차이=${amountDiff}`);
+    // 결제 금액 확인 (원단위 정수 비교)
+    const orderAmount = Math.ceil(order.final_amount); // 주문 금액을 원단위로 올림
+    const requestAmount = Math.ceil(amount); // 요청 금액을 원단위로 올림
+    if (orderAmount !== requestAmount) {
+      console.warn(`결제 금액 불일치: 주문 금액=${orderAmount}원, 요청 금액=${requestAmount}원`);
       return new Response(
         JSON.stringify({ 
           error: '결제 금액이 일치하지 않습니다.',
-          details: `주문 금액: ${order.final_amount}원, 요청 금액: ${amount}원`
+          details: `주문 금액: ${orderAmount}원, 요청 금액: ${requestAmount}원`
         }),
         { status: 400, headers: corsHeaders }
       );

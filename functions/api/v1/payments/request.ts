@@ -159,8 +159,8 @@ export async function onRequestPost({ request, env }: {
       .first<{ discount_rate: number }>();
 
     const discountRate = buyer?.discount_rate || 0;
-    const discountAmount = Math.floor(amount * discountRate / 100);
-    const finalAmount = amount - discountAmount;
+    const discountAmount = Math.ceil(amount * discountRate / 100); // 소수점 올림 처리
+    const finalAmount = Math.ceil(amount - discountAmount); // 최종 금액도 원단위로 올림
 
     // 주문 생성
     const orderResult = await env.DB.prepare(
