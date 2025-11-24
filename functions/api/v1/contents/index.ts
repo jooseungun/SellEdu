@@ -86,9 +86,63 @@ export async function onRequestGet({ request, env }: {
       .bind(...params)
       .all();
 
+    const contentsList = result.results || [];
+
+    // 실제 리뷰 데이터 확인 (성능 최적화: 한 번의 쿼리로 모든 리뷰 데이터 조회)
+    let reviewDataMap: { [key: number]: { count: number; avg: number | null } } = {};
+    
+    if (contentsList.length > 0) {
+      const contentIds = contentsList.map((c: any) => c.id);
+      const placeholders = contentIds.map(() => '?').join(',');
+      
+      const reviewsResult = await env.DB.prepare(
+        `SELECT 
+          content_id,
+          COUNT(*) as count,
+          AVG(rating) as avg
+        FROM reviews
+        WHERE content_id IN (${placeholders})
+        GROUP BY content_id`
+      )
+        .bind(...contentIds)
+        .all<{ content_id: number; count: number; avg: number | null }>();
+
+      // 리뷰 데이터를 맵으로 변환
+      reviewDataMap = {};
+      (reviewsResult.results || []).forEach((review: any) => {
+        reviewDataMap[review.content_id] = {
+          count: review.count || 0,
+          avg: review.avg ? parseFloat(review.avg) : null
+        };
+      });
+    }
+
+    // 실제 리뷰 데이터로 콘텐츠 정보 업데이트
+    const processedContents = contentsList.map((content: any) => {
+      const reviewData = reviewDataMap[content.id];
+      const actualReviewCount = reviewData?.count || 0;
+      const actualAvgRating = reviewData?.avg || null;
+
+      // 실제 리뷰가 없으면 평점과 리뷰 수를 0으로 설정
+      if (actualReviewCount === 0) {
+        return {
+          ...content,
+          avg_rating: null,
+          review_count: 0
+        };
+      }
+
+      // 실제 리뷰가 있으면 실제 값 사용
+      return {
+        ...content,
+        avg_rating: actualAvgRating,
+        review_count: actualReviewCount
+      };
+    });
+
     return new Response(
       JSON.stringify({
-        contents: result.results || []
+        contents: processedContents
       }),
       { status: 200, headers: corsHeaders }
     );
