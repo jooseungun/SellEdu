@@ -10,9 +10,14 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-function execCommand(command) {
+function execCommand(command, options = {}) {
   try {
-    execSync(command, { stdio: 'inherit' });
+    const defaultOptions = {
+      stdio: 'inherit',
+      encoding: 'utf-8',
+      env: { ...process.env, LANG: 'ko_KR.UTF-8', LC_ALL: 'ko_KR.UTF-8' }
+    };
+    execSync(command, { ...defaultOptions, ...options });
     return true;
   } catch (error) {
     console.error(`❌ 오류 발생: ${error.message}`);
@@ -58,7 +63,11 @@ async function main() {
   }
 
   console.log('💾 커밋 중...');
-  if (!execCommand(`git commit -m "${commitMessage}"`)) {
+  // 커밋 메시지를 안전하게 전달하기 위해 환경 변수 사용
+  const commitCmd = process.platform === 'win32' 
+    ? `git -c i18n.commitencoding=utf-8 commit -m "${commitMessage.replace(/"/g, '\\"')}"`
+    : `git -c i18n.commitencoding=utf-8 commit -m "${commitMessage}"`;
+  if (!execCommand(commitCmd)) {
     process.exit(1);
   }
 

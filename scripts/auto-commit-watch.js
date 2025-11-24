@@ -12,10 +12,14 @@ let changeTimeout = null;
 
 function execCommand(command, silent = false) {
   try {
+    const options = {
+      encoding: 'utf-8',
+      env: { ...process.env, LANG: 'ko_KR.UTF-8', LC_ALL: 'ko_KR.UTF-8' }
+    };
     if (silent) {
-      execSync(command, { stdio: 'ignore' });
+      execSync(command, { ...options, stdio: 'ignore' });
     } else {
-      execSync(command, { stdio: 'inherit' });
+      execSync(command, { ...options, stdio: 'inherit' });
     }
     return true;
   } catch (error) {
@@ -68,8 +72,11 @@ function autoCommit() {
     return;
   }
 
-  // 커밋
-  if (!execCommand(`git commit -m "${commitMessage}"`, true)) {
+  // 커밋 (UTF-8 인코딩 명시)
+  const commitCmd = process.platform === 'win32' 
+    ? `git -c i18n.commitencoding=utf-8 commit -m "${commitMessage.replace(/"/g, '\\"')}"`
+    : `git -c i18n.commitencoding=utf-8 commit -m "${commitMessage}"`;
+  if (!execCommand(commitCmd, true)) {
     isCommitting = false;
     return;
   }

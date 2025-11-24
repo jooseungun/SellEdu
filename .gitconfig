@@ -1,0 +1,9 @@
+[core]
+	quotepath = false
+	autocrlf = true
+[i18n]
+	commitencoding = utf-8
+	logoutputencoding = utf-8
+[gui]
+	encoding = utf-8
+
