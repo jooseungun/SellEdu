@@ -30,6 +30,7 @@ import api from '../utils/api';
 import { getToken } from '../utils/auth';
 import TossPayment from '../components/TossPayment';
 import UserProfileDialog from '../components/UserProfileDialog';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -183,7 +184,7 @@ const Cart = () => {
                       <CardMedia
                         component="img"
                         sx={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 1 }}
-                        image={item.content.thumbnailUrl || '/default-thumbnail.svg'}
+                        image={getThumbnailUrl(item.content.thumbnailUrl)}
                         alt={item.content.title}
                       />
                       <Box sx={{ flex: 1 }}>

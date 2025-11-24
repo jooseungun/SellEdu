@@ -47,6 +47,7 @@ import { getToken, removeToken, isAdmin, getUserName, getUserFromToken } from '.
 import { CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import UserProfileDialog from '../components/UserProfileDialog';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -1317,7 +1318,7 @@ const AdminDashboard = () => {
                 <Box sx={{ mb: 4, textAlign: 'center', position: 'relative' }}>
                   <Box
                     component="img"
-                    src={contentDetail.thumbnail_url || '/default-thumbnail.svg'}
+                    src={getThumbnailUrl(contentDetail.thumbnail_url)}
                     alt={contentDetail.title}
                     sx={{ 
                       maxWidth: '100%', 
@@ -1327,7 +1328,7 @@ const AdminDashboard = () => {
                       boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                     }}
                     onError={(e) => {
-                      e.target.src = '/default-thumbnail.svg';
+                      e.target.src = getThumbnailUrl();
                     }}
                   />
                 </Box>

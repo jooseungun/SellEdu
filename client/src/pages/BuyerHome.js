@@ -41,6 +41,7 @@ import Badge from '@mui/material/Badge';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName } from '../utils/auth';
 import UserProfileDialog from '../components/UserProfileDialog';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
@@ -493,11 +494,11 @@ const BuyerHome = () => {
                             <CardMedia
                               component="img"
                               height="240"
-                              image={content.thumbnail_url || '/default-thumbnail.svg'}
+                              image={getThumbnailUrl(content.thumbnail_url)}
                               alt={content.title}
                               sx={{ objectFit: 'cover' }}
                               onError={(e) => {
-                                e.target.src = '/default-thumbnail.svg';
+                                e.target.src = getThumbnailUrl();
                               }}
                             />
                             {/* 오버레이 정보 */}
@@ -722,7 +723,7 @@ const BuyerHome = () => {
                           <CardMedia
                             component="img"
                             height="200"
-                            image={purchase.thumbnail_url || '/default-thumbnail.svg'}
+                            image={getThumbnailUrl(purchase.thumbnail_url)}
                             alt={purchase.title}
                             sx={{ objectFit: 'cover' }}
                           />

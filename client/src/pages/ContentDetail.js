@@ -37,6 +37,7 @@ import api from '../utils/api';
 import { getToken, getUserName } from '../utils/auth';
 import TossPayment from '../components/TossPayment';
 import UserProfileDialog from '../components/UserProfileDialog';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 // 가비지 데이터 생성 함수 (BuyerHome과 동일)
 const generateMockContent = (id) => {
@@ -451,11 +452,11 @@ const ContentDetail = () => {
               <CardMedia
                 component="img"
                 height="450"
-                image={content.thumbnail_url || '/default-thumbnail.svg'}
+                image={getThumbnailUrl(content.thumbnail_url)}
                 alt={content.title}
                 sx={{ objectFit: 'cover' }}
                 onError={(e) => {
-                  e.target.src = '/default-thumbnail.svg';
+                  e.target.src = getThumbnailUrl();
                 }}
               />
             </Card>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Grid, Card, CardContent, CardMedia, Typography, TextField, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
 import api from '../utils/api';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 const Home = () => {
   const [contents, setContents] = useState([]);
@@ -45,10 +46,10 @@ const Home = () => {
               <CardMedia
                 component="img"
                 height="200"
-                image={content.thumbnail_url || '/default-thumbnail.svg'}
+                image={getThumbnailUrl(content.thumbnail_url)}
                 alt={content.title}
                 onError={(e) => {
-                  e.target.src = '/default-thumbnail.svg';
+                  e.target.src = getThumbnailUrl();
                 }}
               />
               <CardContent>

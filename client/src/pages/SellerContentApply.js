@@ -28,6 +28,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ReactQuill from 'react-quill';
 import api from '../utils/api';
 import { getToken, getUserFromToken, isSeller, removeToken } from '../utils/auth';
+import { getThumbnailUrl } from '../utils/thumbnail';
 
 const SellerContentApply = () => {
   const navigate = useNavigate();
@@ -286,7 +287,7 @@ const SellerContentApply = () => {
                         src={formData.thumbnail_url}
                         alt="썸네일 미리보기"
                         onError={(e) => {
-                          e.target.src = '/default-thumbnail.svg';
+                          e.target.src = getThumbnailUrl();
                         }}
                         sx={{ 
                           maxWidth: 200, 
@@ -313,7 +314,7 @@ const SellerContentApply = () => {
                       </Typography>
                       <Box
                         component="img"
-                        src="/default-thumbnail.svg"
+                        src={getThumbnailUrl()}
                         alt="기본 썸네일"
                         sx={{ 
                           maxWidth: 200, 
