@@ -25,9 +25,11 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SettingsIcon from '@mui/icons-material/Settings';
 import api from '../utils/api';
 import { getToken } from '../utils/auth';
 import TossPayment from '../components/TossPayment';
+import UserProfileDialog from '../components/UserProfileDialog';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -37,6 +39,7 @@ const Cart = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!getToken()) {
@@ -307,6 +310,10 @@ const Cart = () => {
           </>
         )}
       </Dialog>
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+      />
     </>
   );
 };

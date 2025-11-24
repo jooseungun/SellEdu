@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { AppBar, Toolbar, Typography, Button, Box, Badge, IconButton } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { getToken, removeToken } from '../utils/auth';
 import api from '../utils/api';
+import UserProfileDialog from './UserProfileDialog';
 
 const Header = () => {
   const navigate = useNavigate();
   const token = getToken();
   const [cartCount, setCartCount] = useState(0);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -65,6 +68,13 @@ const Header = () => {
               <Button color="inherit" component={Link} to="/admin">
                 관리자
               </Button>
+              <IconButton
+                color="inherit"
+                onClick={() => setProfileDialogOpen(true)}
+                title="정보 변경"
+              >
+                <SettingsIcon />
+              </IconButton>
               <Button color="inherit" onClick={handleLogout}>
                 로그아웃
               </Button>
@@ -81,6 +91,10 @@ const Header = () => {
           )}
         </Box>
       </Toolbar>
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+      />
     </AppBar>
   );
 };

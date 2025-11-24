@@ -32,9 +32,11 @@ import CodeIcon from '@mui/icons-material/Code';
 import ShareIcon from '@mui/icons-material/Share';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import SettingsIcon from '@mui/icons-material/Settings';
 import api from '../utils/api';
 import { getToken, getUserName } from '../utils/auth';
 import TossPayment from '../components/TossPayment';
+import UserProfileDialog from '../components/UserProfileDialog';
 
 // 가비지 데이터 생성 함수 (BuyerHome과 동일)
 const generateMockContent = (id) => {
@@ -180,6 +182,7 @@ const ContentDetail = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
   const [buyerInfo, setBuyerInfo] = useState(null);
 
@@ -410,6 +413,20 @@ const ContentDetail = () => {
             <Typography variant="body1" sx={{ color: 'white', mr: 2 }}>
               {getUserName()}님 환영합니다
             </Typography>
+          )}
+          {getToken() && (
+            <Button
+              startIcon={<SettingsIcon />}
+              onClick={() => setProfileDialogOpen(true)}
+              sx={{ 
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.1)'
+                }
+              }}
+            >
+              정보 변경
+            </Button>
           )}
         </Toolbar>
       </AppBar>
@@ -865,6 +882,10 @@ const ContentDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+      />
     </>
   );
 };

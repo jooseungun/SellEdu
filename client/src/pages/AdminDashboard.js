@@ -41,10 +41,12 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import StoreIcon from '@mui/icons-material/Store';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import SettingsIcon from '@mui/icons-material/Settings';
 import api from '../utils/api';
 import { getToken, removeToken, isAdmin, getUserName, getUserFromToken } from '../utils/auth';
 import { CircularProgress, Alert } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import UserProfileDialog from '../components/UserProfileDialog';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -77,6 +79,7 @@ const AdminDashboard = () => {
     seller: false,
     admin: false
   });
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [allContents, setAllContents] = useState([]);
 
   useEffect(() => {
@@ -327,6 +330,19 @@ const AdminDashboard = () => {
               {getUserName()}님 환영합니다
             </Typography>
           )}
+          <Button
+            startIcon={<SettingsIcon />}
+            onClick={() => setProfileDialogOpen(true)}
+            sx={{ 
+              color: 'white', 
+              mr: 1,
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)'
+              }
+            }}
+          >
+            정보 변경
+          </Button>
           <Button
             startIcon={<LogoutIcon />}
             onClick={() => {
@@ -1497,6 +1513,10 @@ const AdminDashboard = () => {
             </Button>
           </DialogActions>
         </Dialog>
+        <UserProfileDialog
+          open={profileDialogOpen}
+          onClose={() => setProfileDialogOpen(false)}
+        />
       </Container>
     </>
   );

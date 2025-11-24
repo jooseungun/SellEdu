@@ -33,9 +33,11 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import SettingsIcon from '@mui/icons-material/Settings';
 import Badge from '@mui/material/Badge';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName } from '../utils/auth';
+import UserProfileDialog from '../components/UserProfileDialog';
 
 // 가비지 데이터 생성 함수
 const generateMockContents = () => {
@@ -118,6 +120,7 @@ const BuyerHome = () => {
   const [hasPartnershipRequest, setHasPartnershipRequest] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [buyerInfo, setBuyerInfo] = useState(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -273,20 +276,35 @@ const BuyerHome = () => {
             </Typography>
           )}
           {isLoggedIn && (
-            <IconButton
-              onClick={() => navigate('/cart')}
-              sx={{ 
-                color: 'white', 
-                mr: 1,
-                '&:hover': {
-                  bgcolor: 'rgba(255,255,255,0.1)'
-                }
-              }}
-            >
-              <Badge badgeContent={cartItemCount} color="error">
-                <ShoppingCartIcon />
-              </Badge>
-            </IconButton>
+            <>
+              <IconButton
+                onClick={() => navigate('/cart')}
+                sx={{ 
+                  color: 'white', 
+                  mr: 1,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
+                <Badge badgeContent={cartItemCount} color="error">
+                  <ShoppingCartIcon />
+                </Badge>
+              </IconButton>
+              <IconButton
+                onClick={() => setProfileDialogOpen(true)}
+                sx={{ 
+                  color: 'white', 
+                  mr: 1,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.1)'
+                  }
+                }}
+                title="정보 변경"
+              >
+                <SettingsIcon />
+              </IconButton>
+            </>
           )}
             <Button
               startIcon={<LocalOfferIcon />}
@@ -711,6 +729,10 @@ const BuyerHome = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+      />
     </>
   );
 };

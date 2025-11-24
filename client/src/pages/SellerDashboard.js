@@ -35,8 +35,10 @@ import EditIcon from '@mui/icons-material/Edit';
 import CodeIcon from '@mui/icons-material/Code';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import SettingsIcon from '@mui/icons-material/Settings';
 import api from '../utils/api';
 import { getToken, removeToken, getUserName, getUserFromToken, isSeller } from '../utils/auth';
+import UserProfileDialog from '../components/UserProfileDialog';
 
 const SellerDashboard = () => {
   const navigate = useNavigate();
@@ -55,6 +57,7 @@ const SellerDashboard = () => {
   const [partnershipType, setPartnershipType] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [userName, setUserName] = useState('');
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     // 로그인 체크 및 초기화
@@ -267,6 +270,19 @@ const SellerDashboard = () => {
             disabled={hasPartnershipRequest}
           >
             제휴할인
+          </Button>
+          <Button
+            startIcon={<SettingsIcon />}
+            onClick={() => setProfileDialogOpen(true)}
+            sx={{ 
+              color: 'white', 
+              mr: 1,
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.1)'
+              }
+            }}
+          >
+            정보 변경
           </Button>
           <Button
             startIcon={<LogoutIcon />}
@@ -680,6 +696,10 @@ const SellerDashboard = () => {
             </Button>
           </DialogActions>
         </Dialog>
+        <UserProfileDialog
+          open={profileDialogOpen}
+          onClose={() => setProfileDialogOpen(false)}
+        />
       </Container>
     </>
   );
