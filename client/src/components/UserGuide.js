@@ -26,16 +26,18 @@ const UserGuide = () => {
   const user = getUserFromToken();
   const userRoles = user?.roles || (user?.role ? [user?.role] : []);
   
-  // 기본 탭 결정: 사용자 역할에 따라
+  // 기본 탭 결정: 사용자 역할에 따라 (가이드가 열릴 때만)
   React.useEffect(() => {
-    if (userRoles.includes('admin')) {
-      setTabValue(2);
-    } else if (userRoles.includes('seller')) {
-      setTabValue(1);
-    } else {
-      setTabValue(0);
+    if (open) {
+      if (userRoles.includes('admin')) {
+        setTabValue(2);
+      } else if (userRoles.includes('seller')) {
+        setTabValue(1);
+      } else {
+        setTabValue(0);
+      }
     }
-  }, [userRoles]);
+  }, [open, userRoles]);
 
   const accountInfo = {
     buyer: { id: 'joosu14', password: 'joosu14' },
@@ -235,7 +237,7 @@ const UserGuide = () => {
         anchor="right"
         open={open}
         onClose={() => setOpen(false)}
-        variant="temporary"
+        variant="persistent"
         PaperProps={{
           sx: {
             width: { xs: '90vw', sm: 380, md: 420 },
@@ -249,22 +251,9 @@ const UserGuide = () => {
             borderLeft: '1px solid rgba(0,0,0,0.12)'
           }
         }}
-        ModalProps={{
-          BackdropProps: {
-            sx: {
-              backgroundColor: 'rgba(0,0,0,0.1)', // 매우 투명한 오버레이
-              pointerEvents: 'none' // 클릭 이벤트 무시하여 메인 화면 클릭 가능
-            }
-          }
-        }}
-        sx={{
-          '& .MuiDrawer-root': {
-            pointerEvents: 'none'
-          },
-          '& .MuiDrawer-paper': {
-            pointerEvents: 'auto'
-          }
-        }}
+        hideBackdrop={true}
+        disableBackdropClick={true}
+        disableEscapeKeyDown={false}
       >
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* 헤더 */}
