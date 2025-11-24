@@ -113,8 +113,27 @@ export async function onRequestGet({ request, env }: {
     console.log('Seller list - Query executed successfully');
     console.log('Seller list - Results count:', result.results?.length || 0);
 
+    // 각 콘텐츠별 실제 판매 금액 집계
+    const contentsWithSales = await Promise.all(
+      (result.results || []).map(async (content: any) => {
+        // 해당 콘텐츠의 실제 판매 금액 집계 (paid 상태인 주문만)
+        const salesResult = await env.DB.prepare(
+          `SELECT COALESCE(SUM(final_amount), 0) as total_sales
+           FROM orders
+           WHERE content_id = ? AND status = 'paid'`
+        )
+          .bind(content.id)
+          .first<{ total_sales: number }>();
+
+        return {
+          ...content,
+          total_sales: salesResult?.total_sales || 0
+        };
+      })
+    );
+
     return new Response(
-      JSON.stringify(result.results || []),
+      JSON.stringify(contentsWithSales),
       { status: 200, headers: corsHeaders }
     );
   } catch (error: any) {
