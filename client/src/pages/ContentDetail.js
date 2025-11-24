@@ -249,27 +249,6 @@ const ContentDetail = () => {
     }
   };
 
-  const generateMockReviews = (contentId) => {
-    const names = ['A기업', 'B기업', 'C기업', 'D기업', 'E기업', 'F기업', 'G기업'];
-    const comments = [
-      '정말 유익한 콘텐츠였습니다. 실무에 바로 적용할 수 있어서 좋았어요!',
-      '콘텐츠 구성이 체계적이고 이해하기 쉬웠습니다.',
-      '내용이 체계적이고 실습 예제가 많아서 좋았습니다.',
-      '가격 대비 만족도가 높은 콘텐츠입니다.',
-      '초보자도 따라하기 쉽게 구성되어 있어서 추천합니다.',
-      '실무 경험이 풍부한 기업의 콘텐츠라서 실용적이었습니다.',
-      '콘텐츠 자료가 잘 정리되어 있어서 활용하기 좋았습니다.'
-    ];
-    
-    const reviewCount = Math.floor(Math.random() * 5) + 3; // 3-7개
-    return Array.from({ length: reviewCount }, (_, i) => ({
-      id: i + 1,
-      buyer_username: names[i % names.length],
-      rating: Math.floor(Math.random() * 2) + 4, // 4-5점
-      comment: comments[i % comments.length],
-      created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-    }));
-  };
 
   const handlePurchase = async () => {
     if (!getToken()) {
