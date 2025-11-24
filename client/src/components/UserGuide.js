@@ -226,11 +226,11 @@ const UserGuide = () => {
         variant="persistent"
         PaperProps={{
           sx: {
-            width: { xs: '90vw', sm: 600, md: 800 },
-            maxWidth: 800,
+            width: { xs: '90vw', sm: 380, md: 420 },
+            maxWidth: 420,
             position: 'fixed',
-            height: '70vh',
-            maxHeight: '600px',
+            height: '85vh',
+            maxHeight: '800px',
             bottom: 24,
             right: 24,
             top: 'auto',
