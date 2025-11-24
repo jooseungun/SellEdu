@@ -29,15 +29,26 @@ const UserGuide = () => {
   // 기본 탭 결정: 사용자 역할에 따라 (가이드가 열릴 때만)
   React.useEffect(() => {
     if (open) {
-      if (userRoles.includes('admin')) {
+      // 배열이 비어있지 않고 admin이 포함되어 있으면 관리자 탭
+      if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('admin')) {
         setTabValue(2);
-      } else if (userRoles.includes('seller')) {
+      } 
+      // 배열이 비어있지 않고 seller가 포함되어 있으면 판매자 탭
+      else if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('seller')) {
         setTabValue(1);
-      } else {
+      } 
+      // role 필드가 있는 경우
+      else if (user?.role === 'admin') {
+        setTabValue(2);
+      } else if (user?.role === 'seller') {
+        setTabValue(1);
+      } 
+      // 기본값은 구매자 탭
+      else {
         setTabValue(0);
       }
     }
-  }, [open, userRoles]);
+  }, [open, userRoles, user]);
 
   const accountInfo = {
     buyer: { id: 'joosu14', password: 'joosu14' },
@@ -243,12 +254,14 @@ const UserGuide = () => {
             width: { xs: '90vw', sm: 380, md: 420 },
             maxWidth: 420,
             position: 'fixed',
-            height: '100vh',
-            top: 0,
+            height: '70vh',
+            maxHeight: '600px',
+            top: '15vh',
             right: 0,
             zIndex: 1200,
             boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
-            borderLeft: '1px solid rgba(0,0,0,0.12)'
+            borderLeft: '1px solid rgba(0,0,0,0.12)',
+            borderRadius: '8px 0 0 8px'
           }
         }}
         hideBackdrop={true}
