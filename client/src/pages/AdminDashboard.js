@@ -520,27 +520,7 @@ const AdminDashboard = () => {
                          <Typography variant="h6">
                            상품관리
                          </Typography>
-                         <Box sx={{ display: 'flex', gap: 1 }}>
-                           <Button
-                             variant="outlined"
-                             color="error"
-                             size="small"
-                             onClick={async () => {
-                               if (window.confirm('picsum.photos 썸네일 URL을 모두 삭제하시겠습니까?')) {
-                                 try {
-                                   const response = await api.post('/admin/contents/clear-picsum-thumbnails');
-                                   alert(response.data?.message || '삭제 완료');
-                                   fetchData();
-                                 } catch (error) {
-                                   console.error('Clear picsum thumbnails error:', error);
-                                   alert('삭제에 실패했습니다.');
-                                 }
-                               }
-                             }}
-                           >
-                             picsum.photos 썸네일 삭제
-                           </Button>
-                           <Button
+                         <Button
                              variant="outlined"
                              size="small"
                              onClick={async () => {
