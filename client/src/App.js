@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFail from './pages/PaymentFail';
 import Cart from './pages/Cart';
+import UserGuide from './components/UserGuide';
 
 const theme = createTheme({
   palette: {
@@ -187,6 +188,8 @@ function App() {
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/fail" element={<PaymentFail />} />
         </Routes>
+        {/* 전역 사용자 가이드 (모든 페이지에서 표시) */}
+        <UserGuide />
       </Router>
     </ThemeProvider>
   );
