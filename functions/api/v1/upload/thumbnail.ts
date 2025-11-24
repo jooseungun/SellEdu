@@ -132,43 +132,23 @@ export async function onRequestPost({ request, env }: {
     
     try {
       // Cloudflare Workers에서 File 객체를 안전하게 처리
-      // file.arrayBuffer() 대신 stream을 사용하여 처리
-      const reader = file.stream().getReader();
-      const chunks: Uint8Array[] = [];
-      let totalLength = 0;
+      // file.arrayBuffer()를 직접 사용
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
       
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          chunks.push(value);
-          totalLength += value.length;
-        }
-      }
-      
-      console.log('Thumbnail upload - File chunks read, total length:', totalLength);
-      
-      // 모든 청크를 하나의 Uint8Array로 합치기
-      const combinedArray = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        combinedArray.set(chunk, offset);
-        offset += chunk.length;
-      }
-      
-      console.log('Thumbnail upload - Combined array created, length:', combinedArray.length);
+      console.log('Thumbnail upload - File arrayBuffer read, length:', uint8Array.length);
       
       // Base64 인코딩 (효율적인 방식)
       const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
       const base64Parts: string[] = [];
       let i = 0;
-      const arrayLength = combinedArray.length;
+      const arrayLength = uint8Array.length;
       
       // 청크 단위로 Base64 인코딩하여 메모리 효율성 향상
       while (i < arrayLength) {
-        const byte1 = combinedArray[i++];
-        const byte2 = i < arrayLength ? combinedArray[i++] : undefined;
-        const byte3 = i < arrayLength ? combinedArray[i++] : undefined;
+        const byte1 = uint8Array[i++];
+        const byte2 = i < arrayLength ? uint8Array[i++] : undefined;
+        const byte3 = i < arrayLength ? uint8Array[i++] : undefined;
         
         const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
         

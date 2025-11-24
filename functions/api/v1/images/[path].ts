@@ -7,7 +7,7 @@ import { R2Bucket } from '@cloudflare/workers-types';
 export async function onRequestGet({ params, env }: {
   params: { path: string };
   env: {
-    IMAGES: R2Bucket;
+    IMAGES?: R2Bucket;
   };
 }): Promise<Response> {
   try {
@@ -15,6 +15,12 @@ export async function onRequestGet({ params, env }: {
     
     if (!imagePath) {
       return new Response('Image path is required', { status: 400 });
+    }
+
+    // R2 버킷이 없으면 404 반환
+    if (!env.IMAGES) {
+      console.log('R2 Image fetch - R2 bucket not available');
+      return new Response('Image service not available', { status: 404 });
     }
 
     // URL 디코딩 (경로에 /가 포함된 경우 인코딩되어 전달됨)
@@ -26,6 +32,7 @@ export async function onRequestGet({ params, env }: {
     const object = await env.IMAGES.get(imagePath);
 
     if (!object) {
+      console.log('R2 Image fetch - Image not found:', imagePath);
       return new Response('Image not found', { status: 404 });
     }
 

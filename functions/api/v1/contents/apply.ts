@@ -114,7 +114,8 @@ export async function onRequestPost({ request, env }: {
     if (lessons && Array.isArray(lessons) && lessons.length > 0) {
       for (let i = 0; i < lessons.length; i++) {
         const lesson = lessons[i];
-        if (lesson.title && lesson.cdn_link) {
+        // lesson이 존재하고 필수 필드가 있는지 확인
+        if (lesson && typeof lesson === 'object' && lesson.title && lesson.cdn_link) {
           await env.DB.prepare(
             `INSERT INTO content_lessons (
               content_id, lesson_number, title, cdn_link, duration, display_order, created_at
@@ -125,7 +126,7 @@ export async function onRequestPost({ request, env }: {
               i + 1,
               lesson.title,
               lesson.cdn_link,
-              lesson.duration || 0,
+              (lesson.duration && typeof lesson.duration === 'number') ? lesson.duration : 0,
               i
             )
             .run();
