@@ -29,24 +29,37 @@ const UserGuide = () => {
   // 기본 탭 결정: 사용자 역할에 따라 (가이드가 열릴 때만)
   React.useEffect(() => {
     if (open) {
+      console.log('UserGuide - User info:', user);
+      console.log('UserGuide - User roles:', userRoles);
+      console.log('UserGuide - User role:', user?.role);
+      
+      let targetTab = 0; // 기본값은 구매자 탭
+      
       // 배열이 비어있지 않고 admin이 포함되어 있으면 관리자 탭
       if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('admin')) {
-        setTabValue(2);
+        console.log('Setting tab to admin (2)');
+        targetTab = 2;
       } 
       // 배열이 비어있지 않고 seller가 포함되어 있으면 판매자 탭
       else if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('seller')) {
-        setTabValue(1);
+        console.log('Setting tab to seller (1)');
+        targetTab = 1;
       } 
       // role 필드가 있는 경우
       else if (user?.role === 'admin') {
-        setTabValue(2);
+        console.log('Setting tab to admin (2) by role field');
+        targetTab = 2;
       } else if (user?.role === 'seller') {
-        setTabValue(1);
+        console.log('Setting tab to seller (1) by role field');
+        targetTab = 1;
       } 
       // 기본값은 구매자 탭
       else {
-        setTabValue(0);
+        console.log('Setting tab to buyer (0) - default');
+        targetTab = 0;
       }
+      
+      setTabValue(targetTab);
     }
   }, [open, userRoles, user]);
 
