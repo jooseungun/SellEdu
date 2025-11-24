@@ -176,8 +176,6 @@ const ContentDetail = () => {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [tabValue, setTabValue] = useState(0);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -366,34 +364,6 @@ const ContentDetail = () => {
   };
 
 
-  const handleReviewSubmit = async () => {
-    if (!getToken()) {
-      alert('로그인이 필요합니다.');
-      setReviewDialogOpen(false);
-      return;
-    }
-
-    if (!reviewForm.rating) {
-      alert('평점을 선택해주세요.');
-      return;
-    }
-
-    try {
-      await api.post('/reviews/create', {
-        content_id: id,
-        rating: reviewForm.rating,
-        comment: reviewForm.comment
-      });
-      alert('후기가 작성되었습니다.');
-      setReviewDialogOpen(false);
-      setReviewForm({ rating: 5, comment: '' });
-      fetchReviews();
-      fetchContent(); // 평점 업데이트를 위해 콘텐츠 정보도 새로고침
-    } catch (error) {
-      console.error('후기 작성 실패:', error);
-      alert(error.response?.data?.error || '후기 작성에 실패했습니다.');
-    }
-  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -687,12 +657,12 @@ const ContentDetail = () => {
                         <CardContent>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                              {review.buyer_username}
+                              {review.buyer_name || review.buyer_username}
                             </Typography>
                             <Rating value={review.rating} readOnly size="small" />
                           </Box>
                           <Typography variant="body2" paragraph>
-                            {review.comment}
+                            {review.comment || '내용 없음'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {new Date(review.created_at).toLocaleDateString('ko-KR')}
@@ -701,13 +671,6 @@ const ContentDetail = () => {
                       </Card>
                     ))
                   )}
-                  <Button
-                    variant="outlined"
-                    onClick={() => setReviewDialogOpen(true)}
-                    sx={{ mt: 2 }}
-                  >
-                    리뷰 작성
-                  </Button>
                 </Box>
               )}
             </Paper>
