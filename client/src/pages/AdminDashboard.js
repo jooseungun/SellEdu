@@ -230,8 +230,7 @@ const AdminDashboard = () => {
         setApprovedContents(Array.isArray(approvedResponse.data) ? approvedResponse.data : []);
       } else if (tabValue === 2) {
         const response = await api.get('/admin/reviews');
-        const data = response.data || [];
-        setReviews(Array.isArray(data) ? data : []);
+        setReviews(response.data?.reviews || []);
       } else if (tabValue === 3) {
         const response = await api.get('/admin/grade-policies');
         const data = response.data || [];
