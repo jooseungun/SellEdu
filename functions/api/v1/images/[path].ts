@@ -1,16 +1,17 @@
 // R2에서 이미지 제공 API
+// 경로: /api/v1/images/{path}
+// 예: /api/v1/images/thumbnails/1234567890_abc123.jpg
 
 import { R2Bucket } from '@cloudflare/workers-types';
 
 export async function onRequestGet({ params, env }: {
-  params: { path: string[] };
+  params: { path: string };
   env: {
     IMAGES: R2Bucket;
   };
 }): Promise<Response> {
   try {
-    // 경로 조합
-    const imagePath = params.path.join('/');
+    const imagePath = params.path;
     
     if (!imagePath) {
       return new Response('Image path is required', { status: 400 });

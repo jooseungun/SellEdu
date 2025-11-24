@@ -101,7 +101,9 @@ export async function onRequestPost({ request, env }: {
 
         const url = new URL(request.url);
         const baseUrl = `${url.protocol}//${url.host}`;
-        const thumbnailUrl = `${baseUrl}/api/v1/images/${fileName}`;
+        // 경로의 /를 인코딩하여 단일 파라미터로 전달
+        const encodedPath = encodeURIComponent(fileName);
+        const thumbnailUrl = `${baseUrl}/api/v1/images/${encodedPath}`;
 
         return new Response(
           JSON.stringify({
