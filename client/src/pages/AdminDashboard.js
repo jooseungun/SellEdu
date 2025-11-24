@@ -1353,6 +1353,66 @@ const AdminDashboard = () => {
                       e.target.src = getThumbnailUrl();
                     }}
                   />
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      disabled={uploadingThumbnails[contentDetail.id]}
+                      startIcon={<EditIcon />}
+                    >
+                      {uploadingThumbnails[contentDetail.id] ? '업로드 중...' : '썸네일 변경'}
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // 파일 크기 제한 (5MB)
+                          if (file.size > 5 * 1024 * 1024) {
+                            alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                            return;
+                          }
+
+                          // 파일 타입 확인
+                          if (!file.type.startsWith('image/')) {
+                            alert('이미지 파일만 업로드할 수 있습니다.');
+                            return;
+                          }
+
+                          // 업로드 시작
+                          setUploadingThumbnails(prev => ({ ...prev, [contentDetail.id]: true }));
+                          try {
+                            const uploadFormData = new FormData();
+                            uploadFormData.append('file', file);
+
+                            const uploadResponse = await api.post('/upload/thumbnail', uploadFormData);
+
+                            if (uploadResponse.data?.thumbnail_url) {
+                              // 콘텐츠 썸네일 URL 업데이트
+                              await api.put(`/admin/contents/${contentDetail.id}`, {
+                                thumbnail_url: uploadResponse.data.thumbnail_url
+                              });
+
+                              alert('썸네일이 업데이트되었습니다.');
+                              // 상세 정보 다시 불러오기
+                              const detailResponse = await api.get(`/admin/contents/${contentDetail.id}/detail`);
+                              setContentDetail(detailResponse.data);
+                              fetchData(); // 목록도 새로고침
+                            } else {
+                              alert('썸네일 업로드에 실패했습니다.');
+                            }
+                          } catch (error) {
+                            console.error('썸네일 업로드 실패:', error);
+                            alert('썸네일 업로드에 실패했습니다.');
+                          } finally {
+                            setUploadingThumbnails(prev => ({ ...prev, [contentDetail.id]: false }));
+                          }
+                        }}
+                      />
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* 기본 정보 */}
