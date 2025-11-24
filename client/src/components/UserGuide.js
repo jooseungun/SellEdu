@@ -17,51 +17,13 @@ import {
 } from '@mui/material';
 import HelpIcon from '@mui/icons-material/Help';
 import CloseIcon from '@mui/icons-material/Close';
-import { getUserFromToken } from '../utils/auth';
 
 const UserGuide = () => {
   const [open, setOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
 
-  const user = getUserFromToken();
-  const userRoles = user?.roles || (user?.role ? [user?.role] : []);
-  
-  // 기본 탭 결정: 사용자 역할에 따라 (가이드가 열릴 때만)
-  React.useEffect(() => {
-    if (open) {
-      console.log('UserGuide - User info:', user);
-      console.log('UserGuide - User roles:', userRoles);
-      console.log('UserGuide - User role:', user?.role);
-      
-      let targetTab = 0; // 기본값은 구매자 탭
-      
-      // 배열이 비어있지 않고 admin이 포함되어 있으면 관리자 탭
-      if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('admin')) {
-        console.log('Setting tab to admin (2)');
-        targetTab = 2;
-      } 
-      // 배열이 비어있지 않고 seller가 포함되어 있으면 판매자 탭
-      else if (Array.isArray(userRoles) && userRoles.length > 0 && userRoles.includes('seller')) {
-        console.log('Setting tab to seller (1)');
-        targetTab = 1;
-      } 
-      // role 필드가 있는 경우
-      else if (user?.role === 'admin') {
-        console.log('Setting tab to admin (2) by role field');
-        targetTab = 2;
-      } else if (user?.role === 'seller') {
-        console.log('Setting tab to seller (1) by role field');
-        targetTab = 1;
-      } 
-      // 기본값은 구매자 탭
-      else {
-        console.log('Setting tab to buyer (0) - default');
-        targetTab = 0;
-      }
-      
-      setTabValue(targetTab);
-    }
-  }, [open, userRoles, user]);
+  // 로그인 여부와 관계없이 모든 가이드를 볼 수 있도록 기본 탭은 구매자 가이드로 설정
+  // 사용자가 원하는 탭을 직접 선택할 수 있음
 
   const accountInfo = {
     buyer: { id: 'joosu14', password: 'joosu14' },
@@ -264,8 +226,8 @@ const UserGuide = () => {
         variant="persistent"
         PaperProps={{
           sx: {
-            width: { xs: '90vw', sm: 380, md: 420 },
-            maxWidth: 420,
+            width: { xs: '90vw', sm: 600, md: 800 },
+            maxWidth: 800,
             position: 'fixed',
             height: '70vh',
             maxHeight: '600px',
