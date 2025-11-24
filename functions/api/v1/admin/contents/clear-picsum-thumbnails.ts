@@ -1,7 +1,7 @@
 // picsum.photos 썸네일 URL 삭제 API (관리자용)
 
 import { D1Database } from '@cloudflare/workers-types';
-import { getTokenFromRequest } from '../../../utils/token';
+import { getTokenFromRequest } from '../../utils/token';
 
 export async function onRequestPost({ request, env }: {
   request: Request;
