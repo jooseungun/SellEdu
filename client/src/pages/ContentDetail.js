@@ -294,7 +294,7 @@ const ContentDetail = () => {
       if (response.data && response.data.orderId) {
         setPaymentInfo({
           orderId: response.data.orderId,
-          amount: content.price,
+          amount: response.data.amount || content.price, // 할인이 적용된 최종 금액 사용
           orderName: content.title
         });
         setPaymentDialogOpen(true);

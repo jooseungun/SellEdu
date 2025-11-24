@@ -40,17 +40,20 @@ export async function onRequestPost({ request, env }: {
 
     // 주문 정보 조회
     const order = await env.DB.prepare(
-      'SELECT id, user_id, content_id, order_number, final_amount, status FROM orders WHERE id = ?'
+      'SELECT id, user_id, content_id, order_number, total_amount, discount_amount, final_amount, status FROM orders WHERE id = ?'
     )
       .bind(orderId)
-      .first<{ id: number; user_id: number; content_id: number; order_number: string; final_amount: number; status: string }>();
+      .first<{ id: number; user_id: number; content_id: number; order_number: string; total_amount: number; discount_amount: number; final_amount: number; status: string }>();
 
     if (!order) {
+      console.error(`주문을 찾을 수 없음: orderId=${orderId}`);
       return new Response(
-        JSON.stringify({ error: '주문을 찾을 수 없습니다.' }),
+        JSON.stringify({ error: '주문을 찾을 수 없습니다.', details: `주문 ID: ${orderId}` }),
         { status: 404, headers: corsHeaders }
       );
     }
+    
+    console.log(`결제 승인 요청: orderId=${orderId}, order.final_amount=${order.final_amount}, request.amount=${amount}`);
 
     // 주문 소유자 확인
     if (order.user_id !== tokenData.userId) {
@@ -68,10 +71,15 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // 결제 금액 확인
-    if (order.final_amount !== amount) {
+    // 결제 금액 확인 (소수점 오차 허용)
+    const amountDiff = Math.abs(order.final_amount - amount);
+    if (amountDiff > 0.01) {
+      console.warn(`결제 금액 불일치: 주문 금액=${order.final_amount}, 요청 금액=${amount}, 차이=${amountDiff}`);
       return new Response(
-        JSON.stringify({ error: '결제 금액이 일치하지 않습니다.' }),
+        JSON.stringify({ 
+          error: '결제 금액이 일치하지 않습니다.',
+          details: `주문 금액: ${order.final_amount}원, 요청 금액: ${amount}원`
+        }),
         { status: 400, headers: corsHeaders }
       );
     }
