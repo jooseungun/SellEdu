@@ -301,7 +301,7 @@ const ContentDetail = () => {
       } else {
         alert('주문 생성에 실패했습니다.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('주문 생성 실패:', error);
       const errorMessage = error?.response?.data?.error || error?.response?.data?.details || error?.message || '알 수 없는 오류';
       const errorDetails = error?.response?.data?.details ? `\n상세: ${error.response.data.details}` : '';
