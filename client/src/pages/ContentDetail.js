@@ -39,7 +39,6 @@ import TossPayment from '../components/TossPayment';
 import UserProfileDialog from '../components/UserProfileDialog';
 import { getThumbnailUrl } from '../utils/thumbnail';
 
-// 더미 데이터 생성 함수 제거됨 - 실제 DB 데이터만 사용
 // HTML 태그 제거 함수
 const stripHtmlTags = (html) => {
   if (!html) return '';
