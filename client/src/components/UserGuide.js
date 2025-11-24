@@ -322,14 +322,17 @@ const UserGuide = () => {
           {/* 탭 */}
           <Tabs
             value={tabValue}
-            onChange={(e, newValue) => setTabValue(newValue)}
+            onChange={(e, newValue) => {
+              console.log('Tab changed to:', newValue);
+              setTabValue(newValue);
+            }}
             variant="scrollable"
             scrollButtons="auto"
             sx={{ borderBottom: 1, borderColor: 'divider' }}
           >
-            <Tab label="구매자 가이드" />
-            <Tab label="판매자 가이드" />
-            <Tab label="관리자 가이드" />
+            <Tab label="구매자 가이드" value={0} />
+            <Tab label="판매자 가이드" value={1} />
+            <Tab label="관리자 가이드" value={2} />
           </Tabs>
 
           {/* 가이드 내용 */}
