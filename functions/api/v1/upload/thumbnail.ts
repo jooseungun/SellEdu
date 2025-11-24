@@ -16,7 +16,7 @@ export async function onRequestPost({ request, env }: {
   };
 
   try {
-    // R2 버킷 확인 (우선 확인)
+    // R2 버킷 확인
     if (!env.IMAGES) {
       console.error('Thumbnail upload - R2 bucket not available');
       return new Response(
@@ -25,10 +25,6 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // Content-Type 확인
-    const contentType = request.headers.get('Content-Type') || '';
-    console.log('Thumbnail upload - Content-Type:', contentType);
-    
     // FormData 파싱
     let formData: FormData;
     try {
@@ -36,7 +32,7 @@ export async function onRequestPost({ request, env }: {
     } catch (error: any) {
       console.error('FormData parsing error:', error);
       return new Response(
-        JSON.stringify({ error: '파일 형식이 올바르지 않습니다.', details: error.message }),
+        JSON.stringify({ error: '파일 형식이 올바르지 않습니다.', details: error?.message || '알 수 없는 오류' }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -44,17 +40,9 @@ export async function onRequestPost({ request, env }: {
     const file = formData.get('file') as File;
     console.log('Thumbnail upload - File received:', file ? { name: file.name, size: file.size, type: file.type } : 'null');
 
-    if (!file) {
+    if (!file || !(file instanceof File)) {
       return new Response(
-        JSON.stringify({ error: '파일이 없습니다.' }),
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    // File 객체 검증
-    if (!(file instanceof File)) {
-      return new Response(
-        JSON.stringify({ error: '유효하지 않은 파일 형식입니다.' }),
+        JSON.stringify({ error: '파일이 없거나 유효하지 않습니다.' }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -68,22 +56,14 @@ export async function onRequestPost({ request, env }: {
     }
 
     // 파일 타입 확인 (이미지만)
-    if (!file.type.startsWith('image/')) {
+    if (!file.type || !file.type.startsWith('image/')) {
       return new Response(
         JSON.stringify({ error: '이미지 파일만 업로드할 수 있습니다.' }),
         { status: 400, headers: corsHeaders }
       );
     }
 
-    // R2에 저장 (R2가 없으면 에러 반환)
-    if (!env.IMAGES) {
-      return new Response(
-        JSON.stringify({ error: 'R2 버킷이 설정되지 않았습니다. 관리자에게 문의하세요.' }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // R2에 저장
+    // 파일 확장자 추출
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
     if (!allowedExtensions.includes(fileExtension)) {
@@ -93,6 +73,7 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 고유 파일명 생성
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 15);
     const fileName = `thumbnails/${timestamp}_${randomStr}.${fileExtension}`;
@@ -140,25 +121,21 @@ export async function onRequestPost({ request, env }: {
     } catch (error: any) {
       console.error('Thumbnail upload - R2 upload error:', error);
       console.error('Thumbnail upload - R2 upload error details:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack
       });
       return new Response(
         JSON.stringify({ 
           error: '파일 업로드에 실패했습니다.', 
-          details: error.message || '알 수 없는 오류가 발생했습니다.'
+          details: error?.message || '알 수 없는 오류가 발생했습니다.'
         }),
         { status: 500, headers: corsHeaders }
       );
     }
-
   } catch (error: any) {
-    console.error('Thumbnail upload error:', error);
-    console.error('Thumbnail upload error stack:', error?.stack);
-    console.error('Thumbnail upload error name:', error?.name);
-    console.error('Thumbnail upload error message:', error?.message);
-    console.error('Thumbnail upload error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.error('Thumbnail upload - Unexpected error:', error);
+    console.error('Thumbnail upload - Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     
     // 에러 메시지 안전하게 추출
     let errorMessage = '알 수 없는 오류가 발생했습니다.';
@@ -189,4 +166,3 @@ export async function onRequestOptions(): Promise<Response> {
     }
   });
 }
-
