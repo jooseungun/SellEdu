@@ -194,9 +194,9 @@ export async function onRequestPost({ request, env }: {
             content.category,
             content.grade,
             content.age,
-            Math.floor(Math.random() * 100),
-            (Math.random() * 2 + 3).toFixed(1),
-            Math.floor(Math.random() * 50),
+            0, // purchase_count: 더미 데이터 제거
+            null, // avg_rating: 더미 데이터 제거 (NULL)
+            0, // review_count: 더미 데이터 제거
             content.duration,
             i + 1
           )
