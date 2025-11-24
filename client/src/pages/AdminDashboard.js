@@ -519,50 +519,28 @@ const AdminDashboard = () => {
                          <Typography variant="h6">
                            상품관리
                          </Typography>
-                         <Box sx={{ display: 'flex', gap: 1 }}>
-                           <Button
-                             variant="outlined"
-                             color="error"
-                             size="small"
-                             onClick={async () => {
-                               if (!confirm('모든 콘텐츠의 썸네일 URL을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                                 return;
-                               }
-                               try {
-                                 const response = await api.post('/admin/contents/clear-thumbnails');
-                                 alert(`✅ 모든 콘텐츠의 썸네일 URL이 삭제되었습니다.\n\n삭제된 콘텐츠 수: ${response.data.updated_count}개`);
-                                 fetchData();
-                               } catch (error) {
-                                 console.error('썸네일 삭제 실패:', error);
-                                 alert('썸네일 삭제에 실패했습니다.');
-                               }
-                             }}
-                           >
-                             모든 썸네일 삭제
-                           </Button>
-                           <Button
-                             variant="outlined"
-                             size="small"
-                             onClick={async () => {
-                               try {
-                                 const response = await api.get('/admin/contents/count');
-                                 const data = response.data;
-                                 alert(
-                                   `📊 콘텐츠 통계\n\n` +
-                                   `전체: ${data.total}개\n\n` +
-                                   `상태별:\n${data.byStatus.map((s: any) => `  ${s.status}: ${s.count}개`).join('\n')}\n\n` +
-                                   `카테고리별:\n${data.byCategory.slice(0, 5).map((c: any) => `  ${c.category}: ${c.count}개`).join('\n')}\n\n` +
-                                   `판매자별:\n${data.bySeller.map((s: any) => `  ${s.username || '알 수 없음'}: ${s.count}개`).join('\n')}`
-                                 );
-                               } catch (error) {
-                                 console.error('통계 조회 실패:', error);
-                                 alert('통계를 불러오는데 실패했습니다.');
-                               }
-                             }}
-                           >
-                             통계 보기
-                           </Button>
-                         </Box>
+                         <Button
+                           variant="outlined"
+                           size="small"
+                           onClick={async () => {
+                             try {
+                               const response = await api.get('/admin/contents/count');
+                               const data = response.data;
+                               alert(
+                                 `📊 콘텐츠 통계\n\n` +
+                                 `전체: ${data.total}개\n\n` +
+                                 `상태별:\n${data.byStatus.map((s: any) => `  ${s.status}: ${s.count}개`).join('\n')}\n\n` +
+                                 `카테고리별:\n${data.byCategory.slice(0, 5).map((c: any) => `  ${c.category}: ${c.count}개`).join('\n')}\n\n` +
+                                 `판매자별:\n${data.bySeller.map((s: any) => `  ${s.username || '알 수 없음'}: ${s.count}개`).join('\n')}`
+                               );
+                             } catch (error) {
+                               console.error('통계 조회 실패:', error);
+                               alert('통계를 불러오는데 실패했습니다.');
+                             }
+                           }}
+                         >
+                           통계 보기
+                         </Button>
                        </Box>
                        {allContents.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -576,6 +554,7 @@ const AdminDashboard = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>ID</TableCell>
+                      <TableCell>썸네일</TableCell>
                       <TableCell>과정명</TableCell>
                       <TableCell>카테고리</TableCell>
                       <TableCell>판매자</TableCell>
@@ -590,6 +569,81 @@ const AdminDashboard = () => {
                     {allContents.map((content) => (
                       <TableRow key={content.id}>
                         <TableCell>{content.id}</TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+                            <Box
+                              component="img"
+                              src={getThumbnailUrl(content.thumbnail_url)}
+                              alt={content.title}
+                              sx={{
+                                width: 80,
+                                height: 60,
+                                objectFit: 'cover',
+                                borderRadius: 1,
+                                border: '1px solid #ddd'
+                              }}
+                              onError={(e) => {
+                                e.target.src = getThumbnailUrl();
+                              }}
+                            />
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              component="label"
+                              disabled={uploadingThumbnails[content.id]}
+                              sx={{ fontSize: '0.7rem', minWidth: 'auto', px: 1 }}
+                            >
+                              {uploadingThumbnails[content.id] ? '업로드 중...' : '변경'}
+                              <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+
+                                  // 파일 크기 제한 (5MB)
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    alert('파일 크기는 5MB를 초과할 수 없습니다.');
+                                    return;
+                                  }
+
+                                  // 파일 타입 확인
+                                  if (!file.type.startsWith('image/')) {
+                                    alert('이미지 파일만 업로드할 수 있습니다.');
+                                    return;
+                                  }
+
+                                  // 업로드 시작
+                                  setUploadingThumbnails(prev => ({ ...prev, [content.id]: true }));
+                                  try {
+                                    const uploadFormData = new FormData();
+                                    uploadFormData.append('file', file);
+
+                                    const uploadResponse = await api.post('/upload/thumbnail', uploadFormData);
+
+                                    if (uploadResponse.data?.thumbnail_url) {
+                                      // 콘텐츠 썸네일 URL 업데이트
+                                      await api.put(`/admin/contents/${content.id}`, {
+                                        thumbnail_url: uploadResponse.data.thumbnail_url
+                                      });
+
+                                      alert('썸네일이 업데이트되었습니다.');
+                                      fetchData();
+                                    } else {
+                                      alert('썸네일 업로드에 실패했습니다.');
+                                    }
+                                  } catch (error) {
+                                    console.error('썸네일 업로드 실패:', error);
+                                    alert('썸네일 업로드에 실패했습니다.');
+                                  } finally {
+                                    setUploadingThumbnails(prev => ({ ...prev, [content.id]: false }));
+                                  }
+                                }}
+                              />
+                            </Button>
+                          </Box>
+                        </TableCell>
                         <TableCell>
                           <Typography
                             variant="body2"
