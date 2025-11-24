@@ -109,12 +109,33 @@ export async function onRequestPost({ request, env }: {
       // 테이블 생성 실패해도 계속 진행 (이미 존재할 수 있음)
     }
 
-    const body = await request.json();
-    const { content_id, amount } = body;
-
-    if (!content_id || !amount) {
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (jsonError: any) {
+      console.error('JSON parsing error:', jsonError);
       return new Response(
-        JSON.stringify({ error: '콘텐츠 ID와 결제 금액이 필요합니다.' }),
+        JSON.stringify({ error: '요청 데이터 형식이 올바르지 않습니다.', details: jsonError?.message }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const { content_id, amount } = body || {};
+
+    console.log('Payment request - Received data:', { content_id, amount, body });
+
+    if (!content_id || content_id === null || content_id === undefined) {
+      console.error('Payment request - Missing content_id');
+      return new Response(
+        JSON.stringify({ error: '콘텐츠 ID가 필요합니다.', details: `content_id: ${content_id}` }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    if (!amount || amount === null || amount === undefined || amount <= 0) {
+      console.error('Payment request - Invalid amount:', amount);
+      return new Response(
+        JSON.stringify({ error: '유효한 결제 금액이 필요합니다.', details: `amount: ${amount}` }),
         { status: 400, headers: corsHeaders }
       );
     }
@@ -141,8 +162,9 @@ export async function onRequestPost({ request, env }: {
       .first<{ id: number }>();
 
     if (existingOrder) {
+      console.log('Payment request - Already purchased:', { userId: tokenData.userId, contentId: content_id });
       return new Response(
-        JSON.stringify({ error: '이미 구매한 콘텐츠입니다.' }),
+        JSON.stringify({ error: '이미 구매한 콘텐츠입니다.', details: `order_id: ${existingOrder.id}` }),
         { status: 400, headers: corsHeaders }
       );
     }

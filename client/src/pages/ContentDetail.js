@@ -301,9 +301,11 @@ const ContentDetail = () => {
       } else {
         alert('주문 생성에 실패했습니다.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('주문 생성 실패:', error);
-      alert('주문 생성에 실패했습니다. 다시 시도해주세요.');
+      const errorMessage = error?.response?.data?.error || error?.response?.data?.details || error?.message || '알 수 없는 오류';
+      const errorDetails = error?.response?.data?.details ? `\n상세: ${error.response.data.details}` : '';
+      alert(`주문 생성에 실패했습니다.\n${errorMessage}${errorDetails}`);
     } finally {
       setPaymentLoading(false);
     }
