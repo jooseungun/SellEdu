@@ -4,13 +4,10 @@ name: Deploy to Cloudflare Pages
 # Cloudflare Pages 대시보드에서 직접 배포가 관리됩니다
 
 on:
-  workflow_dispatch:  # 수동 실행만 가능
-  # push:
-  #   branches:
-  #     - main
-  # pull_request:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # 수동 실행도 가능
 
 jobs:
   deploy:

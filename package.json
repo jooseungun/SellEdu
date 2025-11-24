@@ -13,7 +13,9 @@
     "client:dev": "cd client && npm start",
     "client:build": "cd client && npm run build",
     "db:migrate": "node server/database/migrate.js",
-    "db:seed": "node server/database/seed.js"
+    "db:seed": "node server/database/seed.js",
+    "deploy": "node scripts/deploy.js",
+    "deploy:auto": "git add -A && git commit -m \"자동 커밋: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')\" && git push origin main"
   },
   "keywords": [
     "content",
