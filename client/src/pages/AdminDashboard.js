@@ -563,6 +563,7 @@ const AdminDashboard = () => {
                            통계 보기
                          </Button>
                        </Box>
+                       </Box>
                        {allContents.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="body1" color="text.secondary">
