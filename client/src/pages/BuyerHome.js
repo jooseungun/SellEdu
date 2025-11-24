@@ -57,7 +57,6 @@ const stripHtmlTags = (html) => {
 };
 
 // 더미 데이터 생성 함수 제거됨 - 실제 DB 데이터만 사용
-
 const BuyerHome = () => {
   const navigate = useNavigate();
   const [contents, setContents] = useState([]);
