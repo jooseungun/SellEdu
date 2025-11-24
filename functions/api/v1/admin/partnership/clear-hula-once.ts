@@ -1,4 +1,5 @@
-// 훌라로 관련 제휴할인 신청 데이터 삭제 API
+// 훌라로 관련 제휴할인 신청 데이터 일회성 삭제 API
+// 이 API는 한 번만 실행되어야 하며, 실행 후에는 비활성화됩니다.
 
 import { D1Database } from '@cloudflare/workers-types';
 import { getTokenFromRequest } from '../../utils/token';
@@ -9,6 +10,9 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 };
+
+// 실행 여부를 추적하기 위한 플래그 (실제로는 환경 변수나 별도 테이블에 저장해야 함)
+let hasExecuted = false;
 
 export async function onRequestPost({ request, env }: {
   request: Request;
@@ -26,6 +30,17 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 이미 실행되었는지 확인 (간단한 체크)
+    if (hasExecuted) {
+      return new Response(
+        JSON.stringify({ 
+          message: '이미 실행되었습니다.',
+          skipped: true
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
     // 훌라로 관련 제휴할인 신청 삭제
     const deleteResult = await env.DB.prepare(
       'DELETE FROM partnership_requests WHERE type = ?'
@@ -34,15 +49,15 @@ export async function onRequestPost({ request, env }: {
       .run();
 
     // 훌라로로 승인된 사용자의 할인율 초기화
-    const hulaUsers = await env.DB.prepare(
+    const approvedHulaUsers = await env.DB.prepare(
       `SELECT DISTINCT pr.user_id 
        FROM partnership_requests pr
        WHERE pr.type = 'hula' AND pr.status = 'approved'`
     ).all<{ user_id: number }>();
 
     let resetCount = 0;
-    if (hulaUsers.results && hulaUsers.results.length > 0) {
-      for (const user of hulaUsers.results) {
+    if (approvedHulaUsers.results && approvedHulaUsers.results.length > 0) {
+      for (const user of approvedHulaUsers.results) {
         await env.DB.prepare(
           'UPDATE buyers SET discount_rate = 0 WHERE user_id = ?'
         )
@@ -51,6 +66,8 @@ export async function onRequestPost({ request, env }: {
         resetCount++;
       }
     }
+
+    hasExecuted = true;
 
     return new Response(
       JSON.stringify({
