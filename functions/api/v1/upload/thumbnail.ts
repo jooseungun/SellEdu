@@ -54,6 +54,14 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // File 객체 검증
+    if (!(file instanceof File)) {
+      return new Response(
+        JSON.stringify({ error: '유효하지 않은 파일 형식입니다.' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
     // 파일 크기 제한 (5MB)
     if (file.size > 5 * 1024 * 1024) {
       return new Response(
@@ -70,154 +78,84 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
-    // R2가 있으면 R2에 저장, 없으면 기존 DB 방식 사용
-    if (env.IMAGES) {
-      // R2에 저장
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-      if (!allowedExtensions.includes(fileExtension)) {
-        return new Response(
-          JSON.stringify({ error: '지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif, webp만 가능)' }),
-          { status: 400, headers: corsHeaders }
-        );
-      }
-
-      const timestamp = Date.now();
-      const randomStr = Math.random().toString(36).substring(2, 15);
-      const fileName = `thumbnails/${timestamp}_${randomStr}.${fileExtension}`;
-
-      try {
-        const fileArrayBuffer = await file.arrayBuffer();
-        await env.IMAGES.put(fileName, fileArrayBuffer, {
-          httpMetadata: {
-            contentType: file.type,
-            cacheControl: 'public, max-age=31536000'
-          },
-          customMetadata: {
-            originalName: file.name,
-            uploadedAt: new Date().toISOString()
-          }
-        });
-
-        const url = new URL(request.url);
-        const baseUrl = `${url.protocol}//${url.host}`;
-        // 경로의 /를 인코딩하여 단일 파라미터로 전달
-        const encodedPath = encodeURIComponent(fileName);
-        const thumbnailUrl = `${baseUrl}/api/v1/images/${encodedPath}`;
-
-        return new Response(
-          JSON.stringify({
-            message: '썸네일 업로드 완료',
-            thumbnail_url: thumbnailUrl,
-            file_name: fileName,
-            original_name: file.name,
-            file_size: file.size,
-            file_type: file.type
-          }),
-          { status: 200, headers: corsHeaders }
-        );
-      } catch (error: any) {
-        console.error('R2 upload error:', error);
-        return new Response(
-          JSON.stringify({ error: '파일 업로드에 실패했습니다.', details: error.message }),
-          { status: 500, headers: corsHeaders }
-        );
-      }
+    // R2에 저장 (R2가 없으면 에러 반환)
+    if (!env.IMAGES) {
+      return new Response(
+        JSON.stringify({ error: 'R2 버킷이 설정되지 않았습니다. 관리자에게 문의하세요.' }),
+        { status: 500, headers: corsHeaders }
+      );
     }
 
-    // 기존 DB 방식 (R2가 없는 경우 fallback)
-    // 파일을 base64로 변환
-    console.log('Thumbnail upload - Starting file conversion, size:', file.size);
-    let base64: string;
-    
+    // R2에 저장
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+    if (!allowedExtensions.includes(fileExtension)) {
+      return new Response(
+        JSON.stringify({ error: '지원하지 않는 이미지 형식입니다. (jpg, jpeg, png, gif, webp, svg만 가능)' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 15);
+    const fileName = `thumbnails/${timestamp}_${randomStr}.${fileExtension}`;
+
     try {
-      // Cloudflare Workers에서 File 객체를 안전하게 처리
-      // file.arrayBuffer()를 직접 사용
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+      console.log('Thumbnail upload - Starting R2 upload:', fileName);
       
-      console.log('Thumbnail upload - File arrayBuffer read, length:', uint8Array.length);
-      
-      // Base64 인코딩 (효율적인 방식)
-      const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-      const base64Parts: string[] = [];
-      let i = 0;
-      const arrayLength = uint8Array.length;
-      
-      // 청크 단위로 Base64 인코딩하여 메모리 효율성 향상
-      while (i < arrayLength) {
-        const byte1 = uint8Array[i++];
-        const byte2 = i < arrayLength ? uint8Array[i++] : undefined;
-        const byte3 = i < arrayLength ? uint8Array[i++] : undefined;
-        
-        const bitmap = (byte1 << 16) | ((byte2 ?? 0) << 8) | (byte3 ?? 0);
-        
-        base64Parts.push(
-          base64Chars.charAt((bitmap >> 18) & 63) +
-          base64Chars.charAt((bitmap >> 12) & 63) +
-          (byte2 !== undefined ? base64Chars.charAt((bitmap >> 6) & 63) : '=') +
-          (byte3 !== undefined ? base64Chars.charAt(bitmap & 63) : '=')
-        );
-      }
-      
-      base64 = base64Parts.join('');
-      console.log('Thumbnail upload - Base64 encoding completed, length:', base64.length);
-      
+      // File을 ArrayBuffer로 변환
+      const fileArrayBuffer = await file.arrayBuffer();
+      console.log('Thumbnail upload - File converted to ArrayBuffer, size:', fileArrayBuffer.byteLength);
+
+      // R2에 업로드
+      await env.IMAGES.put(fileName, fileArrayBuffer, {
+        httpMetadata: {
+          contentType: file.type || `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
+          cacheControl: 'public, max-age=31536000'
+        },
+        customMetadata: {
+          originalName: file.name,
+          uploadedAt: new Date().toISOString()
+        }
+      });
+
+      console.log('Thumbnail upload - R2 upload successful:', fileName);
+
+      // URL 생성
+      const url = new URL(request.url);
+      const baseUrl = `${url.protocol}//${url.host}`;
+      const encodedPath = encodeURIComponent(fileName);
+      const thumbnailUrl = `${baseUrl}/api/v1/images/${encodedPath}`;
+
+      console.log('Thumbnail upload - URL generated:', thumbnailUrl);
+
+      return new Response(
+        JSON.stringify({
+          message: '썸네일 업로드 완료',
+          thumbnail_url: thumbnailUrl,
+          file_name: fileName,
+          original_name: file.name,
+          file_size: file.size,
+          file_type: file.type
+        }),
+        { status: 200, headers: corsHeaders }
+      );
     } catch (error: any) {
-      console.error('Thumbnail upload - File conversion error:', error);
-      console.error('Thumbnail upload - Error details:', {
+      console.error('Thumbnail upload - R2 upload error:', error);
+      console.error('Thumbnail upload - R2 upload error details:', {
         message: error.message,
         name: error.name,
         stack: error.stack
       });
       return new Response(
-        JSON.stringify({ error: '파일 변환에 실패했습니다.', details: error.message }),
+        JSON.stringify({ 
+          error: '파일 업로드에 실패했습니다.', 
+          details: error.message || '알 수 없는 오류가 발생했습니다.'
+        }),
         { status: 500, headers: corsHeaders }
       );
     }
 
-    // 고유 ID 생성
-    const thumbnailId = `thumb_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    console.log('Thumbnail upload - Thumbnail ID generated:', thumbnailId);
-    
-    // DB에 저장
-    try {
-      console.log('Thumbnail upload - Starting DB insert');
-      const dbResult = await env.DB.prepare(
-        'INSERT INTO thumbnails (id, file_name, file_type, file_data) VALUES (?, ?, ?, ?)'
-      ).bind(thumbnailId, file.name, file.type, base64).run();
-      console.log('Thumbnail upload - DB insert successful:', dbResult);
-    } catch (error: any) {
-      console.error('Thumbnail upload - DB insert error:', error);
-      console.error('Thumbnail upload - DB insert error details:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack
-      });
-      return new Response(
-        JSON.stringify({ error: '데이터베이스 저장에 실패했습니다.', details: error.message }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // 썸네일 조회 URL 반환 (절대 경로로 변환)
-    const url = new URL(request.url);
-    const baseUrl = `${url.protocol}//${url.host}`;
-    const thumbnailUrl = `${baseUrl}/api/v1/upload/thumbnail/${thumbnailId}`;
-
-    console.log('Thumbnail upload - Success:', { thumbnailId, thumbnailUrl });
-
-    return new Response(
-      JSON.stringify({
-        message: '썸네일 업로드 완료',
-        thumbnail_url: thumbnailUrl,
-        thumbnail_id: thumbnailId,
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type
-      }),
-      { status: 200, headers: corsHeaders }
-    );
   } catch (error: any) {
     console.error('Thumbnail upload error:', error);
     console.error('Thumbnail upload error stack:', error.stack);
