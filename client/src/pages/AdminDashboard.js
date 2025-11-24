@@ -923,11 +923,32 @@ const AdminDashboard = () => {
               <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
                 제휴할인 신청 관리
               </Typography>
-              <Chip
-                label={`총 ${partnershipRequests.length}건`}
-                color="primary"
-                size="small"
-              />
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Chip
+                  label={`총 ${partnershipRequests.length}건`}
+                  color="primary"
+                  size="small"
+                />
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={async () => {
+                    if (!window.confirm('훌라로 관련 제휴할인 신청 데이터를 모두 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                      return;
+                    }
+                    try {
+                      await api.post('/admin/partnership/clear-hula');
+                      alert('훌라로 관련 제휴할인 신청이 삭제되었습니다.');
+                      fetchData();
+                    } catch (error) {
+                      alert(error.response?.data?.error || '훌라로 데이터 삭제에 실패했습니다.');
+                    }
+                  }}
+                >
+                  훌라로 데이터 삭제
+                </Button>
+              </Box>
             </Box>
             {partnershipRequests.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -985,9 +1006,9 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={request.type === 'malgn' ? '맑은소프트 (-30%)' : '훌라로 (+150%)'}
+                            label="맑은소프트 (-30%)"
                             size="small"
-                            color={request.type === 'malgn' ? 'primary' : 'secondary'}
+                            color="primary"
                             sx={{ fontWeight: 'bold' }}
                           />
                         </TableCell>

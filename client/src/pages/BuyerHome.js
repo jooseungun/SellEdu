@@ -825,12 +825,6 @@ const BuyerHome = () => {
                 label="맑은소프트 이용고객 - 30% 할인"
                 disabled={hasPartnershipRequest}
               />
-              <FormControlLabel
-                value="hula"
-                control={<Radio />}
-                label="훌라로 이용고객 +150% 할인"
-                disabled={hasPartnershipRequest}
-              />
             </RadioGroup>
           </FormControl>
           {partnershipType && (

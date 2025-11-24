@@ -26,6 +26,7 @@ export async function onRequestGet({ request, env }: {
       );
     }
 
+    // 훌라로 관련 데이터는 제외하고 맑은소프트만 조회
     const result = await env.DB.prepare(
       `SELECT
         pr.id,
@@ -41,6 +42,7 @@ export async function onRequestGet({ request, env }: {
         u.email
       FROM partnership_requests pr
       LEFT JOIN users u ON pr.user_id = u.id
+      WHERE pr.type = 'malgn'
       ORDER BY pr.created_at DESC`
     ).all();
 

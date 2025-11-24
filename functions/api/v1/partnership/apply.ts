@@ -24,6 +24,22 @@ export async function onRequestPost({ request, env }: {
       );
     }
 
+    // 훌라로 타입은 더 이상 지원하지 않음
+    if (type === 'hula') {
+      return new Response(
+        JSON.stringify({ error: '훌라로 제휴할인은 더 이상 지원하지 않습니다.' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 맑은소프트만 허용
+    if (type !== 'malgn') {
+      return new Response(
+        JSON.stringify({ error: '지원하지 않는 제휴사 타입입니다.' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
     // Authorization 헤더에서 토큰 읽기
     const authHeader = request.headers.get('Authorization');
     let userId: number | null = null;

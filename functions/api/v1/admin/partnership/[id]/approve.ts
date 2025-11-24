@@ -41,13 +41,29 @@ export async function onRequestPost({ params, env }: {
       .run();
 
     // 제휴할인 타입에 따른 할인율 설정
-    // type: '제휴사' 또는 '고객사'
-    // 제휴사: 10% 할인, 고객사: 15% 할인 (예시)
+    // 맑은소프트만 지원 (30% 할인)
     let discountRate = 0;
-    if (request.type === '제휴사') {
-      discountRate = 10.0;
-    } else if (request.type === '고객사') {
-      discountRate = 15.0;
+    if (request.type === 'malgn') {
+      discountRate = 30.0;
+    } else if (request.type === 'hula') {
+      // 훌라로는 더 이상 지원하지 않음 - 거부 처리
+      await env.DB.prepare(
+        `UPDATE partnership_requests 
+         SET status = 'rejected',
+             rejection_reason = '훌라로 제휴할인은 더 이상 지원하지 않습니다.',
+             updated_at = datetime('now')
+         WHERE id = ?`
+      )
+        .bind(requestId)
+        .run();
+      
+      return new Response(
+        JSON.stringify({ 
+          error: '훌라로 제휴할인은 더 이상 지원하지 않습니다.',
+          message: '제휴할인 신청이 자동으로 거부되었습니다.'
+        }),
+        { status: 400, headers: corsHeaders }
+      );
     }
 
     // buyers 테이블의 discount_rate 업데이트
