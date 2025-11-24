@@ -12,9 +12,16 @@ export const getDefaultThumbnailUrl = () => {
 
 // 썸네일 URL이 없을 때 기본 썸네일 URL 반환
 export const getThumbnailUrl = (thumbnailUrl) => {
+  // URL이 없거나 빈 문자열인 경우
   if (!thumbnailUrl || thumbnailUrl.trim() === '') {
     return getDefaultThumbnailUrl();
   }
+  
+  // picsum.photos URL인 경우 기본 썸네일 반환
+  if (thumbnailUrl.includes('picsum.photos')) {
+    return getDefaultThumbnailUrl();
+  }
+  
   return thumbnailUrl;
 };
 
