@@ -572,79 +572,21 @@ const AdminDashboard = () => {
                       <TableRow key={content.id}>
                         <TableCell>{content.id}</TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-                            <Box
-                              component="img"
-                              src={getThumbnailUrl(content.thumbnail_url)}
-                              alt={content.title}
-                              sx={{
-                                width: 80,
-                                height: 60,
-                                objectFit: 'cover',
-                                borderRadius: 1,
-                                border: '1px solid #ddd'
-                              }}
-                              onError={(e) => {
-                                e.target.src = getThumbnailUrl();
-                              }}
-                            />
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              component="label"
-                              disabled={uploadingThumbnails[content.id]}
-                              sx={{ fontSize: '0.7rem', minWidth: 'auto', px: 1 }}
-                            >
-                              {uploadingThumbnails[content.id] ? '업로드 중...' : '변경'}
-                              <input
-                                type="file"
-                                hidden
-                                accept="image/*"
-                                onChange={async (e) => {
-                                  const file = e.target.files[0];
-                                  if (!file) return;
-
-                                  // 파일 크기 제한 (5MB)
-                                  if (file.size > 5 * 1024 * 1024) {
-                                    alert('파일 크기는 5MB를 초과할 수 없습니다.');
-                                    return;
-                                  }
-
-                                  // 파일 타입 확인
-                                  if (!file.type.startsWith('image/')) {
-                                    alert('이미지 파일만 업로드할 수 있습니다.');
-                                    return;
-                                  }
-
-                                  // 업로드 시작
-                                  setUploadingThumbnails(prev => ({ ...prev, [content.id]: true }));
-                                  try {
-                                    const uploadFormData = new FormData();
-                                    uploadFormData.append('file', file);
-
-                                    const uploadResponse = await api.post('/upload/thumbnail', uploadFormData);
-
-                                    if (uploadResponse.data?.thumbnail_url) {
-                                      // 콘텐츠 썸네일 URL 업데이트
-                                      await api.put(`/admin/contents/${content.id}`, {
-                                        thumbnail_url: uploadResponse.data.thumbnail_url
-                                      });
-
-                                      alert('썸네일이 업데이트되었습니다.');
-                                      fetchData();
-                                    } else {
-                                      alert('썸네일 업로드에 실패했습니다.');
-                                    }
-                                  } catch (error) {
-                                    console.error('썸네일 업로드 실패:', error);
-                                    alert('썸네일 업로드에 실패했습니다.');
-                                  } finally {
-                                    setUploadingThumbnails(prev => ({ ...prev, [content.id]: false }));
-                                  }
-                                }}
-                              />
-                            </Button>
-                          </Box>
+                          <Box
+                            component="img"
+                            src={getThumbnailUrl(content.thumbnail_url)}
+                            alt={content.title}
+                            sx={{
+                              width: 80,
+                              height: 60,
+                              objectFit: 'cover',
+                              borderRadius: 1,
+                              border: '1px solid #ddd'
+                            }}
+                            onError={(e) => {
+                              e.target.src = getThumbnailUrl();
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
                           <Typography
@@ -652,16 +594,18 @@ const AdminDashboard = () => {
                             sx={{
                               cursor: 'pointer',
                               color: 'primary.main',
+                              fontWeight: 'bold',
                               '&:hover': {
                                 textDecoration: 'underline'
                               }
                             }}
                             onClick={async () => {
                               try {
-                                const response = await api.get(`/contents/${content.id}`);
+                                const response = await api.get(`/admin/contents/${content.id}/detail`);
                                 setContentDetail(response.data);
                                 setContentDetailDialogOpen(true);
                               } catch (error) {
+                                console.error('상세 정보 조회 실패:', error);
                                 alert('상세 정보를 불러오는데 실패했습니다.');
                               }
                             }}
