@@ -163,26 +163,44 @@ export async function onRequestPost({ request, env }: {
     const now = new Date();
     const orderNumber = `ORD${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}${String(Math.floor(Math.random() * 1000000)).padStart(6, '0')}`;
 
-    // 주문 생성 (여러 상품을 하나의 주문으로 묶음)
-    // 실제로는 각 상품마다 개별 주문을 생성하거나, 주문-주문상품 구조를 사용할 수 있지만
-    // 여기서는 간단하게 첫 번째 상품을 기준으로 주문을 생성합니다.
-    const firstContent = contents[0];
-    const orderResult = await env.DB.prepare(
-      `INSERT INTO orders (user_id, content_id, order_number, total_amount, discount_amount, final_amount, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending')
-       RETURNING id`
-    )
-      .bind(tokenData.userId, firstContent.id, orderNumber, total_amount, discountAmount, finalAmount)
-      .first<{ id: number }>();
+    // 각 상품마다 개별 주문 생성
+    const orderIds: number[] = [];
+    const now = new Date();
+    
+    for (let i = 0; i < contents.length; i++) {
+      const content = contents[i];
+      // 각 주문마다 고유한 주문 번호 생성
+      const contentOrderNumber = `${orderNumber}-${String(i + 1).padStart(3, '0')}`;
+      
+      // 각 상품의 할인 금액 계산
+      const contentDiscountAmount = Math.floor(content.price * discountRate / 100);
+      const contentFinalAmount = content.price - contentDiscountAmount;
+      
+      const orderResult = await env.DB.prepare(
+        `INSERT INTO orders (user_id, content_id, order_number, total_amount, discount_amount, final_amount, status)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+      )
+        .bind(tokenData.userId, content.id, contentOrderNumber, content.price, contentDiscountAmount, contentFinalAmount)
+        .run();
 
-    if (!orderResult) {
+      if (!orderResult.success) {
+        console.error(`주문 생성 실패: content_id=${content.id}`);
+        continue;
+      }
+      
+      const orderId = orderResult.meta.last_row_id;
+      orderIds.push(orderId);
+    }
+
+    if (orderIds.length === 0) {
       return new Response(
         JSON.stringify({ error: '주문 생성에 실패했습니다.' }),
         { status: 500, headers: corsHeaders }
       );
     }
 
-    const orderId = orderResult.id;
+    // 첫 번째 주문 ID를 메인으로 사용 (호환성을 위해)
+    const orderId = orderIds[0];
 
     // 주문명 생성
     const orderName = contents.length === 1

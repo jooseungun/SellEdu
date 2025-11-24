@@ -91,36 +91,68 @@ const Cart = () => {
       return;
     }
 
-    // 결제 요청 API 없이 바로 결제 다이얼로그 표시
-    const orderName = cartItems.length === 1 
-      ? cartItems[0].content.title 
-      : `${cartItems[0].content.title} 외 ${cartItems.length - 1}개`;
+    try {
+      setPaymentLoading(true);
+      // 주문 생성 API 호출 (배치)
+      const contentIds = cartItems.map(item => item.content.id);
+      const response = await api.post('/payments/request-batch', {
+        content_ids: contentIds,
+        amount: totalAmount
+      });
+      
+      if (response.data && response.data.orderId) {
+        const orderName = cartItems.length === 1 
+          ? cartItems[0].content.title 
+          : `${cartItems[0].content.title} 외 ${cartItems.length - 1}개`;
 
-    setPaymentInfo({
-      amount: totalAmount,
-      orderName: orderName
-    });
-    setPaymentDialogOpen(true);
+        setPaymentInfo({
+          orderId: response.data.orderId,
+          amount: totalAmount,
+          orderName: orderName
+        });
+        setPaymentDialogOpen(true);
+      } else {
+        alert('주문 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('주문 생성 실패:', error);
+      alert('주문 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const handlePaymentSuccess = async (paymentKey) => {
-    // 실제 결제 승인 API 호출 없이 바로 완료 처리
-    alert('결제가 완료되었습니다!');
-    setPaymentDialogOpen(false);
-    setPaymentInfo(null);
-    
-    // 장바구니 비우기
     try {
-      await Promise.all(cartItems.map(item => api.delete(`/cart/${item.id}`)));
+      // 결제 승인 API 호출
+      if (paymentInfo && paymentInfo.orderId) {
+        await api.post('/payments/approve', {
+          orderId: paymentInfo.orderId,
+          paymentKey: paymentKey || `sim_${Date.now()}`,
+          amount: paymentInfo.amount
+        });
+      }
+      
+      alert('결제가 완료되었습니다!');
+      setPaymentDialogOpen(false);
+      setPaymentInfo(null);
+      
+      // 장바구니 비우기
+      try {
+        await Promise.all(cartItems.map(item => api.delete(`/cart/${item.id}`)));
+      } catch (error) {
+        console.error('장바구니 비우기 실패:', error);
+      }
+      
+      // 장바구니 새로고침
+      fetchCart();
+      
+      // 구매 내역 페이지로 이동하거나 홈으로 이동
+      navigate('/buyer');
     } catch (error) {
-      console.error('장바구니 비우기 실패:', error);
+      console.error('결제 승인 실패:', error);
+      alert('결제 승인 처리에 실패했습니다. 관리자에게 문의해주세요.');
     }
-    
-    // 장바구니 새로고침
-    fetchCart();
-    
-    // 구매 내역 페이지로 이동하거나 홈으로 이동
-    navigate('/buyer');
   };
 
   const handlePaymentFail = (error) => {

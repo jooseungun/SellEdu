@@ -283,22 +283,53 @@ const ContentDetail = () => {
       return;
     }
 
-    // 결제 요청 API 없이 바로 결제 다이얼로그 표시
-    setPaymentInfo({
-      amount: content.price,
-      orderName: content.title
-    });
-    setPaymentDialogOpen(true);
+    try {
+      setPaymentLoading(true);
+      // 주문 생성 API 호출
+      const response = await api.post('/payments/request', {
+        content_id: content.id,
+        amount: content.price
+      });
+      
+      if (response.data && response.data.orderId) {
+        setPaymentInfo({
+          orderId: response.data.orderId,
+          amount: content.price,
+          orderName: content.title
+        });
+        setPaymentDialogOpen(true);
+      } else {
+        alert('주문 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('주문 생성 실패:', error);
+      alert('주문 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const handlePaymentSuccess = async (paymentKey) => {
-    // 실제 결제 승인 API 호출 없이 바로 완료 처리
-    alert('결제가 완료되었습니다!');
-    setPaymentDialogOpen(false);
-    setPaymentInfo(null);
-    
-    // 콘텐츠 정보 새로고침
-    fetchContent();
+    try {
+      // 결제 승인 API 호출
+      if (paymentInfo && paymentInfo.orderId) {
+        await api.post('/payments/approve', {
+          orderId: paymentInfo.orderId,
+          paymentKey: paymentKey || `sim_${Date.now()}`,
+          amount: paymentInfo.amount
+        });
+      }
+      
+      alert('결제가 완료되었습니다!');
+      setPaymentDialogOpen(false);
+      setPaymentInfo(null);
+      
+      // 콘텐츠 정보 새로고침
+      fetchContent();
+    } catch (error) {
+      console.error('결제 승인 실패:', error);
+      alert('결제 승인 처리에 실패했습니다. 관리자에게 문의해주세요.');
+    }
   };
 
   const handlePaymentFail = (error) => {
