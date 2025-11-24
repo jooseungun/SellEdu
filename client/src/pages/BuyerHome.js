@@ -685,7 +685,7 @@ const BuyerHome = () => {
                               )}
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                                  ⭐ {content.avg_rating || '0'}
+                                  ⭐ {content.avg_rating ? parseFloat(content.avg_rating).toFixed(1) : '0'}점 ({content.review_count || 0}개 리뷰)
                                 </Typography>
                               </Box>
                             </Box>
