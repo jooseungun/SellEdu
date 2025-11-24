@@ -836,33 +836,6 @@ const ContentDetail = () => {
         </DialogActions>
       </Dialog>
 
-      {/* 리뷰 작성 다이얼로그 */}
-      <Dialog open={reviewDialogOpen} onClose={() => setReviewDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>리뷰 작성</DialogTitle>
-        <DialogContent>
-          <Box sx={{ my: 2 }}>
-            <Typography component="legend">평점</Typography>
-            <Rating
-              value={reviewForm.rating}
-              onChange={(e, newValue) => setReviewForm({ ...reviewForm, rating: newValue })}
-            />
-          </Box>
-          <TextField
-            fullWidth
-            label="리뷰 내용"
-            multiline
-            rows={4}
-            margin="normal"
-            value={reviewForm.comment}
-            onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setReviewDialogOpen(false)}>취소</Button>
-          <Button onClick={handleReviewSubmit} variant="contained">작성</Button>
-        </DialogActions>
-      </Dialog>
-
       {/* 결제 다이얼로그 */}
       <Dialog 
         open={paymentDialogOpen} 
