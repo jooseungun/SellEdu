@@ -145,16 +145,32 @@ export async function onRequestPost({ request, env }: {
       .bind(joossSellerId)
       .first<{ count: number }>();
 
-    if ((existingCountJoosu && existingCountJoosu.count > 0) || (existingCountJooss && existingCountJooss.count > 0)) {
+    // URL 파라미터로 force 옵션 확인
+    const url = new URL(request.url);
+    const force = url.searchParams.get('force') === 'true';
+    
+    if (!force && ((existingCountJoosu && existingCountJoosu.count > 0) || (existingCountJooss && existingCountJooss.count > 0))) {
       return new Response(
         JSON.stringify({
-          message: '이미 콘텐츠 데이터가 존재합니다.',
+          message: '이미 콘텐츠 데이터가 존재합니다. 강제 재생성을 원하시면 ?force=true 파라미터를 추가하세요.',
           joosu: existingCountJoosu?.count || 0,
           jooss: existingCountJooss?.count || 0,
           skipped: true
         }),
         { status: 200, headers: corsHeaders }
       );
+    }
+    
+    // force 옵션이 있으면 기존 데이터 삭제
+    if (force) {
+      try {
+        await env.DB.prepare('DELETE FROM contents WHERE seller_id IN (?, ?)')
+          .bind(joosuSellerId, joossSellerId)
+          .run();
+        console.log('기존 콘텐츠 데이터 삭제 완료');
+      } catch (deleteError: any) {
+        console.warn('기존 콘텐츠 삭제 실패 (무시하고 계속):', deleteError.message);
+      }
     }
 
     let insertedCount = 0;
