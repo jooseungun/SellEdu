@@ -1,0 +1,11 @@
+Cloudflare D1 Database Backup ID:
+0000008e-ffffffff-00004fc1-7ad6fe5963d80b1aeb2003efceaf46c8
+
+백업 복원 방법:
+1. Cloudflare 대시보드 접속: https://dash.cloudflare.com
+2. Workers & Pages → D1 → selledu-db 선택
+3. Backups 탭에서 위 백업 ID로 검색
+4. Restore 버튼 클릭
+
+백업 날짜: 2025-11-25 (추정)
+
